@@ -20,6 +20,8 @@ int main(int argc, char** argv) {
     do {
         try {
             token = lexer.getNextToken();
+
+            std::cout << token << std::endl;
         } 
         catch( ... ) {
             std::cout << "ERROR" << std::endl;
