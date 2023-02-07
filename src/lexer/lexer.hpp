@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 class Lexer {
 
@@ -41,4 +42,42 @@ class Lexer {
         void skipWhiteSpace();
         // Accessor methods
         Token getNextToken();
+
+        template<typename UnaryPredicate>
+        void takeWhile(UnaryPredicate predicate)
+        {
+            char in;
+            lineStream.get(in);
+
+            std::cout << "Reading any all tokens that match predicate..." << std::endl;
+
+            while(predicate(in))
+            {
+                tokenBuffer << in;
+                std::cout << "Character matches: " << in << std::endl;
+                lineStream.get(in);
+            }
+
+            // whichever character was taken from string that broke loop needs to be put back
+            lineStream.putback(in);
+
+            std::cout << "Found token string: " << tokenBuffer.str() << std::endl;
+        }
+        template<typename UnaryPredicate>
+        void takeWhile(UnaryPredicate predicate, int maxChars)
+        {
+            char in;
+            lineStream.get(in);
+
+            // get current length
+            int numChars = tokenBuffer.str().length();
+
+            while(numChars < maxChars && predicate(in))
+            {
+                tokenBuffer << in;
+            }
+
+            // whichever character was taken from string that broke loop needs to be put back
+            lineStream.put(in);
+        }
 };
