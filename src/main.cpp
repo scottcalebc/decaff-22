@@ -19,12 +19,14 @@ int main(int argc, char** argv) {
     Token token = Token();
     do {
         try {
+            std::cout << "Getting Token..."<< std::endl;
             token = lexer.getNextToken();
 
             std::cout << token << std::endl;
         } 
         catch( ... ) {
             std::cout << "ERROR" << std::endl;
+            exit(1);
         }
     } while (token.type != Token::Type::END);
 
