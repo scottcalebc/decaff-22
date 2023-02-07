@@ -3,11 +3,41 @@
 
 
 std::map<Token::Type, std::string> Token::enumName{
+    {Type::Int, "Int"},
+    {Type::Identifier, "Identifier"},
     {Type::IntConstant, "IntConstant"},
     {Type::DoubleConstant, "DoubleConstant"},
     {Type::StringConstant, "StringConstant"},
-    {Type::Identifier, "Identifier"}
 };
+
+std::map<std::string, Token::Type> Token::keywords{
+    {"if", Type::If},
+    {"int", Type::Int},
+    {"for", Type::For},
+    {"else", Type::Else},
+    {"void", Type::Void},
+    {"bool", Type::Bool},
+    {"void", Type::Void},
+    {"break", Type::Break},
+    {"while", Type::While},
+    {"string", Type::String},
+    {"double", Type::Double},
+    {"return", Type::Return},
+    {"null", Type::NullConstant},
+    {"true", Type::BoolConstant},
+    {"false", Type::BoolConstant},
+};
+
+std::map<std::string, Token::Type> Token::operators{
+    {"!=", Type::NotEqual},
+    {"==", Type::Equal},
+    {">=", Type::GreaterEqual},
+    {"<=", Type::LessEqual},
+    {"||", Type::Or},
+    {"&&", Type::And},
+};
+
+int Token::identifierMaxLength = 32;
 
 std::ostream& operator<<(std::ostream &out, Token const& token)
 {
@@ -27,6 +57,12 @@ std::ostream& operator<<(std::ostream &out, Token const& token)
         case Token::Type::StringConstant:
             out << Token::getTypeName(token.type) << " (value = " << token.value << ")";
             break;
+
+        case Token::Type::Identifier:
+            out << Token::getTypeName(token.type);
+            out <<(token.value.length() > Token::identifierMaxLength) ? "(truncated to " + token.getValue() + ")" : "";
+            break;
+
         default:
             out << Token::getTypeName(token.type);
         // ommitting default case here since we may add other token types with different
@@ -36,5 +72,12 @@ std::ostream& operator<<(std::ostream &out, Token const& token)
     // not ending with new line since caller may want to print their own new line
 
     return out;
+}
+
+const std::string Token::getValue() const
+{
+    return (type == Type::Identifier) 
+        ? value.substr(0, Token::identifierMaxLength+1)
+        : value;
 }
 
