@@ -124,6 +124,25 @@ Scanner::Token Scanner::Lexer::getNextToken()
     {
         token.type = Token::Type::IntConstant;
         takeWhile(isNumber());
+
+        if (lineStream.peek() == '.')
+        {
+            // possible double take period
+            lineStream.get(tmp);
+
+            if (isNumber()(lineStream.peek()))
+            {
+                // found double need to add to current token
+                tokenBuffer << tmp; // add '.' into buffer
+
+                takeWhile(isNumber());
+            } 
+            else
+            {
+                // put back period
+                lineStream.putback(tmp);
+            }
+        }
     }
     else if ( isOperator()(tmp) )
     {
