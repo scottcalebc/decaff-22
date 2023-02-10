@@ -72,11 +72,28 @@ class isMatchingCharacters
     };
 };
 
-class isNotStringConstantEnd : public isMatchingCharacters
+class isNotMatchingCharacters
+{
+    std::string characters;
+
+    public:
+    isNotMatchingCharacters(std::string characters) :
+        characters(characters)
+    {
+
+    };
+
+    bool operator() (const char &c) const
+    {
+        return characters.find(c) == std::string::npos;
+    };
+};
+
+class isNotStringConstantEnd : public isNotMatchingCharacters
 {
     public:
     isNotStringConstantEnd() :
-        isMatchingCharacters{ "\"\n"}
+        isNotMatchingCharacters{ "\"\n"}
     {
     };
 };

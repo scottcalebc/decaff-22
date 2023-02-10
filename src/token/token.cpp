@@ -1,9 +1,19 @@
 #include <iomanip>
 #include "token.hpp"
 
-
 std::map<Token::Type, std::string> Token::enumName{
+    {Type::If, "If"},
     {Type::Int, "Int"},
+    {Type::For, "For"},
+    {Type::And, "And"},
+    {Type::Else, "Else"},
+    {Type::Void, "Void"},
+    {Type::Bool, "Bool"},
+    {Type::Break, "Break"},
+    {Type::While, "While"},
+    {Type::String, "String"},
+    {Type::Double, "Double"},
+    {Type::Return, "Return"},
     {Type::Identifier, "Identifier"},
     {Type::IntConstant, "IntConstant"},
     {Type::DoubleConstant, "DoubleConstant"},
@@ -17,7 +27,6 @@ std::map<std::string, Token::Type> Token::keywords{
     {"else", Type::Else},
     {"void", Type::Void},
     {"bool", Type::Bool},
-    {"void", Type::Void},
     {"break", Type::Break},
     {"while", Type::While},
     {"string", Type::String},
@@ -41,16 +50,19 @@ int Token::identifierMaxLength = 32;
 
 std::ostream& operator<<(std::ostream &out, Token const& token)
 {
+    // if end token don't print anything
+    if (token.type == Token::Type::END)
+        return out;
 
     // print token first with set spacing
     out << token.value << std::setw(20)
         << "line " << token.lineNumber << " cols " << token.colStart << "-"
-        << token.colStart + token.value.length() << " is " ;
+        << (token.colStart + token.value.length()) - 1 << " is " ;
 
     switch (token.type) {
         case Token::Type::Separator:
         case Token::Type::Operator:
-            out << token.value;
+            out << "\'" << token.value << "\'";
             break;
         case Token::Type::IntConstant:
         case Token::Type::DoubleConstant:
@@ -60,7 +72,9 @@ std::ostream& operator<<(std::ostream &out, Token const& token)
 
         case Token::Type::Identifier:
             out << Token::getTypeName(token.type);
-            out <<(token.value.length() > Token::identifierMaxLength) ? "(truncated to " + token.getValue() + ")" : "";
+            if (token.value.length() > Token::identifierMaxLength)
+                out << "(truncated to " + token.getValue() + ")";
+
             break;
 
         default:
@@ -69,6 +83,7 @@ std::ostream& operator<<(std::ostream &out, Token const& token)
         // print options
     };
 
+    out << std::endl;
     // not ending with new line since caller may want to print their own new line
 
     return out;

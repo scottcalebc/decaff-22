@@ -1,8 +1,10 @@
 #include <iostream>
-
+#include <unistd.h>
 #include "lexer.hpp"
 
 #define VERSION 0.1.0
+
+using namespace Scanner;
 
 int main(int argc, char** argv) {
     if (argc != 2)
@@ -15,18 +17,20 @@ int main(int argc, char** argv) {
 
     std::string file_path(argv[1]);
 
-    Lexer lexer = Lexer(file_path);
-    Token token = Token();
+    Scanner::Lexer lexer = Scanner::Lexer(file_path);
+    Token token;
+    int i = 0;
     do {
         try {
-            std::cout << "Getting Token..."<< std::endl;
+            // std::cout << "Getting Token..."<< std::endl;
             token = lexer.getNextToken();
 
-            std::cout << token << std::endl;
+            std::cout << token;
+            // exit(1);
+            // sleep(1);
         } 
-        catch( ... ) {
-            std::cout << "ERROR" << std::endl;
-            exit(1);
+        catch( const std::exception &exc ) {
+            std::cout << "ERROR : " << exc.what() << std::endl;
         }
     } while (token.type != Token::Type::END);
 
