@@ -2,6 +2,7 @@
 #include "token.hpp"
 
 std::map<Scanner::Token::Type, std::string> Scanner::Token::enumName{
+    {Type::Or, "Or"},
     {Type::If, "If"},
     {Type::Int, "Int"},
     {Type::For, "For"},
@@ -11,11 +12,16 @@ std::map<Scanner::Token::Type, std::string> Scanner::Token::enumName{
     {Type::Bool, "Bool"},
     {Type::Break, "Break"},
     {Type::While, "While"},
+    {Type::Equal, "Equal"},
     {Type::String, "String"},
     {Type::Double, "Double"},
     {Type::Return, "Return"},
+    {Type::NotEqual, "NotEqual"},
+    {Type::LessEqual, "LessEqual"},
     {Type::Identifier, "Identifier"},
     {Type::IntConstant, "IntConstant"},
+    {Type::BoolConstant, "BoolConstant"},
+    {Type::GreaterEqual, "GreaterEqual"},
     {Type::DoubleConstant, "DoubleConstant"},
     {Type::StringConstant, "StringConstant"},
 };
@@ -46,13 +52,13 @@ std::map<std::string, Scanner::Token::Type> Scanner::Token::operators{
     {"&&", Type::And},
 };
 
-int Scanner::Token::identifierMaxLength = 32;
+int Scanner::Token::identifierMaxLength = 31;
 
 template<>
 const std::string Scanner::Token::getValue() const
 {
     return (type == Type::Identifier) ?
-        value.substr(0, Token::identifierMaxLength+1) :
+        value.substr(0, Token::identifierMaxLength) :
         value;
 }
 
@@ -61,6 +67,13 @@ const double Scanner::Token::getValue() const
 {
     return std::atof(value.c_str());
 }
+
+template<>
+const int Scanner::Token::getValue() const
+{
+    return std::atoi(value.c_str());
+}
+
 
 
 std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
@@ -77,11 +90,14 @@ std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
     switch (token.type) {
         case Scanner::Token::Type::Separator:
         case Scanner::Token::Type::Operator:
-            out << "\'" << token.value << "\'";
+            out << "\'" << token.getValue<std::string>()  << "\'";
+            break;
+        case Scanner::Token::Type::BoolConstant:
+        case Scanner::Token::Type::StringConstant:
+            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<std::string>() << ")";
             break;
         case Scanner::Token::Type::IntConstant:
-        case Scanner::Token::Type::StringConstant:
-            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.value << ")";
+            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<int>() << ")";
             break;
         case Scanner::Token::Type::DoubleConstant:
             out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<double>() << ")";
