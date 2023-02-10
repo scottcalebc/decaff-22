@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     std::string file_path(argv[1]);
 
     Scanner::Lexer lexer = Scanner::Lexer(file_path);
-    Token token;
+    Scanner::Token token;
     int i = 0;
     do {
         try {
@@ -31,7 +31,9 @@ int main(int argc, char** argv) {
         } 
         catch( const std::exception &exc ) {
             std::cout << "ERROR : " << exc.what() << std::endl;
+            token.type = Token::Type::ERROR;
         }
+
     } while (token.type != Token::Type::END);
 
 
