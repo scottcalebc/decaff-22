@@ -130,12 +130,66 @@ Scanner::Token Scanner::Lexer::getNextToken()
             // possible double take period
             lineStream.get(tmp);
 
-            if (isNumber()(lineStream.peek()))
+
+            // check to see if next char is a number or E
+            char floatTest = lineStream.peek();
+            if (isNumber()(floatTest) || floatTest == 'E' || floatTest == 'e')
             {
                 // found double need to add to current token
                 tokenBuffer << tmp; // add '.' into buffer
+                token.type = Token::Type::DoubleConstant;
 
+                // take all characters that are numbers
                 takeWhile(isNumber());
+                
+                // get current peek since this may be E now
+                // peek will also still be the same if we no number followed decimal
+                floatTest = lineStream.peek();
+                if (floatTest == 'E' || floatTest == 'e')
+                {
+                    // new temp 
+                    char tmp;
+                    lineStream.get(tmp);  
+
+                    floatTest = lineStream.peek();
+                    if (isNumber()(floatTest))
+                    {
+                        tokenBuffer << tmp; // add 'E' | 'e' into buffer
+                        takeWhile(isNumber());
+                    }
+                    else if ( floatTest == '+' || floatTest == '-')
+                    {
+                        // new temp 
+                        char tmp2;
+                        lineStream.get(tmp2);  
+
+                        // we can now take the full double
+                        if (isNumber()(lineStream.peek()))
+                        {
+                            tokenBuffer << tmp;
+                            tokenBuffer << tmp2;
+
+                            takeWhile(isNumber());
+                        }
+                        // not proper double break out
+                        else 
+                        {
+                            lineStream.putback(tmp2);
+                        }
+                    }
+                    // not proper doulbe break out
+                    else
+                    {
+                        lineStream.putback(tmp);
+                    }
+
+                }
+
+                // convert to actual value now
+                // float d{0};
+                // tokenBuffer >> d;
+
+                // tokenBuffer.str(std::to_string(d));
             } 
             else
             {

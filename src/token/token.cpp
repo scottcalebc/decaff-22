@@ -48,6 +48,21 @@ std::map<std::string, Scanner::Token::Type> Scanner::Token::operators{
 
 int Scanner::Token::identifierMaxLength = 32;
 
+template<>
+const std::string Scanner::Token::getValue() const
+{
+    return (type == Type::Identifier) ?
+        value.substr(0, Token::identifierMaxLength+1) :
+        value;
+}
+
+template<>
+const double Scanner::Token::getValue() const
+{
+    return std::atof(value.c_str());
+}
+
+
 std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
 {
     // if end token don't print anything
@@ -65,16 +80,16 @@ std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
             out << "\'" << token.value << "\'";
             break;
         case Scanner::Token::Type::IntConstant:
-        case Scanner::Token::Type::DoubleConstant:
         case Scanner::Token::Type::StringConstant:
             out << Scanner::Token::getTypeName(token.type) << " (value = " << token.value << ")";
             break;
-
+        case Scanner::Token::Type::DoubleConstant:
+            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<double>() << ")";
+            break;
         case Scanner::Token::Type::Identifier:
             out << Scanner::Token::getTypeName(token.type);
             if (token.value.length() > Scanner::Token::identifierMaxLength)
-                out << "(truncated to " + token.getValue() + ")";
-
+                out << "(truncated to " + token.getValue<std::string>() + ")";
             break;
 
         default:
@@ -87,12 +102,5 @@ std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
     // not ending with new line since caller may want to print their own new line
 
     return out;
-}
-
-const std::string Scanner::Token::getValue() const
-{
-    return (type == Type::Identifier) 
-        ? value.substr(0, Token::identifierMaxLength+1)
-        : value;
 }
 

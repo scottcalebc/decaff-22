@@ -82,7 +82,8 @@ namespace Scanner {
         {};
 
 
-        const std::string getValue() const;
+        template<typename TokenValue>
+        const TokenValue getValue() const;
     };
 }
 
