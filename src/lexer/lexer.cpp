@@ -71,9 +71,12 @@ Scanner::Token Scanner::Lexer::getNextToken()
         // skip comments as well here
     }
 
-    // early out
-    if (sourceFile.eof() )
+    // early out if hit end of stream and end of file
+    if ((lineStream.peek() == -1 || lineStream.eof()) && sourceFile.eof() ) {
+        std::cout << "Returning early since hit eof" << std::endl;
         return token;
+        
+    }
     // std::cout << "line [" << lineNumber << "] : " << lineStream.str() << std::endl;
     // skip WhiteSpace here for each continued line read
     // skipWhiteSpace();
@@ -111,6 +114,9 @@ Scanner::Token Scanner::Lexer::getNextToken()
         {
             // std::cout << "Token string is keyword found type: " << int(op->second) << std::endl;
             token.type = op->second;
+        } else if (tokenBuffer.str().length() > Token::identifierMaxLength)
+        {
+            std::cout << IdentifierTooLong(lineNumber, tokenBuffer.str()).what() << std::endl;
         }
     }
     // if it starts with a number it is either Int or DoubleConst
@@ -156,7 +162,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
         if (lineStream.peek() != '\"')
         {
             // Throw exception with info
-            throw InvalidToken(lineNumber, tokenBuffer.str());
+            throw UnterminatedString(lineNumber, tokenBuffer.str());
         }
         
         // std::cout << "It is so we consume it now" << std::endl;
