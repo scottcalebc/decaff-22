@@ -41,7 +41,7 @@ namespace Scanner {
     class IdentifierTooLong: public GenericException {
         public:
         IdentifierTooLong(const int lineNumber, std::string tokenString) :
-            GenericException{ lineNumber, "*** Identifer too long: \"" + tokenString + "\"\n" }
+            GenericException{ lineNumber, "*** Identifier too long: \"" + tokenString + "\"\n" }
         {
 
         };
