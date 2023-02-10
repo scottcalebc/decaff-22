@@ -3,85 +3,90 @@
 #include <string>
 #include <map>
 
-class Token {
+namespace Scanner {
+    class Token {
 
 
-    public:
-    enum class Type {
-        // Symbols
-        Operator,
-        Separator,
+        public:
+        enum class Type {
+            // Special ERROR to allow printing of errors without breaking main loop
+            ERROR,
 
-        //Constant Values
-        IntConstant,
-        NullConstant,
-        BoolConstant,
-        DoubleConstant,
-        StringConstant,
+            // Symbols
+            Operator,
+            Separator,
 
-        // Anything not a symbol or constant is an identifier
-        Identifier,
-        
-        // Primitive type names
-        Int,
-        Void,
-        Bool,
-        Double,
-        String,
+            //Constant Values
+            IntConstant,
+            NullConstant,
+            BoolConstant,
+            DoubleConstant,
+            StringConstant,
 
-        // Control Statements
-        If,
-        For,
-        Else,
-        Break,
-        While,
-        Return,
+            // Anything not a symbol or constant is an identifier
+            Identifier,
+            
+            // Primitive type names
+            Int,
+            Void,
+            Bool,
+            Double,
+            String,
 
-        // Conditionals
-        Or,
-        And,
-        Equal,
-        NotEqual,
-        LessEqual,
-        GreaterEqual,
+            // Control Statements
+            If,
+            For,
+            Else,
+            Break,
+            While,
+            Return,
 
-        // Special Type to represent finished traversing through all tokens
-        END
+            // Conditionals
+            Or,
+            And,
+            Equal,
+            NotEqual,
+            LessEqual,
+            GreaterEqual,
+
+            // Special Type to represent finished traversing through all tokens
+            END
+        };
+
+        static std::map<Type, std::string> enumName;
+
+        static int identifierMaxLength;
+
+        static std::string getTypeName(const Type &type) {
+            return (enumName.find(type) != enumName.end()) ? 
+                "T_" + enumName.find(type)->second :
+                std::string("ERROR");
+        };
+
+        // usefule identifier keywords for quick lookup
+        static std::map<std::string, Type> keywords;
+
+        // useful multiple character operators for quick lookup
+        static std::map<std::string, Type> operators;
+
+        Type type;
+        std::string value;
+        int lineNumber;
+        int colStart;       // only column start since column end can be inferred by colStart + tokenString.len()
+
+        Token():
+            type(Type::END),
+            value(""),
+            lineNumber(-1),
+            colStart(-1)
+        {};
+
+
+        const std::string getValue() const;
     };
+}
 
-    static std::map<Type, std::string> enumName;
-
-    static int identifierMaxLength;
-
-    static std::string getTypeName(const Type &type) {
-        return (enumName.find(type) != enumName.end()) ? 
-            "T_" + enumName.find(type)->second :
-            std::string("ERROR");
-    };
-
-    // usefule identifier keywords for quick lookup
-    static std::map<std::string, Type> keywords;
-
-    // useful multiple character operators for quick lookup
-    static std::map<std::string, Type> operators;
-
-    Type type;
-    std::string value;
-    int lineNumber;
-    int colStart;       // only column start since column end can be inferred by colStart + tokenString.len()
-
-    Token():
-        type(Type::END),
-        value(""),
-        lineNumber(-1),
-        colStart(-1)
-    {};
-
-    friend std::ostream& operator<<(std::ostream &out, Token const& token);
-
-    const std::string getValue() const;
-};
-
+std::ostream& operator<<(std::ostream &out, Scanner::Token const& token);
 
 
 

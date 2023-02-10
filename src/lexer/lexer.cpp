@@ -46,7 +46,7 @@ void Scanner::Lexer::skipWhiteSpace()
 
 }
 
-Token Scanner::Lexer::getNextToken()
+Scanner::Token Scanner::Lexer::getNextToken()
 {
     // set token instance now so we can early out if file is at EOF
     Token token = Token();
