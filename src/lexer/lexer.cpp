@@ -2,6 +2,7 @@
 #include <iostream>
 #include "lexer.hpp"
 #include "predicates.hpp"
+#include "exceptions.hpp"
 
 
 void Scanner::Lexer::nextLine()
@@ -154,8 +155,8 @@ Scanner::Token Scanner::Lexer::getNextToken()
         // std::cout << "Checking to see if quote still in buffer: " << char(lineStream.peek()) << std::endl;
         if (lineStream.peek() != '\"')
         {
-            // Throw exception with Token
-            throw std::runtime_error("Error reading string, unclosed string constant");
+            // Throw exception with info
+            throw InvalidToken(lineNumber, tokenBuffer.str());
         }
         
         // std::cout << "It is so we consume it now" << std::endl;

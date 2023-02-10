@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 #include "lexer.hpp"
+#include "exceptions.hpp"
 
 #define VERSION 0.1.0
 
@@ -29,8 +30,10 @@ int main(int argc, char** argv) {
             // exit(1);
             // sleep(1);
         } 
-        catch( const std::exception &exc ) {
-            std::cout << "ERROR : " << exc.what() << std::endl;
+        catch( Scanner::GenericException &exc ) {
+            // std::cout << std::endl;
+            std::cout << exc.what() << std::endl;
+            // std::cout << std::endl;
             token.type = Token::Type::ERROR;
         }
 
