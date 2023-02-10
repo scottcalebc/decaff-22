@@ -28,13 +28,22 @@ namespace Scanner {
         }
     };
 
-    class InvalidToken : public GenericException {
+    class UnterminatedString : public GenericException {
 
         public:
-        InvalidToken(const int lineNumber, std::string tokenString) :
+        UnterminatedString(const int lineNumber, std::string tokenString) :
             GenericException{ lineNumber, "*** Unterminated string constant: " + tokenString + "\n" }
         {
 
-        }
+        };
+    };
+
+    class IdentifierTooLong: public GenericException {
+        public:
+        IdentifierTooLong(const int lineNumber, std::string tokenString) :
+            GenericException{ lineNumber, "*** Identifer too long: \"" + tokenString + "\"\n" }
+        {
+
+        };
     };
 }
