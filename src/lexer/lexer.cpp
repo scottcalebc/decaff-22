@@ -73,7 +73,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
 
     // early out if hit end of stream and end of file
     if ((lineStream.peek() == -1 || lineStream.eof()) && sourceFile.eof() ) {
-        std::cout << "Returning early since hit eof" << std::endl;
+        // std::cout << "Returning early since hit eof" << std::endl;
         return token;
         
     }
@@ -136,6 +136,9 @@ Scanner::Token Scanner::Lexer::getNextToken()
             if (isNumber()(floatTest) || floatTest == 'E' || floatTest == 'e')
             {
                 // found double need to add to current token
+                // we took so increment column number
+                columnNumber++;
+
                 tokenBuffer << tmp; // add '.' into buffer
                 token.type = Token::Type::DoubleConstant;
 
@@ -154,6 +157,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
                     floatTest = lineStream.peek();
                     if (isNumber()(floatTest))
                     {
+                        columnNumber++;
                         tokenBuffer << tmp; // add 'E' | 'e' into buffer
                         takeWhile(isNumber());
                     }
@@ -166,6 +170,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
                         // we can now take the full double
                         if (isNumber()(lineStream.peek()))
                         {
+                            columnNumber+= 2;
                             tokenBuffer << tmp;
                             tokenBuffer << tmp2;
 
@@ -175,6 +180,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
                         else 
                         {
                             lineStream.putback(tmp2);
+                            lineStream.putback(tmp);
                         }
                     }
                     // not proper doulbe break out
@@ -206,12 +212,17 @@ Scanner::Token Scanner::Lexer::getNextToken()
         tmp = lineStream.peek();
         if ( isOperator()(tmp) ) 
         {
+            
             std::string cmpString(tokenBuffer.str() + tmp);
 
             // if operator exists in map insert into buffer and adjust type
             auto op = Token::operators.find(cmpString);
             if (op != Token::operators.end())
             {
+                // Actually get the next token out of stream
+                // and increment column number
+                columnNumber++;
+                lineStream.get(tmp);
                 tokenBuffer << tmp;
                 token.type = op->second;
             }
@@ -237,7 +248,8 @@ Scanner::Token Scanner::Lexer::getNextToken()
             // Throw exception with info
             throw UnterminatedString(lineNumber, tokenBuffer.str());
         }
-        
+        // string starts after quote increment column count
+        columnNumber++;
         // std::cout << "It is so we consume it now" << std::endl;
         lineStream.get(tmp);
         tokenBuffer << tmp;
