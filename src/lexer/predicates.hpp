@@ -18,7 +18,7 @@ class isIdentifier
     {
         std::locale locale;
         
-        return std::isalnum(c, locale);
+        return std::isalnum(c, locale) || c == '_';
     }
 };
 
