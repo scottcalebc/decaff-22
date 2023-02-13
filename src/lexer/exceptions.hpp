@@ -46,4 +46,13 @@ namespace Scanner {
 
         };
     };
+
+    class UnrecognizedCharacter: public GenericException {
+        public:
+        UnrecognizedCharacter(const int lineNumber, std::string tokenString) :
+            GenericException{ lineNumber, "*** Unrecognized char: \'" + tokenString + "\'\n" }
+        {
+
+        };
+    };
 }

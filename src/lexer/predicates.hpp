@@ -93,7 +93,16 @@ class isNotStringConstantEnd : public isNotMatchingCharacters
 {
     public:
     isNotStringConstantEnd() :
-        isNotMatchingCharacters{ "\"\n"}
+        isNotMatchingCharacters{"\"\n"}
+    {
+    };
+};
+
+class isNotCommentEnd : public isNotMatchingCharacters
+{
+    public:
+    isNotCommentEnd() :
+        isNotMatchingCharacters{"/"}
     {
     };
 };
@@ -102,9 +111,11 @@ class isWhiteSpace : public isMatchingCharacters
 {
     public:
     isWhiteSpace() :
-        isMatchingCharacters{ " \t\n"}
+        isMatchingCharacters{" \t\n"}
     {
     };
 };
+
+
 
 

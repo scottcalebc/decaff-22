@@ -38,6 +38,7 @@ void Scanner::Lexer::skipWhiteSpace()
     }
 
     // whichever character was taken from string that broke loop needs to be put back
+    // lineStream.clear();
     lineStream.putback(incomingChar);
     // std::cout << "Putting character back: " << incomingChar << std::endl;
     // std::cout << "Line is now: " << lineStream.str() << std::endl;
@@ -47,12 +48,79 @@ void Scanner::Lexer::skipWhiteSpace()
 
 }
 
+bool Scanner::Lexer::skipComments()
+{
+
+    char commentStart = lineStream.peek();
+
+    // comments must start with '\' 
+    if (commentStart != '/' || commentStart == -1) 
+    {
+        // std::cout << "line/character stream not starting with / exitiing" << std::endl;
+        return false;
+    }
+    else
+    {
+
+        char tmp;
+        lineStream.get(tmp);
+
+        // check single line comment
+        if (lineStream.peek() == '/')
+        {
+            // skip line and return
+            lineStream.str("");
+            return true;
+        }
+        // possible multi line comment must take as many characters until hit end
+        else if (lineStream.peek() == '*')
+        {
+            // get start out of stream
+            tokenBuffer << tmp;
+            lineStream.get(tmp);
+            columnNumber+=2;
+
+            // keep taking until hit */
+            while (tokenBuffer.str().back() != '*' || tokenBuffer.str().length() < 3)
+            {
+                tokenBuffer << tmp;
+                // if we are at the end of the line but haven't found the end then get next line
+                if (lineStream.peek() == -1 && !sourceFile.eof())
+                {
+                    nextLine();
+                }
+                // take until we hit '/', but if we hit / and it's not preceded by * then continue
+                takeWhile(isNotCommentEnd());
+                // get previous /
+                lineStream.get(tmp);
+                columnNumber++;
+            }
+
+            tokenBuffer << tmp;
+            
+            // std::cout << "Found comment: " << tokenBuffer.str() << std::endl;
+            tokenBuffer.str("");
+            return false;
+        }
+        else {
+            // clear error state before pushing back
+            if (lineStream.peek() == -1)
+                lineStream.clear();
+            lineStream.putback(tmp);
+        }
+
+        return false;
+    }
+
+}
+
 Scanner::Token Scanner::Lexer::getNextToken()
 {
     // set token instance now so we can early out if file is at EOF
     Token token = Token();
     // clear token buffer before progressing
     tokenBuffer.str(std::string());
+
 
     // takeWhile(isWhiteSpace());
     // if we read new line and it's all white space/empty line then we need to go 
@@ -69,6 +137,8 @@ Scanner::Token Scanner::Lexer::getNextToken()
         // std::cout << "Took all whitespace checking eof : " << lineStream.eof() << std::endl;
 
         // skip comments as well here
+        skipComments();
+
     }
 
     // early out if hit end of stream and end of file
@@ -81,6 +151,11 @@ Scanner::Token Scanner::Lexer::getNextToken()
     // skip WhiteSpace here for each continued line read
     // skipWhiteSpace();
     takeWhile(isWhiteSpace());
+    if (skipComments() ||lineStream.peek() == -1)
+    {
+        nextLine();
+        return getNextToken();
+    }
     tokenBuffer.str("");
 
     // std::cout << "Starting token reading..." << std::endl;
@@ -88,7 +163,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
 
 
     // beginning of token generation
-    char tmp;
+    char tmp{ 0 };
     lineStream.get(tmp);
     columnNumber++;
 
@@ -179,6 +254,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
                         // not proper double break out
                         else 
                         {
+                            // lineStream.clear();
                             lineStream.putback(tmp2);
                             lineStream.putback(tmp);
                         }
@@ -186,6 +262,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
                     // not proper doulbe break out
                     else
                     {
+                        // lineStream.clear();
                         lineStream.putback(tmp);
                     }
 
@@ -200,6 +277,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
             else
             {
                 // put back period
+                // lineStream.clear();
                 lineStream.putback(tmp);
             }
         }
@@ -257,10 +335,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
     }
     else
     {
-        // invalid symbol for token throw generic error
-        std::stringstream err;
-        err << "Error string \'" << tmp << "\' is not a valid token";
-        throw std::runtime_error(err.str());
+        throw UnrecognizedCharacter(lineNumber, tokenBuffer.str());
     }
 
     token.value = tokenBuffer.str();

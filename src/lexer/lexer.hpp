@@ -35,13 +35,14 @@ namespace Scanner {
                 tokenBuffer()
             {
                 // go ahead and read first line into buffer
-                nextLine();
+                // nextLine();
             };
 
 
             // helper methods
             void nextLine();        // this doesn't return but rather replaces the member tokenBuffer
             void skipWhiteSpace();
+            bool skipComments();
             // Accessor methods
             Token getNextToken();
 
@@ -67,8 +68,9 @@ namespace Scanner {
                 }
 
                 // whichever character was taken from string that broke loop needs to be put back
-                if (in != '\0')
+                if (in != '\0') {
                     lineStream.putback(in);
+                }
 
                 #ifdef DEBUG
                 std::cout << "Found token string: " << tokenBuffer.str() << std::endl;
