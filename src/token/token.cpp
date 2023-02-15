@@ -1,6 +1,8 @@
 #include <iomanip>
 #include "token.hpp"
 
+
+namespace Scanner{
 std::map<Scanner::Token::Type, std::string> Scanner::Token::enumName{
     {Type::Or, "Or"},
     {Type::If, "If"},
@@ -74,7 +76,7 @@ const int Scanner::Token::getValue() const
     return std::atoi(value.c_str());
 }
 
-
+}
 
 std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
 {
