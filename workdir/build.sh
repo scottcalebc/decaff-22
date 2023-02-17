@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+BASE_DIR="$(readlink -f $(dirname $0)/..)"
+# push base dir so we know where we are at
+pushd $BASE_DIR &> /dev/null
+
 pushd dependencies &> /dev/null
 
 
@@ -23,7 +27,7 @@ cmake -S .. -B . 2> /dev/null
 
 if [[ $? -eq 0 ]]; then
     echo "Building decaf-22"
-    make
+    make install
 else
     echo "Error running cmake configure..."
     echo "Running manual build"
@@ -38,5 +42,9 @@ else
     done
 
     echo "Running g++ build"
-    g++ --std=c++11 build/*.cpp -o build/bin/decaf-22
+    g++ --std=c++11 build/*.cpp -o ./decaf-22 
+
+    cp ./decaf-22 ./workdir/
 fi
+
+popd &> /dev/null
