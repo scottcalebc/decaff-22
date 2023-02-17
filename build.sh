@@ -1,23 +1,16 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
-pushd dependencies 2> /dev/null
+pushd dependencies &> /dev/null
 
-if [[ ! -f ./cmake-3.26.0-rc2/bin/cmake ]]; then
-    tar -xvf ./cmake-3.26.0-rc2.tar.gz
-
-    cd cmake-3.26.0-rc2
-
-    echo "Building dependencies"
-    ./bootstrap
-    make
-
+if [[ ! -f ./cmake-3.26.0-rc3-linux-x86_64/bin/cmake ]]; then
+    tar -xf ./cmake-3.26.0-rc3-linux-x86_64.tar.gz
 fi
 
-PATH="$PATH:$(pwd)/cmake-3.26.0-rc2/bin"
+PATH="$PATH:$(pwd)/cmake-3.26.0-rc3-linux-x86_64/bin"
 
-popd 2> /dev/null
+popd &> /dev/null
 
-mkdir build
+mkdir -p build
 
 cd build
 
