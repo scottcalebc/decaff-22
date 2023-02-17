@@ -8,7 +8,7 @@
 using namespace Scanner;
 
 int main(int argc, char** argv) {
-std::cout << "TEST" << std::endl;
+
     if (argc != 2)
     {
         std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
@@ -21,7 +21,6 @@ std::cout << "TEST" << std::endl;
 
     Scanner::Lexer lexer(file_path);
     Scanner::Token token;
-    int i = 0;
     do {
         try {
             // std::cout << "Getting Token..."<< std::endl;
