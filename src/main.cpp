@@ -19,13 +19,13 @@ std::cout << "TEST" << std::endl;
 
     std::string file_path(argv[1]);
 
-    Scanner::Lexer *lexer = new Scanner::Lexer(file_path);
+    Scanner::Lexer lexer(file_path);
     Scanner::Token token;
     int i = 0;
     do {
         try {
             // std::cout << "Getting Token..."<< std::endl;
-            token = lexer->getNextToken();
+            token = lexer.getNextToken();
 
             std::cout << token;
             // exit(1);
