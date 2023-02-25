@@ -34,8 +34,14 @@ namespace Scanner {
                 lineStream(),
                 tokenBuffer()
             {
+                // Throw if source is bad so we dont lock up reading
+                // non-existant file
+                if (!sourceFile.good())
+                    throw std::invalid_argument("Invalid source file");
+
                 // go ahead and read first line into buffer
                 // nextLine();
+
             };
 
 
