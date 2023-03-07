@@ -6,6 +6,8 @@ target_link_libraries(lexer-test
     Lexer
 )
 
+find_program(BASH_PROGRAM bash)
+
 
 add_test(
   NAME
@@ -31,3 +33,12 @@ add_test(
   WORKING_DIRECTORY
     ${PROJECT_SOURCE_DIR}/tests
   )
+
+add_test(
+  NAME
+    test_file_outputs
+  COMMAND
+    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR}
+    WORKING_DIRECTORY
+    ${PROJECT_SOURCE_DIR}/tests
+)
