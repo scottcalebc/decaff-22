@@ -287,6 +287,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
         token.type = Token::Type::Operator;
 
         // need to peek to see if next character is also an operator
+        char doubleCheck = tmp;
         tmp = lineStream.peek();
         if ( isOperator()(tmp) ) 
         {
@@ -304,6 +305,11 @@ Scanner::Token Scanner::Lexer::getNextToken()
                 tokenBuffer << tmp;
                 token.type = op->second;
             }
+        }
+
+        if ( tokenBuffer.str().length() < 2 && isOnlyDoubleCharOperator()(doubleCheck) )
+        {
+            throw UnrecognizedCharacter(lineNumber, tokenBuffer.str());
         }
     }
     else if ( isSeparator()(tmp) )
