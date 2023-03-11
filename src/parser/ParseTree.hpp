@@ -1,24 +1,77 @@
 #include <vector>
 #include "token.hpp"
 
+/** Non-Abstract / Derived Classes */
 
-class DeclarationType
+
+/**
+ * Pure Abstract defined classes
+ */
+class ParseNode
 {
-    
+    protected:
+        ParseNode()
+        {};
+        virtual std::string nodeName() = 0;
 
     public:
+        virtual int line() = 0;
+        virtual std::string toString(int numSpaces) = 0;
+};
+
+class Identifier : public ParseNode
+{
+    public:
+        Scanner::Token ident;
+
+        Identifier()
+            : ParseNode()
+            , ident()
+        {
+
+        };
+
+        int line()
+        {
+            return ident.lineNumber;
+        }
+        std::string nodeName();
+        std::string toString(int numSpaces);
+};
+
+class DeclarationType : public ParseNode
+{
+    public:
         DeclarationType()
+            : ParseNode()
+            , type()
         {
 
         };
 
         Scanner::Token type;
 
+        int line()
+        {
+            return type.lineNumber;
+        }
+        std::string nodeName();
         std::string toString(int numSpaces);
 };
 
+class ReturnType: public DeclarationType
+{
+    public:
+        ReturnType()
+            : DeclarationType()
+        {
+            
+        };
+        std::string nodeName();
+};
 
-class Declarations
+
+class Declarations : public ParseNode
 {
     protected:
         Declarations()
@@ -30,16 +83,100 @@ class Declarations
 
     public:
         DeclarationType *type;
-        Scanner::Token ident;
-        virtual ~Declarations() {};
+        Identifier      *ident;
+        virtual ~Declarations() {
+            delete type;
+            delete ident;
+        };
 
-        virtual int line() = 0;
-        virtual std::string toString(int numSpaces) = 0;
+        int line()
+        {
+            return ident->line();
+        };
+
+        virtual std::string toString(int numSpaces);
+};
+
+class Expression : public ParseNode
+{
+    protected:
+        Expression()
+            : left(nullptr)
+        {
+
+        };
+
+
+    public:
+        virtual ~Expression()
+        {
+            delete left;
+        };
+        Expression *left;
+};
+
+
+class BinaryExpression : public Expression
+{
+    public:
+        Scanner::Token op;
+        Expression *right;
+
+        BinaryExpression()
+            : Expression()
+            , op()
+            , right(nullptr)
+        {
+
+        };
+
+        ~BinaryExpression()
+        {
+            delete right;
+        };
 };
 
 
 
+/**
+ * Derived Classes for Actual Implementation / Derivation of Parse Tree
+ */
 
+
+
+class ParenExpr : public Expression
+{
+    public:
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+
+        ParenExpr()
+            : Expression()
+            , lparen()
+            , rparen()
+        {
+
+        };
+};
+
+
+
+class LValue : public Expression
+{
+
+    public:
+        Identifier ident;
+
+        LValue()
+            : Expression()
+            , ident()
+        {
+
+        };
+
+
+        std::string toString(int numSpaces);
+};
 
 /**
  * @brief Variable declaration separate from Function declaration
@@ -59,11 +196,7 @@ class VariableDeclaration : public Declarations
 
         };
 
-        int line()
-        {
-            return ident.lineNumber;
-        }
-        std::string toString(int numSpaces);
+        std::string nodeName();
 };
 
 
@@ -76,7 +209,7 @@ class FormalVariableDeclaration : public VariableDeclaration
 
         };
 
-        std::string toString(int numSpaces);
+        std::string nodeName();
 };
 
 class FunctionDeclaration : public Declarations
@@ -105,9 +238,7 @@ class FunctionDeclaration : public Declarations
             }
         };
 
-        int line()
-        {
-            return ident.lineNumber;
-        };
+
+        std::string nodeName();
         std::string toString(int numSpaces);
 };
