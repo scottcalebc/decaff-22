@@ -70,9 +70,12 @@ std::vector<FormalVariableDeclaration*> parseFormals()
                         || tokenLookAhead->at(2).getValue<std::string>().compare(")") == 0)
                 )
                 {
+                    Identifier *ident = new Identifier();
+                    ident->ident = tokenLookAhead->at(1);
+
                     FormalVariableDeclaration *var = new FormalVariableDeclaration();
                     var->type = type;
-                    var->ident = tokenLookAhead->at(1);
+                    var->ident = ident;
 
                     if (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0)
                     {
@@ -107,10 +110,9 @@ std::vector<FormalVariableDeclaration*> parseFormals()
 Declarations* parseDecl()
 {
     // Decide what type of decl 
-
+    
+    // useful hold for error printing of current token in lookahead
     Scanner::Token token = tokenLookAhead->front();
-    DeclarationType *type = new DeclarationType();
-    type->type = token;
 
     // Here we need up to 3 tokens to determine which direction to go
     addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
@@ -124,9 +126,18 @@ Declarations* parseDecl()
         tokenLookAhead->at(2).getValue<std::string>().compare(";") == 0
     )
     {
+        // Type Node
+        DeclarationType *type = new DeclarationType();
+        type->type = token;
+
+        // Ident Node
+        Identifier *ident = new Identifier();
+        ident->ident = tokenLookAhead->at(1);
+
+        // Variable node
         VariableDeclaration *var = new VariableDeclaration();
         var->type = type;
-        var->ident = tokenLookAhead->at(1);
+        var->ident = ident;
         var->semiColon = tokenLookAhead->at(2);
 
         takeTokens(3);
@@ -138,10 +149,22 @@ Declarations* parseDecl()
         tokenLookAhead->at(2).getValue<std::string>().compare("(") == 0
     )
     {
+        ReturnType *type = new ReturnType();
+        Identifier *ident = new Identifier();
         FunctionDeclaration *func = new FunctionDeclaration();
+
+        // setup return type node
+        type->type = token;
+
+        // setup ident
+        ident->ident = tokenLookAhead->at(1);
+        
+        
         func->type = type;
-        func->ident = tokenLookAhead->at(1);
+        func->ident = ident;
         func->lparen = tokenLookAhead->at(2);
+
+        
 
         takeTokens(3);
 
@@ -160,14 +183,11 @@ Declarations* parseDecl()
     else
     {
         // For testing we Are just going to destroy DeclType and eat the front token
-        delete type;
         std::cout << "Skipping Token: " << token;
         takeTokens(1);
 
         return nullptr;
     }
-
-    // Function Decl
 }
 
 void parseProgram()
