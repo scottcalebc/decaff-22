@@ -1,4 +1,5 @@
 #include <deque>
+#include <iomanip>
 #include <exception>
 
 #include "TreeGeneration.hpp"
@@ -38,7 +39,72 @@ void takeTokens(int numTokens)
         addLookAhead();
 }
 
-Declarations* parseDecl(/*ParseTree parent*/)
+std::vector<FormalVariableDeclaration*> parseFormals()
+{
+    std::vector<FormalVariableDeclaration*> formals;
+
+    // If we haven't hit the end of the formals keep going
+    while(tokenLookAhead->front().getValue<std::string>().compare(")") != 0)
+    {
+        // Here we need up to 3 tokens to determine which direction to go
+        addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
+
+        Scanner::Token token = tokenLookAhead->front();
+
+        DeclarationType *type = new DeclarationType();
+        type->type = token;
+
+        switch(token.type)
+        {
+            case Scanner::Token::Type::Int:
+            case Scanner::Token::Type::Void:
+            case Scanner::Token::Type::Bool:
+            case Scanner::Token::Type::Double:
+            case Scanner::Token::Type::String:
+                if (
+                    tokenLookAhead->at(0).type != Scanner::Token::Type::Void &&
+                    tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
+                    tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
+                    
+                    (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0
+                        || tokenLookAhead->at(2).getValue<std::string>().compare(")") == 0)
+                )
+                {
+                    FormalVariableDeclaration *var = new FormalVariableDeclaration();
+                    var->type = type;
+                    var->ident = tokenLookAhead->at(1);
+
+                    if (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0)
+                    {
+                        var->semiColon = tokenLookAhead->at(2);
+                        takeTokens(3);
+                    }
+                    else
+                    {
+                        var->semiColon.type = Scanner::Token::Type::EMPTY;
+                        takeTokens(2);
+                    }
+
+                    formals.push_back(var);
+
+                } 
+                break;
+            default:
+                delete type;
+                // print error
+                std::cout << "Skipping Token: " << token;
+                takeTokens(1);
+
+        }
+
+ 
+    }
+    // leave rparen in token feed to be eaten by func decl
+
+    return formals;
+}
+
+Declarations* parseDecl()
 {
     // Decide what type of decl 
 
@@ -46,21 +112,13 @@ Declarations* parseDecl(/*ParseTree parent*/)
     DeclarationType *type = new DeclarationType();
     type->type = token;
 
-    // quick is to check void first as this will always be Function decl
-    if (token.type == Scanner::Token::Type::Void)
-    {
-        //function just skip
-        std::cout << "Skipping Token: " << token;
-        takeTokens(1);
-    }
-    
-
     // Here we need up to 3 tokens to determine which direction to go
     addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
 
     // Variable Decl (we already checked Type to get here)
     // Must be: Type Ident ;
     if (
+        tokenLookAhead->at(0).type != Scanner::Token::Type::Void &&
         tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
         tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
         tokenLookAhead->at(2).getValue<std::string>().compare(";") == 0
@@ -73,7 +131,33 @@ Declarations* parseDecl(/*ParseTree parent*/)
 
         takeTokens(3);
         return var;
-    } else
+    } 
+    else if (
+        tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
+        tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
+        tokenLookAhead->at(2).getValue<std::string>().compare("(") == 0
+    )
+    {
+        FunctionDeclaration *func = new FunctionDeclaration();
+        func->type = type;
+        func->ident = tokenLookAhead->at(1);
+        func->lparen = tokenLookAhead->at(2);
+
+        takeTokens(3);
+
+        // should add tokens to lookup until see a rparen, for parsing validity
+        // before attempting to even verify formals are correct, but this is right 'recursive'
+
+        // Take tokens up to lparen, next lookahead should be start of formals
+        func->formals = parseFormals();
+        func->rparen = tokenLookAhead->front();
+        // take rparen
+        takeTokens(1);
+        //func->block = parseStmtBlock();
+
+        return func;
+    }
+    else
     {
         // For testing we Are just going to destroy DeclType and eat the front token
         delete type;
@@ -114,8 +198,11 @@ void parseProgram()
         }
 
         if (decl != nullptr)
-            std::cout << decl->toString(3);
-
+        {
+            std::cout << std::setw(3) << decl->line() 
+                        << std::setw(3) << " " 
+                        << decl->toString(6);
+        }
         decl = nullptr;
     }
 }

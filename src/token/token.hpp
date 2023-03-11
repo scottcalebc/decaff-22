@@ -12,6 +12,9 @@ namespace Scanner {
             // Special ERROR to allow printing of errors without breaking main loop
             ERROR,
 
+            // Special Type for parsing
+            EMPTY,
+
             // Symbols
             Operator,
             Separator,
