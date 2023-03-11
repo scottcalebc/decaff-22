@@ -4,11 +4,19 @@
 #include <iomanip>
 #include "ParseTree.hpp"
 
-
-std::string Identifier::nodeName()
+FormalVariableDeclaration::FormalVariableDeclaration(VariableDeclaration *var)
 {
-    return "Identifier: ";
+    if (var == nullptr)
+        throw std::runtime_error("Invalid Formal");
+    
+    // var = var;
+    ident = new Identifier();
+    *ident = *var->ident;
+    type = new DeclarationType();
+    *type = *var->type;
+
 }
+
 
 std::string Identifier::toString(int numSpaces)
 {
@@ -19,17 +27,6 @@ std::string Identifier::toString(int numSpaces)
     return ss.str();
 }
 
-
-std::string ReturnType::nodeName()
-{
-    return "(return type) " + DeclarationType::nodeName();
-}
-
-std::string DeclarationType::nodeName()
-{
-    return "Type: ";
-}
-
 std::string DeclarationType::toString(int numSpaces)
 {
     std::stringstream ss;
@@ -37,21 +34,6 @@ std::string DeclarationType::toString(int numSpaces)
     ss << nodeName() << type.getValue<std::string>() << std::endl;
 
     return ss.str();
-}
-
-std::string LValue::toString(int numSpaces)
-{
-    std::stringstream ss;
-
-    ss << "Reached LValue" << std::endl;
-
-    return ss.str();
-}
-
-
-std::string VariableDeclaration::nodeName()
-{
-    return "VarDecl:";
 }
 
 std::string Declarations::toString(int numSpaces)
@@ -68,15 +50,40 @@ std::string Declarations::toString(int numSpaces)
 
     return ss.str();
 }
-std::string FormalVariableDeclaration::nodeName()
+
+std::string LValue::toString(int numSpaces)
 {
-    return "(formals) " + VariableDeclaration::nodeName();
+    std::stringstream ss;
+
+    ss << "Reached: " << nodeName() << std::endl;
+
+    return ss.str();
 }
 
 
-std::string FunctionDeclaration::nodeName()
+std::string Statement::toString(int numSpaces)
 {
-    return "FnDecl:";
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+
+    return ss.str();
+}
+
+std::string StatementBlock::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << Statement::toString(numSpaces);
+
+    for(auto var : vars)
+    {
+        ss << std::setw(3) << var->line();
+        ss << std::setw(numSpaces) << " "; 
+        ss << var->toString(numSpaces+3);
+    }
+
+    return ss.str();
 }
 
 std::string FunctionDeclaration::toString(int numSpaces)
@@ -92,5 +99,10 @@ std::string FunctionDeclaration::toString(int numSpaces)
             << formal->toString(numSpaces + 3);
     }
 
+    ss << std::setw(numSpaces + 3) << " ";
+    ss << "(body) ";
+    ss << block->toString(numSpaces+3);
+
     return ss.str();
 }
+

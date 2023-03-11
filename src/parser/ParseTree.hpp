@@ -2,8 +2,6 @@
 #include "token.hpp"
 
 /** Non-Abstract / Derived Classes */
-
-
 /**
  * Pure Abstract defined classes
  */
@@ -31,11 +29,16 @@ class Identifier : public ParseNode
 
         };
 
+        Identifier(const Identifier &i)
+        {
+            ident = i.ident;
+        }
+
         int line()
         {
             return ident.lineNumber;
         }
-        std::string nodeName();
+        std::string nodeName() { return "Identifier: "; };
         std::string toString(int numSpaces);
 };
 
@@ -49,13 +52,18 @@ class DeclarationType : public ParseNode
 
         };
 
+        DeclarationType(const DeclarationType & dt)
+        {
+            type = dt.type;
+        }
+
         Scanner::Token type;
 
         int line()
         {
             return type.lineNumber;
         }
-        std::string nodeName();
+        std::string nodeName() { return "Type: "; };
         std::string toString(int numSpaces);
 };
 
@@ -67,8 +75,23 @@ class ReturnType: public DeclarationType
         {
             
         };
-        std::string nodeName();
+        std::string nodeName() { return "(return type) " + DeclarationType::nodeName(); };
 };
+
+class Statement : public ParseNode
+{
+    protected:
+        Statement()
+        {
+
+        };
+
+    public:
+        int line() { return 0; };
+        std::string nodeName() { return "Stmt: ";};
+        std::string toString(int numSpaces);
+};
+
 
 
 class Declarations : public ParseNode
@@ -97,7 +120,7 @@ class Declarations : public ParseNode
         virtual std::string toString(int numSpaces);
 };
 
-class Expression : public ParseNode
+class Expression : public Statement
 {
     protected:
         Expression()
@@ -174,7 +197,7 @@ class LValue : public Expression
 
         };
 
-
+        std::string nodeName() { return "LValue"; };
         std::string toString(int numSpaces);
 };
 
@@ -196,7 +219,42 @@ class VariableDeclaration : public Declarations
 
         };
 
-        std::string nodeName();
+        std::string nodeName() { return "VarDecl:"; };
+};
+
+
+class StatementBlock : public Statement
+{
+    public:
+        Scanner::Token lbrace;
+        std::vector<VariableDeclaration*>   vars;
+        std::vector<Statement*>            stmts;
+        Scanner::Token rbrace;
+        
+        StatementBlock()
+            : Statement()
+            , lbrace()
+            , vars()
+            , stmts()
+        {
+
+        };
+
+        ~StatementBlock()
+        {
+            for (auto var : vars)
+            {
+                delete var;
+            }
+
+            for (auto stmt : stmts)
+            {
+                delete stmt;
+            }
+        }
+
+        std::string nodeName() { return "StmtBlock: "; };
+        std::string toString(int numSpaces);
 };
 
 
@@ -209,17 +267,18 @@ class FormalVariableDeclaration : public VariableDeclaration
 
         };
 
-        std::string nodeName();
+        FormalVariableDeclaration(VariableDeclaration*var);
+        std::string nodeName() { return "(formals):" + VariableDeclaration::nodeName(); };
 };
 
 class FunctionDeclaration : public Declarations
 {
     public:
-        Scanner::Token lparen;         // Open Paren
+        Scanner::Token                              lparen;
         /*vector of formals since can be 0-inf (in theory) */
-        std::vector<FormalVariableDeclaration*> formals;
-        Scanner::Token rparen;
-        //StmtBlock    block;
+        std::vector<FormalVariableDeclaration*>     formals;
+        Scanner::Token                              rparen;
+        StatementBlock                              *block;
 
         FunctionDeclaration() 
             : Declarations()
@@ -239,6 +298,6 @@ class FunctionDeclaration : public Declarations
         };
 
 
-        std::string nodeName();
+        std::string nodeName() { return "FnDecl:"; };
         std::string toString(int numSpaces);
 };

@@ -39,6 +39,112 @@ void takeTokens(int numTokens)
         addLookAhead();
 }
 
+
+
+
+VariableDeclaration* parseVarDecl()
+{
+    Scanner::Token token = tokenLookAhead->front();
+
+    if (tokenLookAheadIndex + 1 < 3)
+    {
+        addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
+    }
+
+    // Variable Decl (we already checked Type to get here)
+    switch(token.type)
+    {
+        case Scanner::Token::Type::Int:
+        case Scanner::Token::Type::Bool:
+        case Scanner::Token::Type::Double:
+        case Scanner::Token::Type::String:
+            // Must be: Type Ident ;
+            if (
+                tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
+                tokenLookAhead->at(2).type == Scanner::Token::Type::Separator
+            )
+            {
+                // Type Node
+                DeclarationType *type = new DeclarationType();
+                type->type = token;
+
+                // Ident Node
+                Identifier *ident = new Identifier();
+                ident->ident = tokenLookAhead->at(1);
+
+                // Variable node
+                VariableDeclaration *var = new VariableDeclaration();
+                var->type = type;
+                var->ident = ident;
+                var->semiColon = tokenLookAhead->at(2);
+
+                return var;
+            }
+            break;
+        default:
+            return nullptr;
+    }
+
+    return nullptr;
+}
+
+StatementBlock* parseStmtBlock()
+{
+
+    Scanner::Token token = tokenLookAhead->front();
+
+    if (token.type != Scanner::Token::Type::Separator &&
+        token.getValue<std::string>().compare("{") != 0)
+    {
+        throw std::runtime_error("Expected opening brace to statement body");
+    }
+
+    StatementBlock * stmtBlock = new StatementBlock();
+    stmtBlock->lbrace = token;
+
+    takeTokens(1);
+
+    // While we haven't reached the end
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("}") != 0 )
+    {
+        // parse var decls
+        VariableDeclaration *varDecl = nullptr;
+        do {
+            // will add to lookup as necessary
+            varDecl = parseVarDecl();
+
+            if (varDecl != nullptr)
+            {
+                if (varDecl->semiColon.getValue<std::string>().compare(";") != 0)
+                {
+                    throw std::runtime_error("Error expected semicolon to end statemnt");
+                }
+                takeTokens(3); // take varDecl tokens
+                stmtBlock->vars.push_back(varDecl);
+            }
+        } while(varDecl != nullptr);
+
+        // parse statements
+        while (tokenLookAhead->at(0).getValue<std::string>().compare("}") != 0)
+        {
+            // extra tokens
+            std::cout << "Skipping token: " << tokenLookAhead->at(0) << std::endl << std::flush;
+            takeTokens(1);
+        }
+
+    }
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("}") == 0)
+    {
+        stmtBlock->rbrace = tokenLookAhead->at(0);
+        takeTokens(1);
+        return stmtBlock;
+    }
+
+
+    return nullptr;
+}
+
 std::vector<FormalVariableDeclaration*> parseFormals()
 {
     std::vector<FormalVariableDeclaration*> formals;
@@ -48,64 +154,35 @@ std::vector<FormalVariableDeclaration*> parseFormals()
     {
         // Here we need up to 3 tokens to determine which direction to go
         addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
-
-        Scanner::Token token = tokenLookAhead->front();
-
-        DeclarationType *type = new DeclarationType();
-        type->type = token;
-
-        switch(token.type)
+        if (
+        (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0
+                || tokenLookAhead->at(2).getValue<std::string>().compare(")") == 0)
+        )
         {
-            case Scanner::Token::Type::Int:
-            case Scanner::Token::Type::Void:
-            case Scanner::Token::Type::Bool:
-            case Scanner::Token::Type::Double:
-            case Scanner::Token::Type::String:
-                if (
-                    tokenLookAhead->at(0).type != Scanner::Token::Type::Void &&
-                    tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
-                    tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
-                    
-                    (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0
-                        || tokenLookAhead->at(2).getValue<std::string>().compare(")") == 0)
-                )
-                {
-                    Identifier *ident = new Identifier();
-                    ident->ident = tokenLookAhead->at(1);
+            VariableDeclaration *var = parseVarDecl();            
+            FormalVariableDeclaration *formalVar = new FormalVariableDeclaration(var);
 
-                    FormalVariableDeclaration *var = new FormalVariableDeclaration();
-                    var->type = type;
-                    var->ident = ident;
+            if (var->semiColon.getValue<std::string>().compare(",") == 0)
+            {
+                formalVar->semiColon = var->semiColon; 
+                takeTokens(3);
+            }
+            else
+            {
+                formalVar->semiColon.type = Scanner::Token::Type::EMPTY;
+                takeTokens(2);
+            }
 
-                    if (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0)
-                    {
-                        var->semiColon = tokenLookAhead->at(2);
-                        takeTokens(3);
-                    }
-                    else
-                    {
-                        var->semiColon.type = Scanner::Token::Type::EMPTY;
-                        takeTokens(2);
-                    }
+            delete var;
+            formals.push_back(formalVar);
 
-                    formals.push_back(var);
-
-                } 
-                break;
-            default:
-                delete type;
-                // print error
-                std::cout << "Skipping Token: " << token;
-                takeTokens(1);
-
-        }
-
- 
+        }  
     }
     // leave rparen in token feed to be eaten by func decl
 
     return formals;
 }
+
 
 Declarations* parseDecl()
 {
@@ -117,32 +194,14 @@ Declarations* parseDecl()
     // Here we need up to 3 tokens to determine which direction to go
     addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
 
-    // Variable Decl (we already checked Type to get here)
-    // Must be: Type Ident ;
-    if (
-        tokenLookAhead->at(0).type != Scanner::Token::Type::Void &&
-        tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
-        tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
-        tokenLookAhead->at(2).getValue<std::string>().compare(";") == 0
-    )
+    Declarations* decl = nullptr;
+    if ( tokenLookAhead->at(2).getValue<std::string>().compare(";") == 0)
     {
-        // Type Node
-        DeclarationType *type = new DeclarationType();
-        type->type = token;
+        decl = parseVarDecl();
+        takeTokens(3);  // take semi
 
-        // Ident Node
-        Identifier *ident = new Identifier();
-        ident->ident = tokenLookAhead->at(1);
-
-        // Variable node
-        VariableDeclaration *var = new VariableDeclaration();
-        var->type = type;
-        var->ident = ident;
-        var->semiColon = tokenLookAhead->at(2);
-
-        takeTokens(3);
-        return var;
-    } 
+        return decl;
+    }
     else if (
         tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
         tokenLookAhead->at(2).type == Scanner::Token::Type::Separator &&
@@ -176,7 +235,10 @@ Declarations* parseDecl()
         func->rparen = tokenLookAhead->front();
         // take rparen
         takeTokens(1);
-        //func->block = parseStmtBlock();
+        func->block = parseStmtBlock();
+
+        if (func->block == nullptr)
+            throw std::runtime_error("Expected Closing brace to statement block");
 
         return func;
     }
@@ -188,6 +250,8 @@ Declarations* parseDecl()
 
         return nullptr;
     }
+
+    return decl;
 }
 
 void parseProgram()
