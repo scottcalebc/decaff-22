@@ -142,30 +142,45 @@ Expression* parseExpr()
         // binary expression
 
         // needs to be either arithmetic or comparison/relational/logical
-        // BinaryExpression *binexpr = new BinaryExpression();
-        // binexpr->op = tokenLookAhead->at(1);
+        BinaryExpression *binexpr = new BinaryExpression();
+        binexpr->op = tokenLookAhead->at(1);
 
-        // // save token at front, pop two tokens, then push back
-        // Scanner::Token top = tokenLookAhead->front();
-        // takeTokens(2);
-        // insertFront(top);
+        // save token at front, pop two tokens, then push back
+        Scanner::Token top = tokenLookAhead->front();
+        takeTokens(2);
+        insertFront(top);
 
-        // binexpr->expr = parseExpr();
+        binexpr->expr = parseExpr();
         
-        // if (binexpr->expr == nullptr)
-        // {
-        //     throw std::runtime_error("Invalid Binary Expression with operator: " + binexpr->op.getValue<std::string>());
-        // }
+        if (binexpr->expr == nullptr)
+        {
+            throw std::runtime_error("Invalid Binary Expression with operator: " + binexpr->op.getValue<std::string>());
+        }
 
-        // binexpr->right = parseExpr();
+        binexpr->right = parseExpr();
 
-        // if (binexpr->right->nodeName().compare("Unary") == 0)
-        //     throw std::runtime_error("Invalid Binary expression with RHS: " + binexpr->right->toString(0));
+        if (binexpr->right->nodeName().compare("Unary") == 0)
+            throw std::runtime_error("Invalid Binary expression with RHS: " + binexpr->right->toString(0));
 
-        // return binexpr;
+        return binexpr;
     } else if (tokenLookAhead->at(0).type == Scanner::Token::Type::Identifier 
-        && tokenLookAhead->at(1).getValue<std::string>().compare("(") ) {
+        && tokenLookAhead->at(1).getValue<std::string>().compare("(") == 0 ) 
         // Call
+    {
+        if (tokenLookAhead->at(0).getValue<std::string>().compare("ReadInteger") == 0 
+                || tokenLookAhead->at(0).getValue<std::string>().compare("ReadLine") == 0)
+        {
+            takeTokens(1);
+            if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
+                throw std::runtime_error("Expected opening parenthesis");
+            
+            takeTokens(1);
+
+            if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+                throw std::runtime_error("Expected closing parenthesis");
+
+            takeTokens(1);
+        }
     }
     else
     {
@@ -200,8 +215,8 @@ Expression* parseExpr()
     }
 
 
-    while ( tokenLookAhead->at(1).getValue<std::string>().compare(";") != 0 && tokenLookAhead->at(1).getValue<std::string>().compare(")") != 0
-        && tokenLookAhead->at(1).type != Scanner::Token::Type::END )
+    while ( tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0 && tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0
+        && tokenLookAhead->at(0).type != Scanner::Token::Type::END )
     {
         std:: cout << "Expr: ";
         std::cout << "Skipping Token: " << tokenLookAhead->at(0) << std::endl;
@@ -230,7 +245,15 @@ Statement* parseStmt()
             if (token.getValue<std::string>().compare("Print") == 0)
                 return nullptr;
             else
-                return parseExpr();
+            {
+                Expression *expr = parseExpr();
+
+                if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
+                    takeTokens(1);
+                else
+                    throw std::runtime_error("Expected semicolon at end of expression");
+            }
+                
         case Scanner::Token::Type::Separator:
             if (token.getValue<std::string>().compare("{") == 0)
                 return parseStmtBlock();
