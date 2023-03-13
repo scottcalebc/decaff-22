@@ -16,7 +16,6 @@ class ParseNode
         virtual int line() = 0;
         virtual std::string toString(int numSpaces) = 0;
 };
-
 class Identifier : public ParseNode
 {
     public:
@@ -87,6 +86,10 @@ class Statement : public ParseNode
         };
 
     public:
+        virtual ~Statement()
+        {
+
+        };
         int line() { return 0; };
         std::string nodeName() { return "Stmt: ";};
         std::string toString(int numSpaces);
@@ -122,20 +125,18 @@ class Declarations : public ParseNode
 
 class Expression : public Statement
 {
-    protected:
+    public:
         Expression()
-            : left(nullptr)
+            : expr(nullptr)
         {
 
         };
-
-
-    public:
         virtual ~Expression()
         {
-            delete left;
+            delete expr;
         };
-        Expression *left;
+        struct Expression *expr;
+        Scanner::Token semiColon;
 };
 
 
@@ -180,6 +181,8 @@ class ParenExpr : public Expression
         {
 
         };
+
+        std::string toString(int numSpaces);
 };
 
 
@@ -188,16 +191,37 @@ class LValue : public Expression
 {
 
     public:
-        Identifier ident;
+        Identifier *ident;
 
         LValue()
             : Expression()
-            , ident()
+            , ident(nullptr)
         {
 
         };
 
+        ~LValue()
+        {
+            delete ident;
+        }
+
         std::string nodeName() { return "LValue"; };
+        std::string toString(int numSpaces);
+};
+
+class Constant : public Expression
+{
+    public:
+        Scanner::Token constant;
+
+        Constant()
+            : Expression()
+            , constant()
+        {
+
+        };
+
+        std::string nodeName() { return "Constant"; };
         std::string toString(int numSpaces);
 };
 

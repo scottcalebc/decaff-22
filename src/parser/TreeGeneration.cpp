@@ -9,6 +9,11 @@
 #include "ParseTree.hpp"
 
 
+
+// Forward Decls for Recursive calls
+StatementBlock* parseStmtBlock();
+
+
 Scanner::Lexer             *glexer;
 std::deque<Scanner::Token> *tokenLookAhead;
 int tokenLookAheadIndex = -1;
@@ -37,6 +42,14 @@ void takeTokens(int numTokens)
     // If we have eaten all the lookahead, then replace
     if (tokenLookAheadIndex == -1)
         addLookAhead();
+}
+
+void insertFront(Scanner::Token item)
+{
+    tokenLookAhead->push_front(item);
+
+    // reset tokenLookAhead
+    tokenLookAheadIndex = 0;
 }
 
 
@@ -88,6 +101,148 @@ VariableDeclaration* parseVarDecl()
     return nullptr;
 }
 
+Expression* parseExpr()
+{
+    Scanner::Token token = tokenLookAhead->front();
+
+    // need at least two tokens
+    addLookAhead(std::abs(2 - (tokenLookAheadIndex+1) ) );
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("(") == 0)
+    {
+        std::cout << "Parsing ParenExpr" << std::endl << std::flush;
+        ParenExpr *expr = new ParenExpr();
+
+        expr->lparen = tokenLookAhead->at(0);
+        takeTokens(1);
+
+        expr->expr = parseExpr();
+
+        if (expr->expr == nullptr)
+            throw std::runtime_error("Invalid Expression");
+
+        if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+            throw std::runtime_error("Missing ')' in Expression");
+        
+        expr->rparen = tokenLookAhead->at(0);
+        takeTokens(1);
+
+        return expr;
+    }
+    else if (tokenLookAhead->at(0).type == Scanner::Token::Type::Operator )
+    {
+        // unary operator
+
+        std::cout << "Skipping unary op: " << tokenLookAhead->at(0);
+        takeTokens(1);
+        return new Expression();
+    }
+    else if (tokenLookAhead->at(1).type == Scanner::Token::Type::Operator )
+    {
+        // binary expression
+
+        // needs to be either arithmetic or comparison/relational/logical
+        // BinaryExpression *binexpr = new BinaryExpression();
+        // binexpr->op = tokenLookAhead->at(1);
+
+        // // save token at front, pop two tokens, then push back
+        // Scanner::Token top = tokenLookAhead->front();
+        // takeTokens(2);
+        // insertFront(top);
+
+        // binexpr->expr = parseExpr();
+        
+        // if (binexpr->expr == nullptr)
+        // {
+        //     throw std::runtime_error("Invalid Binary Expression with operator: " + binexpr->op.getValue<std::string>());
+        // }
+
+        // binexpr->right = parseExpr();
+
+        // if (binexpr->right->nodeName().compare("Unary") == 0)
+        //     throw std::runtime_error("Invalid Binary expression with RHS: " + binexpr->right->toString(0));
+
+        // return binexpr;
+    } else if (tokenLookAhead->at(0).type == Scanner::Token::Type::Identifier 
+        && tokenLookAhead->at(1).getValue<std::string>().compare("(") ) {
+        // Call
+    }
+    else
+    {
+        switch (tokenLookAhead->at(0).type)
+        {
+            case Scanner::Token::Type::Identifier :
+                {
+                    LValue *expr = new LValue();
+                    expr->ident = new Identifier();
+                    expr->ident->ident = tokenLookAhead->at(0);
+
+                    takeTokens(1);
+                    return expr;
+                }
+            case Scanner::Token::Type::IntConstant :
+            case Scanner::Token::Type::DoubleConstant : 
+            case Scanner::Token::Type::BoolConstant :
+            case Scanner::Token::Type::NullConstant : 
+            case Scanner::Token::Type::StringConstant : 
+                {
+                    Constant *expr = new Constant();
+                    expr->constant = tokenLookAhead->at(0);
+                    takeTokens(1);
+
+                    return expr;
+                } 
+                break;     
+            default:
+                return nullptr;
+                break;
+        }
+    }
+
+
+    while ( tokenLookAhead->at(1).getValue<std::string>().compare(";") != 0 && tokenLookAhead->at(1).getValue<std::string>().compare(")") != 0
+        && tokenLookAhead->at(1).type != Scanner::Token::Type::END )
+    {
+        std:: cout << "Expr: ";
+        std::cout << "Skipping Token: " << tokenLookAhead->at(0) << std::endl;
+        takeTokens(1);
+    }
+
+
+    return new Expression();
+
+}
+
+Statement* parseStmt()
+{
+    Scanner::Token token = tokenLookAhead->front();
+
+    switch(token.type)
+    {
+        case Scanner::Token::Type::If:
+        case Scanner::Token::Type::While:
+        case Scanner::Token::Type::For:
+        case Scanner::Token::Type::Break:
+        case Scanner::Token::Type::Return:
+            return nullptr;
+            break;
+        case Scanner::Token::Type::Identifier:
+            if (token.getValue<std::string>().compare("Print") == 0)
+                return nullptr;
+            else
+                return parseExpr();
+        case Scanner::Token::Type::Separator:
+            if (token.getValue<std::string>().compare("{") == 0)
+                return parseStmtBlock();
+            else    
+                return nullptr;
+        default:
+            return parseExpr();
+    }
+
+    return nullptr;
+}
+
 StatementBlock* parseStmtBlock()
 {
 
@@ -128,9 +283,23 @@ StatementBlock* parseStmtBlock()
         while (tokenLookAhead->at(0).getValue<std::string>().compare("}") != 0)
         {
             // extra tokens
-            std::cout << "Skipping token: " << tokenLookAhead->at(0) << std::endl << std::flush;
-            takeTokens(1);
-        }
+
+            Statement *stmt = parseStmt();
+
+            if (stmt == nullptr && tokenLookAhead->at(0).getValue<std::string>().compare("}") != 0)
+            {
+                // normally throw, for debug just skip token
+                // throw std::runtime_error("Invalid token in statement");
+                std::cout << "StmtBlock: ";
+                std::cout << "Skipping Token: " << tokenLookAhead->at(0);
+                takeTokens(1);
+            }
+
+            if (stmt != nullptr )
+            {
+                stmtBlock->stmts.push_back(stmt);
+            }
+        }   
 
     }
 
@@ -244,6 +413,7 @@ Declarations* parseDecl()
     }
     else
     {
+        std::cout << "Decl: ";
         // For testing we Are just going to destroy DeclType and eat the front token
         std::cout << "Skipping Token: " << token;
         takeTokens(1);
@@ -276,6 +446,7 @@ void parseProgram()
                 break;
             default:
                 // print error
+                std::cout << "Prog: ";
                 std::cout << "Skipping Token: " << token;
                 takeTokens(1);
 

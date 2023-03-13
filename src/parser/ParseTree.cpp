@@ -55,9 +55,27 @@ std::string LValue::toString(int numSpaces)
 {
     std::stringstream ss;
 
-    ss << "Reached: " << nodeName() << std::endl;
+    ss << "FieldAccess:" << std::endl
+        << std::setw(3) << ident->line()
+        << std::setw(numSpaces) << " "
+        << ident->toString(numSpaces+3);
 
     return ss.str();
+}
+
+std::string Constant::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss  << Scanner::Token::getTypeName(constant.type) 
+        << ": " << constant.getValue<std::string>() << std::endl;
+
+    return ss.str();
+}
+
+std::string ParenExpr::toString(int numSpaces)
+{
+    return expr->toString(numSpaces);
 }
 
 
