@@ -362,13 +362,35 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             tokenStack.pop();
             logic->right = parseExpr(tokenStack);
 
-            if (logic->right == nullptr || logic->followExpr(dynamic_cast<LogicalExpression*>(logic->right) ) )
+            if (logic->right == nullptr ||
+                (dynamic_cast<BinaryExpression*>(logic->right) != nullptr 
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::LessThan
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::LessEqual
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::GreaterThan
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::GreaterEqual
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::Equal
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::NotEqual
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::And 
+                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::Or ) )
+            {
                 throw std::runtime_error("Invalid Expression");
+            }
 
             logic->expr = parseExpr(tokenStack);
 
-            if (logic->expr == nullptr || logic->followExpr(dynamic_cast<LogicalExpression*>(logic->expr) ) )
+            if (logic->expr == nullptr ||
+                (dynamic_cast<BinaryExpression*>(logic->expr) != nullptr 
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::LessThan
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::LessEqual
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::GreaterThan
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::GreaterEqual
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::Equal
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::NotEqual
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::And 
+                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::Or ) )
+            {
                 throw std::runtime_error("Invalid Expression");
+            }
 
             return logic;
         }
@@ -404,7 +426,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
 
             while(!tokenStack.empty() && tokenStack.top().subType != Scanner::Token::SubType::Paren )
             {
-                call->actuals.push_back(parseExpr(tokenStack));
+                call->actuals.push_front(parseExpr(tokenStack));
             }
 
             if (tokenStack.top().subType != Scanner::Token::SubType::Paren )
@@ -447,7 +469,7 @@ Statement* parseStmt()
         default:
             {
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
-                printStack("Tokens", tokens);
+                printStack("Tokens ", tokens);
                 Expression *expr = parseExpr(tokens);
 
 
@@ -521,7 +543,6 @@ StatementBlock* parseStmtBlock()
 
             if (stmt != nullptr )
             {
-                std::cout << "StmtBlock: " << "Got Statement: " << stmt->toString(3);
                 stmtBlock->stmts.push_back(stmt);
             }
         }   

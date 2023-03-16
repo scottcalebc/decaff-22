@@ -135,6 +135,7 @@ std::string CallExpression::toString(int numSpaces)
     {
         ss << std::setw(3) << actual->line()
             << std::setw(numSpaces) << " "
+            << "(actuals) "
             << actual->toString(numSpaces+3);
     }
 

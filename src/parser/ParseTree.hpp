@@ -1,4 +1,5 @@
 #include <vector>
+#include <deque>
 #include "token.hpp"
 
 /** Non-Abstract / Derived Classes */
@@ -387,7 +388,7 @@ class CallExpression : public Expression
 {
     public:
         Identifier* ident;
-        std::vector<Expression*> actuals;
+        std::deque<Expression*> actuals;
         Scanner::Token lparen;
         Scanner::Token rparen;
 

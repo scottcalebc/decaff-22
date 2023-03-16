@@ -70,13 +70,13 @@ namespace Scanner {
             Or,
             Modulus,
             Not,
-            UnaryNegative,
             LessThan,
             LessEqual,
             GreaterThan,
             GreaterEqual,
             Equal,
             NotEqual,
+            UnaryNegative,
         };
 
         static std::map<Type, std::string> enumName;
