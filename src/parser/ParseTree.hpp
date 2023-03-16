@@ -1,24 +1,104 @@
 #include <vector>
+#include <deque>
 #include "token.hpp"
 
-
-class DeclarationType
+/** Non-Abstract / Derived Classes */
+/**
+ * Pure Abstract defined classes
+ */
+class ParseNode
 {
-    
+    protected:
+        ParseNode()
+        {};
+        virtual std::string nodeName() = 0;
 
     public:
-        DeclarationType()
+        virtual int line() = 0;
+        virtual std::string toString(int numSpaces) = 0;
+};
+class Identifier : public ParseNode
+{
+    public:
+        Scanner::Token ident;
+
+        Identifier()
+            : ParseNode()
+            , ident()
         {
 
         };
 
+        Identifier(const Identifier &i)
+        {
+            ident = i.ident;
+        }
+
+        int line()
+        {
+            return ident.lineNumber;
+        }
+        std::string nodeName() { return "Identifier: "; };
+        std::string toString(int numSpaces);
+};
+
+class DeclarationType : public ParseNode
+{
+    public:
+        DeclarationType()
+            : ParseNode()
+            , type()
+        {
+
+        };
+
+        DeclarationType(const DeclarationType & dt)
+        {
+            type = dt.type;
+        }
+
         Scanner::Token type;
 
+        int line()
+        {
+            return type.lineNumber;
+        }
+        std::string nodeName() { return "Type: "; };
+        std::string toString(int numSpaces);
+};
+
+class ReturnType: public DeclarationType
+{
+    public:
+        ReturnType()
+            : DeclarationType()
+        {
+            
+        };
+        std::string nodeName() { return "(return type) " + DeclarationType::nodeName(); };
+};
+
+class Statement : public ParseNode
+{
+    protected:
+        Statement()
+        {
+
+        };
+
+    public:
+        virtual ~Statement()
+        {
+
+        };
+        virtual int line() { return 0; };
+        virtual std::string nodeName() { return "Stmt: ";};
         std::string toString(int numSpaces);
 };
 
 
-class Declarations
+
+class Declarations : public ParseNode
 {
     protected:
         Declarations()
@@ -30,16 +110,171 @@ class Declarations
 
     public:
         DeclarationType *type;
-        Scanner::Token ident;
-        virtual ~Declarations() {};
+        Identifier      *ident;
+        virtual ~Declarations() {
+            delete type;
+            delete ident;
+        };
 
-        virtual int line() = 0;
-        virtual std::string toString(int numSpaces) = 0;
+        int line()
+        {
+            return ident->line();
+        };
+
+        virtual std::string toString(int numSpaces);
+};
+
+class Expression : public Statement
+{
+    public:
+        Expression()
+            : expr(nullptr)
+        {
+
+        };
+        virtual ~Expression()
+        {
+            delete expr;
+        };
+        Expression *expr;
+        Scanner::Token semiColon;
+
+        virtual int line() {return semiColon.lineNumber; };
+        virtual std::string toString(int numSpaces);
+};
+
+class BinaryExpression : public Expression
+{
+    public:
+        Scanner::Token op;
+        Expression *right;
+
+        BinaryExpression()
+            : Expression()
+            , op()
+            , right(nullptr)
+        {
+
+        };
+
+        ~BinaryExpression()
+        {
+            delete right;
+        };
+
+        template<typename T>
+        bool followExpr(T* follow) { return true; };
+
+        virtual int line() { return op.lineNumber; };
+        std::string nodeName() { return "BinExpr: "; };
+        virtual std::string toString(int numSpaces);
+};
+
+class UnaryExpression : public BinaryExpression
+{
+    public:
+        UnaryExpression()
+            : BinaryExpression()
+        {
+
+        };
+
+        std::string nodeName() { return "UnaryExpr:"; };
+};
+
+
+
+/**
+ * Derived Classes for Actual Implementation / Derivation of Parse Tree
+ */
+
+class AssignExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "AssignExpr: "; };
+};
+
+class ArithmeticExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "ArithmeticExpr:"; };
+};
+
+
+class LogicalExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "LogicalExpr:"; };
+
+        bool followExpr(LogicalExpression* follow) { 
+            if (follow != nullptr)
+                return false; 
+            else
+                return true;
+                };
 };
 
 
 
 
+class ParenExpr : public Expression
+{
+    public:
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+
+        ParenExpr()
+            : Expression()
+            , lparen()
+            , rparen()
+        {
+
+        };
+
+        std::string toString(int numSpaces);
+};
+
+
+
+class LValue : public Expression
+{
+
+    public:
+        Identifier *ident;
+
+        LValue()
+            : Expression()
+            , ident(nullptr)
+        {
+
+        };
+
+        ~LValue()
+        {
+            delete ident;
+        }
+
+        int line() { return ident->line(); };
+        std::string nodeName() { return "FieldAccess: "; };
+        std::string toString(int numSpaces);
+};
+
+class Constant : public Expression
+{
+    public:
+        Scanner::Token constant;
+
+        Constant()
+            : Expression()
+            , constant()
+        {
+
+        };
+
+        int line() { return constant.lineNumber; };
+        std::string nodeName() { return Scanner::Token::getTypeName(constant.type) + ":"; }; 
+        std::string toString(int numSpaces);
+};
 
 /**
  * @brief Variable declaration separate from Function declaration
@@ -59,10 +294,41 @@ class VariableDeclaration : public Declarations
 
         };
 
-        int line()
+        std::string nodeName() { return "VarDecl:"; };
+};
+
+
+class StatementBlock : public Statement
+{
+    public:
+        Scanner::Token lbrace;
+        std::vector<VariableDeclaration*>   vars;
+        std::vector<Statement*>            stmts;
+        Scanner::Token rbrace;
+        
+        StatementBlock()
+            : Statement()
+            , lbrace()
+            , vars()
+            , stmts()
         {
-            return ident.lineNumber;
+
+        };
+
+        ~StatementBlock()
+        {
+            for (auto var : vars)
+            {
+                delete var;
+            }
+
+            for (auto stmt : stmts)
+            {
+                delete stmt;
+            }
         }
+
+        std::string nodeName() { return "StmtBlock: "; };
         std::string toString(int numSpaces);
 };
 
@@ -76,17 +342,18 @@ class FormalVariableDeclaration : public VariableDeclaration
 
         };
 
-        std::string toString(int numSpaces);
+        FormalVariableDeclaration(VariableDeclaration*var);
+        std::string nodeName() { return "(formals):" + VariableDeclaration::nodeName(); };
 };
 
 class FunctionDeclaration : public Declarations
 {
     public:
-        Scanner::Token lparen;         // Open Paren
+        Scanner::Token                              lparen;
         /*vector of formals since can be 0-inf (in theory) */
-        std::vector<FormalVariableDeclaration*> formals;
-        Scanner::Token rparen;
-        //StmtBlock    block;
+        std::vector<FormalVariableDeclaration*>     formals;
+        Scanner::Token                              rparen;
+        StatementBlock                              *block;
 
         FunctionDeclaration() 
             : Declarations()
@@ -105,9 +372,37 @@ class FunctionDeclaration : public Declarations
             }
         };
 
-        int line()
+
+        std::string nodeName() { return "FnDecl:"; };
+        std::string toString(int numSpaces);
+};
+
+class Actual: public Expression
+{
+    public:
+
+        std::string nodeName() { return "(actual) " + expr->nodeName(); };
+};
+
+class CallExpression : public Expression
+{
+    public:
+        Identifier* ident;
+        std::deque<Expression*> actuals;
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+
+        CallExpression() 
+            : Expression()
+            , ident(nullptr)
+            , actuals()
+            , lparen()
+            , rparen()
         {
-            return ident.lineNumber;
+
         };
+
+        int line() { return lparen.lineNumber; };
+        std::string nodeName() { return "Call: "; };
         std::string toString(int numSpaces);
 };

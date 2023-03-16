@@ -10,7 +10,9 @@ void Scanner::Lexer::nextLine()
     std::string tmp;
     std::getline(sourceFile, tmp);
     lineStream.str(tmp);
-    lineStream.clear();     
+    lineStream.clear();
+
+    std::cout << "Getting line[" << lineNumber << "]: " << lineStream.str() << std::endl;
 
     // increment line number
     lineNumber++;
@@ -343,6 +345,11 @@ Scanner::Token Scanner::Lexer::getNextToken()
     {
         throw UnrecognizedCharacter(lineNumber, tokenBuffer.str());
     }
+
+    // assign sub type if exists;
+    auto sub = Token::subTypes.find(tokenBuffer.str());
+    if (sub != Token::subTypes.end())
+        token.subType = sub->second;
 
     token.value = tokenBuffer.str();
 
