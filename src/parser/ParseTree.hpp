@@ -137,29 +137,20 @@ class Expression : public Statement
         };
         Expression *expr;
         Scanner::Token semiColon;
+
+        virtual int line() {return semiColon.lineNumber; };
+        virtual std::string toString(int numSpaces);
 };
 
-class UnaryExpression : public Expression
+class BinaryExpression : public Expression
 {
     public:
         Scanner::Token op;
-
-        UnaryExpression()
-            : Expression()
-            , op()
-        {
-
-        };
-
-        std::string nodeName() { return "UnaryExpr:"; };
-};
-class BinaryExpression : public UnaryExpression
-{
-    public:
         Expression *right;
 
         BinaryExpression()
-            : UnaryExpression()
+            : Expression()
+            , op()
             , right(nullptr)
         {
 
@@ -172,6 +163,22 @@ class BinaryExpression : public UnaryExpression
 
         template<typename T>
         bool followExpr(T* follow) { return true; };
+
+        virtual int line() { return op.lineNumber; };
+        std::string nodeName() { return "BinExpr: "; };
+        virtual std::string toString(int numSpaces);
+};
+
+class UnaryExpression : public BinaryExpression
+{
+    public:
+        UnaryExpression()
+            : BinaryExpression()
+        {
+
+        };
+
+        std::string nodeName() { return "UnaryExpr:"; };
 };
 
 
@@ -179,6 +186,12 @@ class BinaryExpression : public UnaryExpression
 /**
  * Derived Classes for Actual Implementation / Derivation of Parse Tree
  */
+
+class AssignExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "AssignExpr: "; };
+};
 
 class ArithmeticExpression : public BinaryExpression
 {
@@ -240,7 +253,8 @@ class LValue : public Expression
             delete ident;
         }
 
-        std::string nodeName() { return "LValue"; };
+        int line() { return ident->line(); };
+        std::string nodeName() { return "FieldAccess: "; };
         std::string toString(int numSpaces);
 };
 
@@ -256,7 +270,8 @@ class Constant : public Expression
 
         };
 
-        std::string nodeName() { return "Constant"; };
+        int line() { return constant.lineNumber; };
+        std::string nodeName() { return Scanner::Token::getTypeName(constant.type) + ":"; }; 
         std::string toString(int numSpaces);
 };
 
@@ -358,5 +373,35 @@ class FunctionDeclaration : public Declarations
 
 
         std::string nodeName() { return "FnDecl:"; };
+        std::string toString(int numSpaces);
+};
+
+class Actual: public Expression
+{
+    public:
+
+        std::string nodeName() { return "(actual) " + expr->nodeName(); };
+};
+
+class CallExpression : public Expression
+{
+    public:
+        Identifier* ident;
+        std::vector<Expression*> actuals;
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+
+        CallExpression() 
+            : Expression()
+            , ident(nullptr)
+            , actuals()
+            , lparen()
+            , rparen()
+        {
+
+        };
+
+        int line() { return lparen.lineNumber; };
+        std::string nodeName() { return "Call: "; };
         std::string toString(int numSpaces);
 };

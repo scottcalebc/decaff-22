@@ -57,19 +57,20 @@ namespace Scanner {
         };
 
         enum class SubType {
+            Operand,
             Call,
+            Assign,
             Paren,
             Comma,
-            Assign,
             Subtract,
             Add,
             Divide,
             Multiply,
-            Modulus,
-            UnaryNegative,
             And,
             Or,
+            Modulus,
             Not,
+            UnaryNegative,
             LessThan,
             LessEqual,
             GreaterThan,
@@ -82,9 +83,13 @@ namespace Scanner {
 
         static int identifierMaxLength;
 
+        static std::string getTTypeName(const Type &type) {
+            return "T_" + getTypeName(type);
+        };
+
         static std::string getTypeName(const Type &type) {
             return (enumName.find(type) != enumName.end()) ? 
-                "T_" + enumName.find(type)->second :
+                enumName.find(type)->second :
                 std::string("ERROR");
         };
 
@@ -104,6 +109,7 @@ namespace Scanner {
 
         Token():
             type(Type::END),
+            subType(SubType::Operand),
             value(""),
             lineNumber(-1),
             colStart(-1)

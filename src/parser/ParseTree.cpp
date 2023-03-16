@@ -22,7 +22,7 @@ std::string Identifier::toString(int numSpaces)
 {
     std::stringstream ss;
 
-    ss << nodeName() << ident.getValue<std::string>();
+    ss << nodeName() << ident.getValue<std::string>() << std::endl;
 
     return ss.str();
 }
@@ -45,8 +45,7 @@ std::string Declarations::toString(int numSpaces)
         << type->toString(numSpaces + 3)
         << std::setw(3) << ident->line()
         << std::setw(numSpaces) << " "
-        << ident->toString(numSpaces + 3)
-        << std::endl;
+        << ident->toString(numSpaces + 3);
 
     return ss.str();
 }
@@ -87,6 +86,61 @@ std::string Statement::toString(int numSpaces)
 
     return ss.str();
 }
+
+std::string Expression::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss  << Statement::toString(numSpaces);
+    
+    if (expr != nullptr)
+    {
+        ss << std::setw(3) << line()
+            << std::setw(numSpaces) << " "
+            << expr->toString(numSpaces+3);
+    }
+
+    return ss.str();
+}
+
+std::string BinaryExpression::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << Expression::toString(numSpaces)
+        << std::setw(3) << line()
+        << std::setw(numSpaces) << " "
+        << "Operator: " << op.getValue<std::string>() << std::endl
+        << std::setw(3) << line()
+        << std::setw(numSpaces) << " "
+        << right->toString(numSpaces+3);
+
+    return ss.str();
+}
+
+std::string CallExpression::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+
+    if (ident != nullptr)
+    {
+        ss << std::setw(3) << line()
+            << std::setw(numSpaces) << " "
+            << ident->toString(numSpaces+3);
+    }
+
+    for (auto actual : actuals)
+    {
+        ss << std::setw(3) << actual->line()
+            << std::setw(numSpaces) << " "
+            << actual->toString(numSpaces+3);
+    }
+
+    return ss.str();
+}
+
 
 std::string StatementBlock::toString(int numSpaces)
 {
