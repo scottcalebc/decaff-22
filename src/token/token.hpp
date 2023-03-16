@@ -56,6 +56,28 @@ namespace Scanner {
             END
         };
 
+        enum class SubType {
+            Call,
+            Paren,
+            Comma,
+            Assign,
+            Subtract,
+            Add,
+            Divide,
+            Multiply,
+            Modulus,
+            UnaryNegative,
+            And,
+            Or,
+            Not,
+            LessThan,
+            LessEqual,
+            GreaterThan,
+            GreaterEqual,
+            Equal,
+            NotEqual,
+        };
+
         static std::map<Type, std::string> enumName;
 
         static int identifierMaxLength;
@@ -72,7 +94,10 @@ namespace Scanner {
         // useful multiple character operators for quick lookup
         static std::map<std::string, Type> operators;
 
+        static std::map<std::string, SubType> subTypes;
+
         Type type;
+        SubType subType;
         std::string value;
         int lineNumber;
         int colStart;       // only column start since column end can be inferred by colStart + tokenString.len()
@@ -87,6 +112,19 @@ namespace Scanner {
 
         template<typename TokenValue>
         const TokenValue getValue() const;
+
+        bool operator== (const Token& o)
+        {
+            if (
+                type == o.type &&
+                value.compare(o.value) == 0 &&
+                lineNumber == o.lineNumber &&
+                colStart == o.colStart
+            )
+                return true;
+
+            return false;
+        };
     };
 }
 

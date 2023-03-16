@@ -1,4 +1,5 @@
 #include <deque>
+#include <stack>
 #include <iomanip>
 #include <exception>
 
@@ -37,6 +38,27 @@ void takeTokens(int numTokens)
     {
         tokenLookAhead->pop_front();
         tokenLookAheadIndex--;
+    }
+
+    // If we have eaten all the lookahead, then replace
+    if (tokenLookAheadIndex == -1)
+        addLookAhead();
+}
+
+void eraseToken(Scanner::Token item)
+{
+
+    for(auto it = tokenLookAhead->begin(); it != tokenLookAhead->end();)
+    {
+        if (*it == item)
+        {
+            it = tokenLookAhead->erase(it);
+            tokenLookAheadIndex--;
+        } 
+        else
+        {
+            ++it;
+        }
     }
 
     // If we have eaten all the lookahead, then replace
@@ -101,6 +123,129 @@ VariableDeclaration* parseVarDecl()
     return nullptr;
 }
 
+void printStack(const char*name, std::stack<Scanner::Token> stack)
+{
+    std::cout << name << "Stack" << ": ";
+    
+    while (! stack.empty())
+    {
+        std::cout << stack.top().getValue<std::string>() << " ";
+        stack.pop();
+    }
+    std::cout << std::endl;
+}
+
+Expression* parseExpr2(std::string sep)
+{
+    std::stack<Scanner::Token> tokenStack;
+    
+    Expression *expr = nullptr;
+
+    // 
+    std::stack<Scanner::Token> opHold;
+    while ( tokenLookAhead->at(0).getValue<std::string>().compare(sep) != 0 
+    && tokenLookAhead->at(0).type != Scanner::Token::Type::END )
+    {
+        // always make sure there are at least two tokens before parsing
+        addLookAhead(std::abs(2 - (tokenLookAheadIndex+1) ) );
+        
+        switch(tokenLookAhead->at(0).type)
+        {
+            case Scanner::Token::Type::Identifier:
+                if (tokenLookAhead->at(1).subType == Scanner::Token::SubType::Paren)
+                {
+                    tokenLookAhead->at(0).subType = Scanner::Token::SubType::Call;
+                    // add call to op hold, need to parse rest of exprs which may have their own ops
+                    opHold.push(tokenLookAhead->at(0));
+                } else
+                {
+                    // add LValue
+                    tokenStack.push(tokenLookAhead->at(0));
+                }
+                break;
+            case Scanner::Token::Type::IntConstant :
+            case Scanner::Token::Type::DoubleConstant : 
+            case Scanner::Token::Type::BoolConstant :
+            case Scanner::Token::Type::NullConstant : 
+            case Scanner::Token::Type::StringConstant :
+                // add constant 
+                tokenStack.push(tokenLookAhead->at(0));
+                break;
+            case Scanner::Token::Type::Operator:
+            case Scanner::Token::Type::Equal :
+            case Scanner::Token::Type::NotEqual :
+            case Scanner::Token::Type::GreaterEqual :
+            case Scanner::Token::Type::LessEqual :
+            case Scanner::Token::Type::And :
+            case Scanner::Token::Type::Or :
+                while (!opHold.empty() && opHold.top().subType > tokenLookAhead->at(0).subType)
+                {
+                    tokenStack.push(opHold.top());
+                    opHold.pop();
+                }
+                opHold.push(tokenLookAhead->at(0));
+                break;
+            case Scanner::Token::Type::Separator :
+                if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren
+                && tokenLookAhead->at(0).getValue<std::string>().compare("(") == 0)
+                {
+                    // push opening paren onto token stack
+                    tokenStack.push(tokenLookAhead->at(0));
+
+                    // push into opHold to know how many operators are in a parenthesis section
+                    opHold.push(tokenLookAhead->at(0));
+                } else if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren
+                || tokenLookAhead->at(0).subType == Scanner::Token::SubType::Comma)
+                {
+                    // dont take call token as we don't know if we are dealing with comma or paren
+                    while(!opHold.empty() && (opHold.top().subType != Scanner::Token::SubType::Paren
+                        && opHold.top().subType != Scanner::Token::SubType::Call) )
+                    {
+                        tokenStack.push(opHold.top());
+                        opHold.pop();
+                    }
+
+                    if (!opHold.empty() )
+                    {
+                        // pop paren we don't need it anymore
+                        if (opHold.top().subType == Scanner::Token::SubType::Paren)
+                            opHold.pop();
+                        
+                        // if we finish call then we need to pull that off
+                        if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren
+                            && opHold.top().subType == Scanner::Token::SubType::Call)
+                        {
+                            tokenStack.push(opHold.top());
+                            opHold.pop();
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+
+        }
+
+        // parsed token, need to take
+        takeTokens(1);
+
+    }
+    
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(sep) != 0)
+        throw std::runtime_error("Invalid expression");
+
+    while (!opHold.empty())
+    {
+        tokenStack.push(opHold.top());
+        opHold.pop();
+    }
+
+    printStack("Token", tokenStack);
+
+
+    return new Expression();
+}
+
 Expression* parseExpr()
 {
     Scanner::Token token = tokenLookAhead->front();
@@ -141,14 +286,11 @@ Expression* parseExpr()
     {
         // binary expression
 
-        // needs to be either arithmetic or comparison/relational/logical
-        BinaryExpression *binexpr = new BinaryExpression();
+        // Since relational/logical expr use custom token types operators will always be arithmetic
+        ArithmeticExpression *binexpr = new ArithmeticExpression();
         binexpr->op = tokenLookAhead->at(1);
-
-        // save token at front, pop two tokens, then push back
-        Scanner::Token top = tokenLookAhead->front();
-        takeTokens(2);
-        insertFront(top);
+        
+        eraseToken(binexpr->op);
 
         binexpr->expr = parseExpr();
         
@@ -184,6 +326,45 @@ Expression* parseExpr()
     }
     else
     {
+        {
+            LogicalExpression *expr = nullptr;
+            switch(tokenLookAhead->at(1).type)
+            {
+                // equality statements (logical?)       ~
+                case Scanner::Token::Type::Equal :
+                case Scanner::Token::Type::NotEqual :
+                case Scanner::Token::Type::GreaterEqual :
+                case Scanner::Token::Type::LessEqual :
+                case Scanner::Token::Type::And :
+                case Scanner::Token::Type::Or :
+                    expr = new LogicalExpression();
+                    break;
+                default:
+                    break;
+            }
+
+            if (expr != nullptr)
+            {
+                // Found operator save top and take token
+                Scanner::Token top = tokenLookAhead->at(0);
+                expr->op = tokenLookAhead->at(1);
+                eraseToken(expr->op);
+
+                expr->expr = parseExpr();
+
+                if (expr->expr == nullptr)
+                {
+                    throw std::runtime_error("Invalid Binary Expression with operator: " + expr->op.getValue<std::string>());
+                }
+
+                expr->right = parseExpr();
+
+                if (expr->followExpr(dynamic_cast<LogicalExpression*>(expr->right)))
+                    throw std::runtime_error("Invalid Binary expression with RHS: " + expr->right->toString(0));
+
+                return expr;
+            }
+        }
         switch (tokenLookAhead->at(0).type)
         {
             case Scanner::Token::Type::Identifier :
@@ -242,25 +423,24 @@ Statement* parseStmt()
             return nullptr;
             break;
         case Scanner::Token::Type::Identifier:
-            if (token.getValue<std::string>().compare("Print") == 0)
-                return nullptr;
-            else
             {
-                Expression *expr = parseExpr();
+                Expression *expr = parseExpr2(";");
 
                 if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
                     takeTokens(1);
                 else
                     throw std::runtime_error("Expected semicolon at end of expression");
+
+                return expr;
             }
-                
+            break;    
         case Scanner::Token::Type::Separator:
             if (token.getValue<std::string>().compare("{") == 0)
                 return parseStmtBlock();
             else    
                 return nullptr;
         default:
-            return parseExpr();
+            return parseExpr2(";");
     }
 
     return nullptr;
@@ -320,6 +500,7 @@ StatementBlock* parseStmtBlock()
 
             if (stmt != nullptr )
             {
+                std::cout << "StmtBlock: " << "Got Statement: " << stmt->toString(0);
                 stmtBlock->stmts.push_back(stmt);
             }
         }   

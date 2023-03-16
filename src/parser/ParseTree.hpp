@@ -90,8 +90,8 @@ class Statement : public ParseNode
         {
 
         };
-        int line() { return 0; };
-        std::string nodeName() { return "Stmt: ";};
+        virtual int line() { return 0; };
+        virtual std::string nodeName() { return "Stmt: ";};
         std::string toString(int numSpaces);
 };
 
@@ -135,20 +135,31 @@ class Expression : public Statement
         {
             delete expr;
         };
-        struct Expression *expr;
+        Expression *expr;
         Scanner::Token semiColon;
 };
 
-
-class BinaryExpression : public Expression
+class UnaryExpression : public Expression
 {
     public:
         Scanner::Token op;
+
+        UnaryExpression()
+            : Expression()
+            , op()
+        {
+
+        };
+
+        std::string nodeName() { return "UnaryExpr:"; };
+};
+class BinaryExpression : public UnaryExpression
+{
+    public:
         Expression *right;
 
         BinaryExpression()
-            : Expression()
-            , op()
+            : UnaryExpression()
             , right(nullptr)
         {
 
@@ -158,6 +169,9 @@ class BinaryExpression : public Expression
         {
             delete right;
         };
+
+        template<typename T>
+        bool followExpr(T* follow) { return true; };
 };
 
 
@@ -165,6 +179,27 @@ class BinaryExpression : public Expression
 /**
  * Derived Classes for Actual Implementation / Derivation of Parse Tree
  */
+
+class ArithmeticExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "ArithmeticExpr:"; };
+};
+
+
+class LogicalExpression : public BinaryExpression
+{
+    public:
+        std::string nodeName() { return "LogicalExpr:"; };
+
+        bool followExpr(LogicalExpression* follow) { 
+            if (follow != nullptr)
+                return false; 
+            else
+                return true;
+                };
+};
+
 
 
 

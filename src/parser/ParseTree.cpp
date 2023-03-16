@@ -101,6 +101,13 @@ std::string StatementBlock::toString(int numSpaces)
         ss << var->toString(numSpaces+3);
     }
 
+    for(auto stmt : stmts)
+    {
+        ss << std::setw(3) << stmt->line();
+        ss << std::setw(numSpaces) << " "; 
+        ss << stmt->toString(numSpaces+3);
+    }
+
     return ss.str();
 }
 
@@ -123,4 +130,6 @@ std::string FunctionDeclaration::toString(int numSpaces)
 
     return ss.str();
 }
+
+
 

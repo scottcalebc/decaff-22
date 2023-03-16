@@ -54,6 +54,24 @@ std::map<std::string, Scanner::Token::Type> Scanner::Token::operators{
     {"&&", Type::And},
 };
 
+std::map<std::string, Scanner::Token::SubType> Scanner::Token::subTypes{
+    {"(", SubType::Paren},
+    {")", SubType::Paren},
+    {",", SubType::Comma},
+    {"=", SubType::Assign},
+    {"!", SubType::Not},
+    {"+", SubType::Add},
+    {"-", SubType::Subtract},
+    {"<", SubType::LessThan},
+    {"<=", SubType::LessEqual},
+    {">", SubType::GreaterThan},
+    {">=", SubType::GreaterEqual},
+    {"==", SubType::Equal},
+    {"!=", SubType::NotEqual},
+    {"&&", SubType::And},
+    {"||", SubType::Or},
+};
+
 int Scanner::Token::identifierMaxLength = 31;
 
 template<>
