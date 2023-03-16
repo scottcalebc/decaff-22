@@ -206,6 +206,8 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                 } else if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren
                 || tokenLookAhead->at(0).subType == Scanner::Token::SubType::Comma)
                 {
+                    // push all operators that might be holding between paren or commas to make sure
+                    //  expr in parenthesis and arguments for functions are evaluated correctly 
                     // dont take call token as we don't know if we are dealing with comma or paren
                     while(!opHold.empty() && (opHold.top().subType != Scanner::Token::SubType::Paren
                         && opHold.top().subType != Scanner::Token::SubType::Call) )
@@ -362,6 +364,10 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             tokenStack.pop();
             logic->right = parseExpr(tokenStack);
 
+            // Probably easier way to check
+            // This checks if the right expressions is a logical expression cannot have something like
+            // a > b > c (not parsable)
+            // a > b && a > c (parsable)
             if (logic->right == nullptr ||
                 (dynamic_cast<BinaryExpression*>(logic->right) != nullptr 
                 && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::LessThan
