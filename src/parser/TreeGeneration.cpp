@@ -227,7 +227,7 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                         if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren)
                         {
                             tokenStack.push(tokenLookAhead->at(0));
-                            if (opHold.top().subType == Scanner::Token::SubType::Call)
+                            if (!opHold.empty() && opHold.top().subType == Scanner::Token::SubType::Call)
                             {
                                 tokenStack.push(opHold.top());
                                 opHold.pop();
@@ -696,6 +696,10 @@ Statement* parseStmt()
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
                 printStack("Tokens ", tokens);
                 Expression *expr = parseExpr(tokens);
+
+                // todo: add this logic to all expression parsing
+                if (!tokens.empty())
+                    throw std::runtime_error("Invalid Expression on token " + tokens.top().getValue<std::string>());
 
 
                 if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
