@@ -233,5 +233,18 @@ std::string FunctionDeclaration::toString(int numSpaces)
     return ss.str();
 }
 
+std::string ReturnStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+
+    ss << std::setw(3) << expr->line()
+        << std::setw(numSpaces) << " "
+        << expr->toString(numSpaces+3);
+
+    return ss.str();
+}
+
 
 

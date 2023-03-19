@@ -494,7 +494,24 @@ Statement* parseStmt()
         case Scanner::Token::Type::For:
         case Scanner::Token::Type::Break:
         case Scanner::Token::Type::Return:
-            return nullptr;
+            {
+                ReturnStmt *ret = new ReturnStmt();
+                ret->returnToken = tokenLookAhead->at(0);
+                takeTokens(1);
+                std::stack<Scanner::Token> tokens = infix2postfix(";");
+                ret->expr = parseExpr(tokens);
+
+                if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
+                {
+                    ret->semiColon = tokenLookAhead->at(0);
+                    ret->expr->semiColon = tokenLookAhead->at(0);
+                    takeTokens(1);
+                }
+                else
+                    throw std::runtime_error("Expected semicolon at end of return");
+
+                return ret;
+            }
             break;
         case Scanner::Token::Type::Separator:
             if (token.getValue<std::string>().compare("{") == 0)

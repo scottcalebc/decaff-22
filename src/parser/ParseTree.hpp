@@ -447,3 +447,23 @@ class ReadLineExpr : public CallExpression
     std::string toString(int numSpaces);
     std::string nodeName() { return "ReadLineExpr: "; };
 };
+
+class ReturnStmt : public Statement
+{
+    public:
+        ReturnStmt()
+            : Statement()
+            , returnToken()
+            , expr(nullptr)
+            , semiColon()
+            {
+
+            };
+        
+        Scanner::Token returnToken;
+        Expression * expr;
+        Scanner::Token semiColon;
+
+        std::string nodeName() { return "ReturnStmt: ";};
+        std::string toString(int numSpaces);
+};
