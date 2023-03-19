@@ -13,6 +13,7 @@
 
 // Forward Decls for Recursive calls
 StatementBlock* parseStmtBlock();
+Statement* parseStmt();
 
 
 Scanner::Lexer             *glexer;
@@ -483,6 +484,41 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
     return nullptr;
 }
 
+WhileStmt * parseWhile()
+{
+    WhileStmt *stmt = new WhileStmt();
+
+    stmt->keyword = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
+        throw std::runtime_error("Expected open paren for while");
+
+    stmt->lparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    // parse expr up until close paren
+    std::stack<Scanner::Token> tokens = infix2postfix(")");
+    stmt->expr = parseExpr(tokens);
+
+    if (stmt->expr == nullptr)
+        throw std::runtime_error("Invalid expression for while");
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+        throw std::runtime_error("Invalid while");
+
+    stmt->rparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    // parse statement(s)
+    stmt->stmt = parseStmt();
+
+    if (stmt->stmt == nullptr)
+        throw std::runtime_error("Expected statement for while");
+
+    return stmt;
+}
+
 Statement* parseStmt()
 {
     Scanner::Token token = tokenLookAhead->front();
@@ -490,8 +526,12 @@ Statement* parseStmt()
     switch(token.type)
     {
         case Scanner::Token::Type::If:
+            break;
         case Scanner::Token::Type::While:
+            return parseWhile();
+            break;
         case Scanner::Token::Type::For:
+            break;
         case Scanner::Token::Type::Break:
             {
                 BreakStmt *breakStmt = new BreakStmt();

@@ -248,4 +248,28 @@ std::string KeywordStmt::toString(int numSpaces)
     return ss.str();
 }
 
+std::string WhileStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl
+        << std::setw(3) << expr->line()
+        << std::setw(numSpaces) << " "
+        << "(cond) " << expr->toString(numSpaces+3);
+
+    if (stmt->line() < 1)
+    {
+        ss << std::setw(numSpaces+3) << " ";
+    }
+    else
+    {
+        ss << std::setw(3) << stmt->line()
+            << std::setw(numSpaces) << " ";
+    }
+    
+    ss << "(body) " << stmt->toString(numSpaces+3);
+
+    return ss.str();
+}
+
 

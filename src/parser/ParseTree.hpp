@@ -495,3 +495,24 @@ class BreakStmt : public ReturnStmt
 
         std::string nodeName() { return "BreakStmt: "; };
 };
+
+class WhileStmt : public KeywordStmt
+{
+    public:
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+        Statement *stmt;
+
+        WhileStmt()
+            : KeywordStmt()
+            , lparen()
+            , rparen()
+            , stmt(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "WhileStmt: "; };
+        std::string toString(int numSpaces);
+};
+
