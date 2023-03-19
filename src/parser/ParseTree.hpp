@@ -516,3 +516,21 @@ class WhileStmt : public KeywordStmt
         std::string toString(int numSpaces);
 };
 
+class IfStmt : public WhileStmt
+{
+    public:
+        Scanner::Token secondKeyword;
+        Statement *elseBlock;
+
+        IfStmt()
+            : WhileStmt()
+            , secondKeyword()
+            , elseBlock(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "IfStmt: "; };
+        std::string toString(int numSpaces);
+};
+

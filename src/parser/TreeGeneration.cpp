@@ -519,6 +519,55 @@ WhileStmt * parseWhile()
     return stmt;
 }
 
+IfStmt* parseIfStmt()
+{
+    IfStmt *stmt = new IfStmt();
+
+    stmt->keyword = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
+        throw std::runtime_error("Expected open paren for If");
+
+    stmt->lparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    // parse expr up until close paren
+    std::stack<Scanner::Token> tokens = infix2postfix(")");
+    stmt->expr = parseExpr(tokens);
+
+    if (stmt->expr == nullptr)
+        throw std::runtime_error("Invalid expression for If");
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+        throw std::runtime_error("Invalid If");
+
+    
+    stmt->rparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    // parse statement(s)
+    stmt->stmt = parseStmt();
+
+    if (stmt->stmt == nullptr)
+        throw std::runtime_error("Expected statement for If");
+
+
+    if (tokenLookAhead->at(0).type == Scanner::Token::Type::Else)
+    {
+        stmt->secondKeyword = tokenLookAhead->at(0);
+        takeTokens(1);
+        
+        stmt->elseBlock = parseStmt();
+
+        if (stmt->elseBlock == nullptr)
+            throw std::runtime_error("Expected statement following else keyword");
+        
+    }
+    
+    return stmt;
+}
+
 Statement* parseStmt()
 {
     Scanner::Token token = tokenLookAhead->front();
@@ -526,7 +575,7 @@ Statement* parseStmt()
     switch(token.type)
     {
         case Scanner::Token::Type::If:
-            break;
+            return parseIfStmt();
         case Scanner::Token::Type::While:
             return parseWhile();
             break;

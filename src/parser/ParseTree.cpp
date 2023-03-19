@@ -272,4 +272,20 @@ std::string WhileStmt::toString(int numSpaces)
     return ss.str();
 }
 
+std::string IfStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << WhileStmt::toString(numSpaces);
+
+    if ( elseBlock != nullptr)
+    {
+        ss << std::setw(3) << " "
+            << std::setw(numSpaces) << " "
+            << "(else body) " << elseBlock->toString(numSpaces+3);
+    }
+
+    return ss.str();
+}
+
 
