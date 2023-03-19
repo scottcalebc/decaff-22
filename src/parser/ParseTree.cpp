@@ -17,6 +17,18 @@ FormalVariableDeclaration::FormalVariableDeclaration(VariableDeclaration *var)
 
 }
 
+PrintStmt::PrintStmt(CallExpression *expr)
+{
+    if (expr == nullptr)
+        throw std::runtime_error("Invalid Expression");
+
+    ident = new Identifier();
+    *ident = *expr->ident;
+    actuals.swap(expr->actuals);
+    lparen = expr->lparen;
+    rparen = expr->rparen;
+}
+
 
 std::string Identifier::toString(int numSpaces)
 {
@@ -138,6 +150,41 @@ std::string CallExpression::toString(int numSpaces)
             << "(actuals) "
             << actual->toString(numSpaces+3);
     }
+
+    return ss.str();
+}
+
+std::string PrintStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+
+    for (auto actual : actuals)
+    {
+        ss << std::setw(3) << actual->line()
+            << std::setw(numSpaces) << " "
+            << "(args) "
+            << actual->toString(numSpaces+3);
+    }
+
+    return ss.str();
+}
+
+std::string ReadIntExpr::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+
+    return ss.str();
+}
+
+std::string ReadLineExpr::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
 
     return ss.str();
 }

@@ -406,3 +406,44 @@ class CallExpression : public Expression
         std::string nodeName() { return "Call: "; };
         std::string toString(int numSpaces);
 };
+
+class PrintStmt : public CallExpression
+{
+    public:
+
+        PrintStmt()
+            : CallExpression()
+        {
+            
+        };
+        PrintStmt(CallExpression *expr);
+
+        std::string nodeName() { return "PrintStmt: "; };
+        std::string toString(int numSpaces);
+};
+
+class ReadIntExpr : public CallExpression
+{
+    public:
+    ReadIntExpr()
+            : CallExpression()
+        {
+
+        };
+
+    std::string toString(int numSpaces);
+    std::string nodeName() { return "ReadIntegerExpr: "; };
+};
+
+class ReadLineExpr : public CallExpression
+{
+    public:
+        ReadLineExpr()
+            : CallExpression()
+        {
+
+        };
+        
+    std::string toString(int numSpaces);
+    std::string nodeName() { return "ReadLineExpr: "; };
+};

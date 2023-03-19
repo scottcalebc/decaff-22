@@ -418,7 +418,24 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
 
     case Scanner::Token::SubType::Call:
         {
-            CallExpression *call = new CallExpression();
+            CallExpression *call;
+
+            if (tokenStack.top().getValue<std::string>().compare("Print") == 0)
+            {
+                call = new PrintStmt();
+            }
+            else if (tokenStack.top().getValue<std::string>().compare("ReadInteger") == 0)
+            {
+                call = new ReadIntExpr();
+            }
+            else if (tokenStack.top().getValue<std::string>().compare("ReadLine") == 0)
+            {
+                call = new ReadLineExpr();
+            }
+            else
+            {
+                call = new CallExpression();
+            }
 
             call->ident = new Identifier();
             call->ident->ident = tokenStack.top();
@@ -440,6 +457,19 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             
             call->lparen = tokenStack.top();
             tokenStack.pop();
+
+
+            if (call->ident->ident.getValue<std::string>().compare("Print") == 0 
+                && call->actuals.size() == 0 )
+            {
+                throw std::runtime_error("Expected Argument for Print");
+            }
+            if ( (call->ident->ident.getValue<std::string>().compare("ReadInteger") == 0 
+                || call->ident->ident.getValue<std::string>().compare("ReadLine") == 0 )
+                && call->actuals.size() != 0 )
+            {
+                throw std::runtime_error("Invalid Arguments for " + call->ident->ident.getValue<std::string>());
+            }
 
             // return empty expression
             return call;
