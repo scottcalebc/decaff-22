@@ -343,7 +343,7 @@ class FormalVariableDeclaration : public VariableDeclaration
         };
 
         FormalVariableDeclaration(VariableDeclaration*var);
-        std::string nodeName() { return "(formals):" + VariableDeclaration::nodeName(); };
+        std::string nodeName() { return "(formals) " + VariableDeclaration::nodeName(); };
 };
 
 class FunctionDeclaration : public Declarations
@@ -448,22 +448,50 @@ class ReadLineExpr : public CallExpression
     std::string nodeName() { return "ReadLineExpr: "; };
 };
 
-class ReturnStmt : public Statement
+
+class KeywordStmt: public Statement
+{
+    public:
+        Scanner::Token keyword;
+        Expression* expr;
+        KeywordStmt()
+            : Statement()
+            , keyword()
+            , expr(nullptr)
+        {
+
+        };
+
+        virtual int line() { return keyword.lineNumber; };
+        virtual std::string nodeName() { return "KeywordStmt: "; };
+        virtual std::string toString(int numSpaces);
+
+};
+
+
+class ReturnStmt : public KeywordStmt
 {
     public:
         ReturnStmt()
-            : Statement()
-            , returnToken()
-            , expr(nullptr)
+            : KeywordStmt()
             , semiColon()
             {
 
             };
         
-        Scanner::Token returnToken;
-        Expression * expr;
         Scanner::Token semiColon;
 
         std::string nodeName() { return "ReturnStmt: ";};
-        std::string toString(int numSpaces);
+};
+
+class BreakStmt : public ReturnStmt
+{
+    public:
+        BreakStmt()
+            : ReturnStmt()
+            {
+
+            };
+
+        std::string nodeName() { return "BreakStmt: "; };
 };

@@ -493,10 +493,27 @@ Statement* parseStmt()
         case Scanner::Token::Type::While:
         case Scanner::Token::Type::For:
         case Scanner::Token::Type::Break:
+            {
+                BreakStmt *breakStmt = new BreakStmt();
+
+                breakStmt->keyword = tokenLookAhead->at(0);
+                takeTokens(1);
+
+                if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
+                {
+                    throw std::runtime_error("Expected semicolon for break statement");
+                }
+
+                breakStmt->semiColon = tokenLookAhead->at(0);
+                takeTokens(1);
+
+                return breakStmt;
+            }
+            break;
         case Scanner::Token::Type::Return:
             {
                 ReturnStmt *ret = new ReturnStmt();
-                ret->returnToken = tokenLookAhead->at(0);
+                ret->keyword = tokenLookAhead->at(0);
                 takeTokens(1);
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
                 ret->expr = parseExpr(tokens);
