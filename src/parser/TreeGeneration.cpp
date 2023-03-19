@@ -557,7 +557,7 @@ IfStmt* parseIfStmt()
     {
         stmt->secondKeyword = tokenLookAhead->at(0);
         takeTokens(1);
-        
+
         stmt->elseBlock = parseStmt();
 
         if (stmt->elseBlock == nullptr)
@@ -565,6 +565,71 @@ IfStmt* parseIfStmt()
         
     }
     
+    return stmt;
+}
+
+ForStmt* parseFor()
+{
+    ForStmt *stmt = new ForStmt();
+
+    stmt->keyword = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
+        throw std::runtime_error("Expected open paren for If");
+
+    stmt->lparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
+    {
+        std::stack<Scanner::Token> tokens = infix2postfix(";");
+        int numTokens = tokens.size();
+        stmt->startExpr = parseExpr(tokens);
+
+        if (stmt->startExpr == nullptr)
+            throw std::runtime_error("Expected expression");
+
+        // check again after parsing to verify
+        if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
+            throw std::runtime_error("Expected semicolon");
+    } 
+    
+    stmt->endStart = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    std::stack<Scanner::Token> tokens = infix2postfix(";");
+    stmt->expr = parseExpr(tokens);
+
+    if (stmt->expr == nullptr)
+        throw std::runtime_error("Invalid Expression");
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
+        throw std::runtime_error("Invalid For statement");
+    
+    stmt->endExpr = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+    {
+        std::stack<Scanner::Token> tokens = infix2postfix(")");
+        stmt->loopExpr = parseExpr(tokens);
+
+        if (stmt->loopExpr == nullptr)
+            throw std::runtime_error("Expected expression");
+        
+        if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
+            throw std::runtime_error("Expected end paren");
+    }
+
+    stmt->rparen = tokenLookAhead->at(0);
+    takeTokens(1);
+
+    stmt->stmt = parseStmt();
+
+    if (stmt->stmt == nullptr)
+        throw std::runtime_error("Expected statement");
+
     return stmt;
 }
 
@@ -580,6 +645,7 @@ Statement* parseStmt()
             return parseWhile();
             break;
         case Scanner::Token::Type::For:
+            return parseFor();
             break;
         case Scanner::Token::Type::Break:
             {

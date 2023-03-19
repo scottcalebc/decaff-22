@@ -289,3 +289,43 @@ std::string IfStmt::toString(int numSpaces)
 }
 
 
+std::string ForStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << nodeName() << std::endl;
+    
+    if (startExpr != nullptr)
+    {
+        ss << std::setw(3) << startExpr->line()
+            << std::setw(numSpaces) << " "
+            << "(initial) " << startExpr->toString(numSpaces+3);
+    }
+
+    ss << std::setw(3) << expr->line()
+        << std::setw(numSpaces) << " "
+        << "(cond) " << expr->toString(numSpaces+3);
+
+    if (loopExpr != nullptr)
+    {
+        ss << std::setw(3) << loopExpr->line()
+            << std::setw(numSpaces) << " "
+            << "(after loop) " << loopExpr->toString(numSpaces+3);
+    }
+
+    if (stmt->line() < 1)
+    {
+        ss << std::setw(numSpaces+3) << " ";
+    }
+    else
+    {
+        ss << std::setw(3) << stmt->line()
+            << std::setw(numSpaces) << " ";
+    }
+    
+    ss << "(body) " << stmt->toString(numSpaces+3);
+
+    return ss.str();
+}
+
+

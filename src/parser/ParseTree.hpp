@@ -534,3 +534,25 @@ class IfStmt : public WhileStmt
         std::string toString(int numSpaces);
 };
 
+class ForStmt : public WhileStmt
+{
+    public:
+        Expression *startExpr;
+        Scanner::Token endStart;
+        Scanner::Token endExpr;
+        Expression *loopExpr;
+
+        ForStmt()
+            : WhileStmt()
+            , startExpr(nullptr)
+            , endStart()
+            , endExpr()
+            , loopExpr(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "ForStmt: "; };
+        std::string toString(int numSpace);
+};
+
