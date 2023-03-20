@@ -22,7 +22,7 @@ void test_invalid_file(void)
 
 void test_valid_file(void)
 {
-    helper_fake_main("./samples/program.decaf"); 
+    helper_fake_main("./samples/lexer/program.decaf"); 
 }
 
 void test_working_files(void)
@@ -35,7 +35,7 @@ void test_working_files(void)
 
     for ( auto & file : file_names) 
     {
-        helper_fake_main("./samples/"+file);
+        helper_fake_main("./samples/lexer/"+file);
     }
 }
 
