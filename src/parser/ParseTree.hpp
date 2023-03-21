@@ -490,7 +490,6 @@ class ReturnStmt : public KeywordStmt
     public:
         ReturnStmt()
             : KeywordStmt()
-            , semiColon()
             {
 
             };
@@ -498,6 +497,7 @@ class ReturnStmt : public KeywordStmt
         Scanner::Token semiColon;
 
         std::string nodeName() { return "ReturnStmt: ";};
+        std::string toString(int numSpaces);
 
 };
 

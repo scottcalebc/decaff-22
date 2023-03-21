@@ -248,6 +248,22 @@ std::string KeywordStmt::toString(int numSpaces)
     return ss.str();
 }
 
+std::string ReturnStmt::toString(int numSpaces)
+{
+    std::stringstream ss;
+
+    ss << KeywordStmt::toString(numSpaces);
+
+    if (expr == nullptr)
+    {
+        ss << std::setw(3) << " "
+            << std::setw(numSpaces+3) << " "
+            << "Empty: " << std::endl;
+    }
+
+    return ss.str();
+}
+
 std::string WhileStmt::toString(int numSpaces)
 {
     std::stringstream ss;
@@ -255,7 +271,7 @@ std::string WhileStmt::toString(int numSpaces)
     ss << nodeName() << std::endl
         << std::setw(3) << expr->line()
         << std::setw(numSpaces) << " "
-        << "(cond) " << expr->toString(numSpaces+3);
+        << "(test) " << expr->toString(numSpaces+3);
 
     if (stmt->line() < 1)
     {
@@ -276,13 +292,28 @@ std::string IfStmt::toString(int numSpaces)
 {
     std::stringstream ss;
 
-    ss << WhileStmt::toString(numSpaces);
+    ss << nodeName() << std::endl
+        << std::setw(3) << expr->line()
+        << std::setw(numSpaces) << " "
+        << "(test) " << expr->toString(numSpaces+3);
+
+    if (stmt->line() < 1)
+    {
+        ss << std::setw(numSpaces+3) << " ";
+    }
+    else
+    {
+        ss << std::setw(3) << stmt->line()
+            << std::setw(numSpaces) << " ";
+    }
+
+    ss << "(then) " << stmt->toString(numSpaces+3);
 
     if ( elseBlock != nullptr)
     {
         ss << std::setw(3) << " "
             << std::setw(numSpaces) << " "
-            << "(else body) " << elseBlock->toString(numSpaces+3);
+            << "(else) " << elseBlock->toString(numSpaces+3);
     }
 
     return ss.str();
@@ -295,22 +326,32 @@ std::string ForStmt::toString(int numSpaces)
 
     ss << nodeName() << std::endl;
     
+    ss << std::setw(3) << expr->line()
+        << std::setw(numSpaces) << " "
+        << "(init) " ; 
+    
     if (startExpr != nullptr)
     {
-        ss << std::setw(3) << startExpr->line()
-            << std::setw(numSpaces) << " "
-            << "(initial) " << startExpr->toString(numSpaces+3);
+        ss << startExpr->toString(numSpaces+3);
+    } else 
+    {
+        ss << "Empty:" << std::endl;
     }
 
     ss << std::setw(3) << expr->line()
         << std::setw(numSpaces) << " "
-        << "(cond) " << expr->toString(numSpaces+3);
+        << "(test) " << expr->toString(numSpaces+3);
+
+    ss << std::setw(3) << expr->line()
+            << std::setw(numSpaces) << " "
+            << "(step) ";
 
     if (loopExpr != nullptr)
     {
-        ss << std::setw(3) << loopExpr->line()
-            << std::setw(numSpaces) << " "
-            << "(after loop) " << loopExpr->toString(numSpaces+3);
+        ss << loopExpr->toString(numSpaces+3);
+    } else 
+    {
+        ss << "Empty: " << std::endl;
     }
 
     if (stmt->line() < 1)

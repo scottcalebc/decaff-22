@@ -693,11 +693,15 @@ Statement* parseStmt()
                 if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
                 {
                     ret->semiColon = tokenLookAhead->at(0);
-                    ret->expr->semiColon = tokenLookAhead->at(0);
+
+                    // expr optional
+                    if (ret->expr != nullptr)
+                        ret->expr->semiColon = tokenLookAhead->at(0);
+                        
                     takeTokens(1);
                 }
                 else
-                    throw std::runtime_error("Expected semicolon at end of return");
+                    throw Parser::ParseException(tokenLookAhead->at(0));
 
                 return ret;
             }
