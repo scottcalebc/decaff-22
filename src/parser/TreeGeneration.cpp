@@ -124,7 +124,7 @@ VariableDeclaration* parseVarDecl()
                 throw Parser::ParseException(tokenLookAhead->at(2));
             break;
         default:
-            throw Parser::ParseException(token);
+            return nullptr;
     }
 
     return nullptr;
@@ -829,7 +829,10 @@ std::vector<FormalVariableDeclaration*> parseFormals()
     {
         // Here we need up to 3 tokens to determine which direction to go
         addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
-        VariableDeclaration *var = parseVarDecl();            
+        VariableDeclaration *var = parseVarDecl();        
+
+        if (var == nullptr)
+            throw Parser::ParseException(tokenLookAhead->at(0));    
         FormalVariableDeclaration *formalVar = new FormalVariableDeclaration(var);
 
         if (var->semiColon.getValue<std::string>().compare(",") == 0)
@@ -866,6 +869,11 @@ Declarations* parseDecl()
     if ( tokenLookAhead->at(2).getValue<std::string>().compare(";") == 0)
     {
         decl = parseVarDecl();
+
+
+        if (decl == nullptr)
+            throw Parser::ParseException(tokenLookAhead->at(0));
+        
         takeTokens(3);  // take semi
 
         return decl;
