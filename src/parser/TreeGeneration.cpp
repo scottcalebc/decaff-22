@@ -96,6 +96,7 @@ VariableDeclaration* parseVarDecl()
         case Scanner::Token::Type::Double:
         case Scanner::Token::Type::String:
             // Must be: Type Ident ;
+            
             if (
                 tokenLookAhead->at(1).type == Scanner::Token::Type::Identifier &&
                 tokenLookAhead->at(2).type == Scanner::Token::Type::Separator
@@ -117,6 +118,10 @@ VariableDeclaration* parseVarDecl()
 
                 return var;
             }
+            else if (tokenLookAhead->at(1).type != Scanner::Token::Type::Identifier)
+                throw Parser::ParseException(tokenLookAhead->at(1));
+            else
+                throw Parser::ParseException(tokenLookAhead->at(2));
             break;
         default:
             return nullptr;
@@ -697,7 +702,7 @@ Statement* parseStmt()
                     // expr optional
                     if (ret->expr != nullptr)
                         ret->expr->semiColon = tokenLookAhead->at(0);
-                        
+
                     takeTokens(1);
                 }
                 else
@@ -824,29 +829,22 @@ std::vector<FormalVariableDeclaration*> parseFormals()
     {
         // Here we need up to 3 tokens to determine which direction to go
         addLookAhead(std::abs(3 - (tokenLookAheadIndex+1) ) );
-        if (
-        (tokenLookAhead->at(2).getValue<std::string>().compare(",") == 0
-                || tokenLookAhead->at(2).getValue<std::string>().compare(")") == 0)
-        )
+        VariableDeclaration *var = parseVarDecl();            
+        FormalVariableDeclaration *formalVar = new FormalVariableDeclaration(var);
+
+        if (var->semiColon.getValue<std::string>().compare(",") == 0)
         {
-            VariableDeclaration *var = parseVarDecl();            
-            FormalVariableDeclaration *formalVar = new FormalVariableDeclaration(var);
+            formalVar->semiColon = var->semiColon; 
+            takeTokens(3);
+        }
+        else
+        {
+            formalVar->semiColon.type = Scanner::Token::Type::EMPTY;
+            takeTokens(2);
+        }
 
-            if (var->semiColon.getValue<std::string>().compare(",") == 0)
-            {
-                formalVar->semiColon = var->semiColon; 
-                takeTokens(3);
-            }
-            else
-            {
-                formalVar->semiColon.type = Scanner::Token::Type::EMPTY;
-                takeTokens(2);
-            }
-
-            delete var;
-            formals.push_back(formalVar);
-
-        }  
+        delete var;
+        formals.push_back(formalVar);
     }
     // leave rparen in token feed to be eaten by func decl
 
