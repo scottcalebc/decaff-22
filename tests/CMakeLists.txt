@@ -38,7 +38,7 @@ add_test(
   NAME
     test_file_outputs
   COMMAND
-    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR}
+    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR} lexer --lexer
     WORKING_DIRECTORY
     ${PROJECT_SOURCE_DIR}/tests
 )

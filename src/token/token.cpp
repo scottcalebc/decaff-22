@@ -117,22 +117,22 @@ std::ostream& operator<<(std::ostream &out, Scanner::Token const& token)
             break;
         case Scanner::Token::Type::BoolConstant:
         case Scanner::Token::Type::StringConstant:
-            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<std::string>() << ")";
+            out << Scanner::Token::getTTypeName(token.type) << " (value = " << token.getValue<std::string>() << ")";
             break;
         case Scanner::Token::Type::IntConstant:
-            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<int>() << ")";
+            out << Scanner::Token::getTTypeName(token.type) << " (value = " << token.getValue<int>() << ")";
             break;
         case Scanner::Token::Type::DoubleConstant:
-            out << Scanner::Token::getTypeName(token.type) << " (value = " << token.getValue<double>() << ")";
+            out << Scanner::Token::getTTypeName(token.type) << " (value = " << token.getValue<double>() << ")";
             break;
         case Scanner::Token::Type::Identifier:
-            out << Scanner::Token::getTypeName(token.type);
+            out << Scanner::Token::getTTypeName(token.type);
             if (token.value.length() > Scanner::Token::identifierMaxLength)
                 out << "(truncated to " + token.getValue<std::string>() + ")";
             break;
 
         default:
-            out << Scanner::Token::getTypeName(token.type);
+            out << Scanner::Token::getTTypeName(token.type);
         // ommitting default case here since we may add other token types with different
         // print options
     };

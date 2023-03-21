@@ -343,7 +343,7 @@ class FormalVariableDeclaration : public VariableDeclaration
         };
 
         FormalVariableDeclaration(VariableDeclaration*var);
-        std::string nodeName() { return "(formals):" + VariableDeclaration::nodeName(); };
+        std::string nodeName() { return "(formals) " + VariableDeclaration::nodeName(); };
 };
 
 class FunctionDeclaration : public Declarations
@@ -447,3 +447,112 @@ class ReadLineExpr : public CallExpression
     std::string toString(int numSpaces);
     std::string nodeName() { return "ReadLineExpr: "; };
 };
+
+
+class KeywordStmt: public Statement
+{
+    public:
+        Scanner::Token keyword;
+        Expression* expr;
+        KeywordStmt()
+            : Statement()
+            , keyword()
+            , expr(nullptr)
+        {
+
+        };
+
+        virtual int line() { return keyword.lineNumber; };
+        virtual std::string nodeName() { return "KeywordStmt: "; };
+        virtual std::string toString(int numSpaces);
+
+};
+
+
+class ReturnStmt : public KeywordStmt
+{
+    public:
+        ReturnStmt()
+            : KeywordStmt()
+            , semiColon()
+            {
+
+            };
+        
+        Scanner::Token semiColon;
+
+        std::string nodeName() { return "ReturnStmt: ";};
+};
+
+class BreakStmt : public ReturnStmt
+{
+    public:
+        BreakStmt()
+            : ReturnStmt()
+            {
+
+            };
+
+        std::string nodeName() { return "BreakStmt: "; };
+};
+
+class WhileStmt : public KeywordStmt
+{
+    public:
+        Scanner::Token lparen;
+        Scanner::Token rparen;
+        Statement *stmt;
+
+        WhileStmt()
+            : KeywordStmt()
+            , lparen()
+            , rparen()
+            , stmt(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "WhileStmt: "; };
+        std::string toString(int numSpaces);
+};
+
+class IfStmt : public WhileStmt
+{
+    public:
+        Scanner::Token secondKeyword;
+        Statement *elseBlock;
+
+        IfStmt()
+            : WhileStmt()
+            , secondKeyword()
+            , elseBlock(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "IfStmt: "; };
+        std::string toString(int numSpaces);
+};
+
+class ForStmt : public WhileStmt
+{
+    public:
+        Expression *startExpr;
+        Scanner::Token endStart;
+        Scanner::Token endExpr;
+        Expression *loopExpr;
+
+        ForStmt()
+            : WhileStmt()
+            , startExpr(nullptr)
+            , endStart()
+            , endExpr()
+            , loopExpr(nullptr)
+        {
+
+        };
+
+        std::string nodeName() { return "ForStmt: "; };
+        std::string toString(int numSpace);
+};
+

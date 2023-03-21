@@ -12,7 +12,7 @@ void Scanner::Lexer::nextLine()
     lineStream.str(tmp);
     lineStream.clear();
 
-    std::cout << "Getting line[" << lineNumber << "]: " << lineStream.str() << std::endl;
+    //std::cout << "Getting line[" << lineNumber << "]: " << lineStream.str() << std::endl;
 
     // increment line number
     lineNumber++;
