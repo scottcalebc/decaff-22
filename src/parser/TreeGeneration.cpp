@@ -526,6 +526,9 @@ WhileStmt * parseWhile()
     if (stmt->expr == nullptr)
         throw std::runtime_error("Invalid expression for while");
 
+    if (!tokens.empty())
+        throw Parser::ParseException(stmt->expr->firstToken());
+
     if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
         throw Parser::ParseException(tokenLookAhead->at(0));
 
@@ -560,6 +563,9 @@ IfStmt* parseIfStmt()
 
     if (stmt->expr == nullptr)
         throw std::runtime_error("Invalid expression for If");
+
+    if (!tokens.empty())
+        throw Parser::ParseException(stmt->expr->firstToken());
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
         throw Parser::ParseException(tokenLookAhead->at(0));
@@ -611,6 +617,9 @@ ForStmt* parseFor()
 
         if (stmt->startExpr == nullptr)
             throw std::runtime_error("Expected expression");
+        
+        if (!tokens.empty())
+            throw Parser::ParseException(stmt->expr->firstToken());
 
         // check again after parsing to verify
         if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
@@ -626,6 +635,9 @@ ForStmt* parseFor()
     if (stmt->expr == nullptr)
         throw std::runtime_error("Invalid Expression");
 
+    if (!tokens.empty())
+        throw Parser::ParseException(stmt->expr->firstToken());
+
     if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
         throw Parser::ParseException(tokenLookAhead->at(0));
     
@@ -639,6 +651,9 @@ ForStmt* parseFor()
 
         if (stmt->loopExpr == nullptr)
             throw std::runtime_error("Expected expression");
+        
+        if (!tokens.empty())
+            throw Parser::ParseException(stmt->expr->firstToken()); 
         
         if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
             throw Parser::ParseException(tokenLookAhead->at(0));
@@ -695,6 +710,12 @@ Statement* parseStmt()
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
                 ret->expr = parseExpr(tokens);
 
+                if (!tokens.empty() && ret->expr != nullptr)
+                    throw Parser::ParseException(ret->expr->firstToken());
+
+                if (!tokens.empty())
+                    throw Parser::ParseException(tokenLookAhead->at(0));
+
                 if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
                 {
                     ret->semiColon = tokenLookAhead->at(0);
@@ -730,8 +751,7 @@ Statement* parseStmt()
 
                 // todo: add this logic to all expression parsing
                 if (!tokens.empty())
-                    throw std::runtime_error("Invalid Expression on token " + tokens.top().getValue<std::string>());
-
+                    throw Parser::ParseException(expr->firstToken());
 
                 if (tokenLookAhead->at(0).getValue<std::string>().compare(";") == 0)
                 {
