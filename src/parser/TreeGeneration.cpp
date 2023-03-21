@@ -321,12 +321,15 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             assign->right = parseExpr(tokenStack);
 
             if (assign->right == nullptr)
-                throw std::runtime_error("Invalid Expression for assignment");
+                throw Parser::ParseException(assign->op);
             
             assign->expr = parseExpr(tokenStack);
 
-            if (assign->expr == nullptr || dynamic_cast<LValue*>(assign->expr) == nullptr)
-                throw std::runtime_error("Expected lvalue for assignment");
+            if (assign->expr == nullptr)
+                throw Parser::ParseException(assign->op);
+
+            if (dynamic_cast<LValue*>(assign->expr) == nullptr)
+                throw Parser::ParseException(assign->expr->firstToken());
 
             return assign;
         }
@@ -426,7 +429,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             unary->right = parseExpr(tokenStack);
 
             if (unary->right == nullptr)
-                throw std::runtime_error("Invalid Expression");
+                throw Parser::ParseException(unary->op);
 
             return unary;
         }
@@ -457,7 +460,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             tokenStack.pop();
 
             if (tokenStack.top().subType != Scanner::Token::SubType::Paren )
-                throw std::runtime_error("Expected paren when making call");
+                throw Parser::ParseException(tokenStack.top());
             
             call->rparen = tokenStack.top();
             tokenStack.pop();
@@ -468,7 +471,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             }
 
             if (tokenStack.top().subType != Scanner::Token::SubType::Paren )
-                throw std::runtime_error("Expected paren when making call");
+                throw Parser::ParseException(tokenStack.top());
             
             call->lparen = tokenStack.top();
             tokenStack.pop();
@@ -477,13 +480,13 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             if (call->ident->ident.getValue<std::string>().compare("Print") == 0 
                 && call->actuals.size() == 0 )
             {
-                throw std::runtime_error("Expected Argument for Print");
+                throw Parser::ParseException(call->lparen);
             }
             if ( (call->ident->ident.getValue<std::string>().compare("ReadInteger") == 0 
                 || call->ident->ident.getValue<std::string>().compare("ReadLine") == 0 )
                 && call->actuals.size() != 0 )
             {
-                throw std::runtime_error("Invalid Arguments for " + call->ident->ident.getValue<std::string>());
+                throw Parser::ParseException(call->lparen);
             }
 
             // return empty expression
@@ -506,7 +509,7 @@ WhileStmt * parseWhile()
     takeTokens(1);
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
-        throw std::runtime_error("Expected open paren for while");
+        throw Parser::ParseException(tokenLookAhead->at(0));
 
     stmt->lparen = tokenLookAhead->at(0);
     takeTokens(1);
@@ -519,7 +522,7 @@ WhileStmt * parseWhile()
         throw std::runtime_error("Invalid expression for while");
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
-        throw std::runtime_error("Invalid while");
+        throw Parser::ParseException(tokenLookAhead->at(0));
 
     stmt->rparen = tokenLookAhead->at(0);
     takeTokens(1);
@@ -541,7 +544,7 @@ IfStmt* parseIfStmt()
     takeTokens(1);
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
-        throw std::runtime_error("Expected open paren for If");
+        throw Parser::ParseException(tokenLookAhead->at(0));
 
     stmt->lparen = tokenLookAhead->at(0);
     takeTokens(1);
@@ -554,7 +557,7 @@ IfStmt* parseIfStmt()
         throw std::runtime_error("Invalid expression for If");
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
-        throw std::runtime_error("Invalid If");
+        throw Parser::ParseException(tokenLookAhead->at(0));
 
     
     stmt->rparen = tokenLookAhead->at(0);
@@ -590,7 +593,7 @@ ForStmt* parseFor()
     takeTokens(1);
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare("(") != 0)
-        throw std::runtime_error("Expected open paren for If");
+        throw Parser::ParseException(tokenLookAhead->at(0));
 
     stmt->lparen = tokenLookAhead->at(0);
     takeTokens(1);
@@ -606,7 +609,7 @@ ForStmt* parseFor()
 
         // check again after parsing to verify
         if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
-            throw std::runtime_error("Expected semicolon");
+            throw Parser::ParseException(tokenLookAhead->at(0));
     } 
     
     stmt->endStart = tokenLookAhead->at(0);
@@ -619,7 +622,7 @@ ForStmt* parseFor()
         throw std::runtime_error("Invalid Expression");
 
     if (tokenLookAhead->at(0).getValue<std::string>().compare(";") != 0)
-        throw std::runtime_error("Invalid For statement");
+        throw Parser::ParseException(tokenLookAhead->at(0));
     
     stmt->endExpr = tokenLookAhead->at(0);
     takeTokens(1);
@@ -633,7 +636,7 @@ ForStmt* parseFor()
             throw std::runtime_error("Expected expression");
         
         if (tokenLookAhead->at(0).getValue<std::string>().compare(")") != 0)
-            throw std::runtime_error("Expected end paren");
+            throw Parser::ParseException(tokenLookAhead->at(0));
     }
 
     stmt->rparen = tokenLookAhead->at(0);
@@ -705,6 +708,11 @@ Statement* parseStmt()
             else    
                 return nullptr;
         case Scanner::Token::Type::Identifier:
+            {
+                auto op = Scanner::Token::keywords.find(token.getValue<std::string>());
+                if (op != Scanner::Token::keywords.end())
+                    throw Parser::ParseException(token);
+            }
         default:
             {
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
