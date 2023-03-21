@@ -8,6 +8,7 @@
 #include "exceptions.hpp"
 #include "token.hpp"
 #include "ParseTree.hpp"
+#include "ParseExceptions.hpp"
 
 
 

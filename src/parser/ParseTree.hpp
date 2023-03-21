@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <deque>
 #include "token.hpp"
