@@ -31,8 +31,9 @@ int main(int argc, char** argv) {
         }
         catch ( Parser::ParseException &exc)
         {
-            std::cout << exc.what();
+            std::cout << exc.what() << std::endl;
         }
+        std::cout << std::endl;
     } else
     {
         Scanner::Token token;
@@ -54,6 +55,8 @@ int main(int argc, char** argv) {
 
         } while (token.type != Token::Type::END);
     }
+
+    
 
     return 0;
 }

@@ -746,7 +746,6 @@ Statement* parseStmt()
         default:
             {
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
-                printStack("Tokens ", tokens);
                 Expression *expr = parseExpr(tokens);
 
                 // todo: add this logic to all expression parsing

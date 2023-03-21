@@ -17,7 +17,7 @@ done
 ret=0
 for out in $(ls *.out); do
     # err_output=$(diff -w $out $samples_dir/$out)
-
+    echo $out
     diff -w $out $samples_dir/$test_type/$out
 
     if [[ $? -ne 0 ]]; then
