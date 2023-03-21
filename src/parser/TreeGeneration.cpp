@@ -124,7 +124,7 @@ VariableDeclaration* parseVarDecl()
                 throw Parser::ParseException(tokenLookAhead->at(2));
             break;
         default:
-            return nullptr;
+            throw Parser::ParseException(token);
     }
 
     return nullptr;
