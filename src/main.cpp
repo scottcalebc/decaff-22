@@ -26,8 +26,8 @@ int main(int argc, char** argv) {
 
     if (argc == 2) 
     {
-        treeGeneration(&lexer);
         try {
+            treeGeneration(&lexer);
         }
         catch ( Parser::ParseException &exc)
         {
