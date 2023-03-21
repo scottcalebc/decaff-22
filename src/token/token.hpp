@@ -105,6 +105,7 @@ namespace Scanner {
         Type type;
         SubType subType;
         std::string value;
+        std::string lineInfo;
         int lineNumber;
         int colStart;       // only column start since column end can be inferred by colStart + tokenString.len()
 

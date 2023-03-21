@@ -18,6 +18,7 @@ class ParseNode
     public:
         virtual int line() = 0;
         virtual std::string toString(int numSpaces) = 0;
+        virtual Scanner::Token firstToken() = 0;
 };
 class Identifier : public ParseNode
 {
@@ -42,6 +43,8 @@ class Identifier : public ParseNode
         }
         std::string nodeName() { return "Identifier: "; };
         std::string toString(int numSpaces);
+
+        Scanner::Token firstToken() { return ident; };
 };
 
 class DeclarationType : public ParseNode
@@ -67,6 +70,7 @@ class DeclarationType : public ParseNode
         }
         std::string nodeName() { return "Type: "; };
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return type; };
 };
 
 class ReturnType: public DeclarationType
@@ -95,7 +99,7 @@ class Statement : public ParseNode
         };
         virtual int line() { return 0; };
         virtual std::string nodeName() { return "Stmt: ";};
-        std::string toString(int numSpaces);
+        virtual std::string toString(int numSpaces);
 };
 
 
@@ -124,6 +128,7 @@ class Declarations : public ParseNode
         };
 
         virtual std::string toString(int numSpaces);
+        virtual Scanner::Token firstToken() { return type->firstToken(); };
 };
 
 class Expression : public Statement
@@ -143,6 +148,7 @@ class Expression : public Statement
 
         virtual int line() {return semiColon.lineNumber; };
         virtual std::string toString(int numSpaces);
+        virtual Scanner::Token firstToken() { return (expr != nullptr) ? expr->firstToken() : semiColon; };
 };
 
 class BinaryExpression : public Expression
@@ -170,6 +176,7 @@ class BinaryExpression : public Expression
         virtual int line() { return op.lineNumber; };
         std::string nodeName() { return "BinExpr: "; };
         virtual std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return expr->firstToken(); };
 };
 
 class UnaryExpression : public BinaryExpression
@@ -234,6 +241,7 @@ class ParenExpr : public Expression
         };
 
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return lparen; };
 };
 
 
@@ -259,6 +267,7 @@ class LValue : public Expression
         int line() { return ident->line(); };
         std::string nodeName() { return "FieldAccess: "; };
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return ident->firstToken(); };
 };
 
 class Constant : public Expression
@@ -276,6 +285,7 @@ class Constant : public Expression
         int line() { return constant.lineNumber; };
         std::string nodeName() { return Scanner::Token::getTypeName(constant.type) + ":"; }; 
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return constant; };
 };
 
 /**
@@ -332,6 +342,7 @@ class StatementBlock : public Statement
 
         std::string nodeName() { return "StmtBlock: "; };
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return lbrace; };
 };
 
 
@@ -377,6 +388,7 @@ class FunctionDeclaration : public Declarations
 
         std::string nodeName() { return "FnDecl:"; };
         std::string toString(int numSpaces);
+        
 };
 
 class Actual: public Expression
@@ -407,6 +419,7 @@ class CallExpression : public Expression
         int line() { return lparen.lineNumber; };
         std::string nodeName() { return "Call: "; };
         std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return ident->firstToken(); };
 };
 
 class PrintStmt : public CallExpression
@@ -467,6 +480,7 @@ class KeywordStmt: public Statement
         virtual int line() { return keyword.lineNumber; };
         virtual std::string nodeName() { return "KeywordStmt: "; };
         virtual std::string toString(int numSpaces);
+        Scanner::Token firstToken() { return keyword; };
 
 };
 
@@ -484,6 +498,7 @@ class ReturnStmt : public KeywordStmt
         Scanner::Token semiColon;
 
         std::string nodeName() { return "ReturnStmt: ";};
+
 };
 
 class BreakStmt : public ReturnStmt

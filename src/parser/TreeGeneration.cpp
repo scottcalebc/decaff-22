@@ -238,6 +238,8 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                 }
                 break;
             default:
+                // unexpected token here 
+                throw Parser::ParseException(tokenLookAhead->at(0));
                 break;
 
         }
@@ -298,7 +300,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             paren->expr = parseExpr(tokenStack);
 
             if (tokenStack.top().getValue<std::string>().compare("(") != 0)
-                throw std::runtime_error("Invalid paren expr");
+                throw Parser::ParseException(tokenStack.top());
             
             paren->lparen = tokenStack.top();
             tokenStack.pop();
@@ -338,15 +340,24 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             math->op = tokenStack.top();
 
             tokenStack.pop();
+
+            Scanner::Token t;
+            if (!tokenStack.empty())
+                t = tokenStack.top();
+
             math->right = parseExpr(tokenStack);
             
             if (math->right == nullptr)
-                throw std::runtime_error("Invalid arithmetic expression");
+                throw Parser::ParseException(math->op);
+
+            Scanner::Token t1;
+            if (!tokenStack.empty())
+                t = tokenStack.top();
 
             math->expr = parseExpr(tokenStack);
 
             if (math->expr == nullptr)
-                throw std::runtime_error("Invalid arithmetic expression");
+                throw Parser::ParseException(math->op);
             
             return math;
         }
@@ -370,34 +381,36 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             // This checks if the right expressions is a logical expression cannot have something like
             // a > b > c (not parsable)
             // a > b && a > c (parsable)
-            if (logic->right == nullptr ||
-                (dynamic_cast<BinaryExpression*>(logic->right) != nullptr 
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::LessThan
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::LessEqual
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::GreaterThan
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::GreaterEqual
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::Equal
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::NotEqual
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::And 
-                && dynamic_cast<BinaryExpression*>(logic->right)->op.subType == Scanner::Token::SubType::Or ) )
+            if (logic->right == nullptr)
+                throw Parser::ParseException(logic->op);
+
+            if (logic->op.subType != Scanner::Token::SubType::And && logic->op.subType != Scanner::Token::SubType::Or &&
+                dynamic_cast<BinaryExpression*>(logic->right) != nullptr && (
+                    dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::LessThan
+                ||  dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::LessEqual
+                ||  dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::GreaterThan
+                ||  dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::GreaterEqual
+                ||  dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::Equal
+                ||  dynamic_cast<BinaryExpression*>(logic->right)->op.subType  == Scanner::Token::SubType::NotEqual) )
             {
-                throw std::runtime_error("Invalid Expression");
+                throw Parser::ParseException(dynamic_cast<BinaryExpression*>(logic->right)->op);
             }
 
             logic->expr = parseExpr(tokenStack);
 
-            if (logic->expr == nullptr ||
-                (dynamic_cast<BinaryExpression*>(logic->expr) != nullptr 
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::LessThan
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::LessEqual
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::GreaterThan
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::GreaterEqual
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::Equal
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::NotEqual
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::And 
-                && dynamic_cast<BinaryExpression*>(logic->expr)->op.subType == Scanner::Token::SubType::Or ) )
+            if (logic->right == nullptr)
+                throw Parser::ParseException(logic->op);
+            
+            if (logic->op.subType != Scanner::Token::SubType::And && logic->op.subType != Scanner::Token::SubType::Or &&
+                dynamic_cast<BinaryExpression*>(logic->expr) != nullptr 
+                && (   dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::LessThan
+                    || dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::GreaterThan
+                    || dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::GreaterEqual
+                    || dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::Equal
+                    || dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::LessEqual
+                    || dynamic_cast<BinaryExpression*>(logic->expr)->op.subType  == Scanner::Token::SubType::NotEqual ) )
             {
-                throw std::runtime_error("Invalid Expression");
+                throw Parser::ParseException(dynamic_cast<BinaryExpression*>(logic->right)->op);
             }
 
             return logic;
