@@ -216,11 +216,28 @@ class LogicalExpression : public BinaryExpression
         std::string nodeName() { return "LogicalExpr:"; };
 
         bool followExpr(LogicalExpression* follow) { 
-            if (follow != nullptr)
-                return false; 
-            else
+            if (op.subType == Scanner::Token::SubType::And ||
+                op.subType == Scanner::Token::SubType::Or )
                 return true;
+            else if ( follow->op.subType == Scanner::Token::SubType::And 
+                || follow->op.subType == Scanner::Token::SubType::Or)
+                return true;
+            else
+                return false;
                 };
+};
+
+class RelationalExpression: public LogicalExpression
+{
+    public:
+        std::string nodeName() { return "RelationalExpr: ";};
+
+};
+
+class EqualityExpression: public LogicalExpression
+{
+    public:
+        std::string nodeName() { return "EqualityExpr: "; };
 };
 
 

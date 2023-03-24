@@ -385,8 +385,18 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
     case Scanner::Token::SubType::And :
     case Scanner::Token::SubType::Or :
         {
-            LogicalExpression *logic = new LogicalExpression();
-            logic->op = tokenStack.top();
+            LogicalExpression *logic;
+
+            Scanner::Token op = tokenStack.top();
+            if (op.subType == Scanner::Token::SubType::And || op.subType == Scanner::Token::SubType::Or)
+                logic = new LogicalExpression();
+            if (op.subType == Scanner::Token::SubType::Equal || op.subType == Scanner::Token::SubType::NotEqual)
+                logic = new EqualityExpression();
+            else
+                logic = new RelationalExpression();
+            
+            
+            logic->op = op;
 
             tokenStack.pop();
             logic->right = parseExpr(tokenStack);
