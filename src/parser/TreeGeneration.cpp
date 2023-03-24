@@ -240,6 +240,12 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                             }
                         }
                     }
+                } else {
+                    addLookAhead(2);
+                    if (tokenLookAhead->size() < 2)
+                        throw Parser::ParseException(tokenLookAhead->at(0));
+                    else
+                        throw Parser::ParseException(tokenLookAhead->at(1));
                 }
                 break;
             default:
