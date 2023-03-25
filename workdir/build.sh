@@ -31,13 +31,14 @@ if [[ $? -eq 0 ]]; then
 else
     echo "Error running cmake configure..."
     echo "Running manual build"
-
+    cd $BASE_DIR
+    
     echo "Cleaning build directory"
     rm -rf ./build/
 
     mkdir -p ./build/bin
 
-    for file in $(find ./src -iname "*.cpp" -or "*.hpp"); do
+    for file in $(find ./src -iname "*.cpp" -or -iname "*.hpp"); do
         cp $file ./build
     done
 
