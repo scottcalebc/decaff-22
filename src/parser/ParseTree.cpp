@@ -326,7 +326,7 @@ std::string ForStmt::toString(int numSpaces, std::string extra)
         ss << startExpr->toString(numSpaces+3, "(init) ");
     } else 
     {
-        ss  << std::setw(numSpaces+3) << " "
+        ss  << std::setw(3+numSpaces+3) << " "
             << "(init) Empty:" << std::endl;
     }
 
