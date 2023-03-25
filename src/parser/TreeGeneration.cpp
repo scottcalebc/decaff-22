@@ -1015,7 +1015,7 @@ void treeGeneration(Scanner::Lexer *lexer)
         addLookAhead();
         Program* p = parseProgram();
 
-        std::cout << p->toString(0);
+        std::cout << std::endl << p->toString(0);
     }
     catch( Scanner::GenericException &exc )
     {

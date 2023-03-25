@@ -33,7 +33,6 @@ int main(int argc, char** argv) {
         {
             std::cout << exc.what() << std::endl;
         }
-        std::cout << std::endl;
     } else
     {
         Scanner::Token token;

@@ -93,7 +93,7 @@ std::string Constant::toString(int numSpaces, std::string extra)
 
         if (value == 0)
         {
-            ss << std::fixed << std::setprecision(1) << constant.getValue<double>();
+            ss << constant.getValue<double>();
         }
         else
         {
@@ -104,6 +104,7 @@ std::string Constant::toString(int numSpaces, std::string extra)
             ss << std::fixed << std::setprecision((decimal_places < 1) ? 1 : decimal_places)
                 << constant.getValue<double>();
         }
+
 
 
     }
@@ -271,7 +272,7 @@ std::string ReturnStmt::toString(int numSpaces, std::string extra)
 
     ss << KeywordStmt::toString(numSpaces, extra);
 
-    if (expr == nullptr)
+    if (expr == nullptr && keyword.type == Scanner::Token::Type::Return)
     {
         ss << std::setw(3) << " "
             << std::setw(numSpaces+3) << " "
@@ -285,7 +286,8 @@ std::string WhileStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl
+    ss  << std::setw(numSpaces+3) << " "
+        << nodeName() << std::endl
         << expr->toString(numSpaces+3, "(test) ");
     
     ss << stmt->toString(numSpaces+3, "(body) ");
@@ -297,7 +299,8 @@ std::string IfStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss  << Statement::toString(numSpaces, extra)
+    ss  << std::setw(numSpaces+3) << " "
+        << extra << nodeName() << std::endl
         << expr->toString(numSpaces+3, "(test) ");
 
     ss << stmt->toString(numSpaces+3, "(then) ");
@@ -315,18 +318,16 @@ std::string ForStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
-    
-    ; 
+    ss  << std::setw(numSpaces+3) << " "
+        << extra << nodeName() << std::endl;
     
     if (startExpr != nullptr)
     {
         ss << startExpr->toString(numSpaces+3, "(init) ");
     } else 
     {
-        ss  << std::setw(3) << expr->line()
-            << std::setw(numSpaces) << " "
-            << "Empty:" << std::endl;
+        ss  << std::setw(numSpaces+3) << " "
+            << "(init) Empty:" << std::endl;
     }
 
     ss  << expr->toString(numSpaces+3,"(test) ");
