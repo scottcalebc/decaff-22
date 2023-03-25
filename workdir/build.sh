@@ -7,12 +7,12 @@ pushd $BASE_DIR &> /dev/null
 pushd dependencies &> /dev/null
 
 
-if [[ ! -x "$(command -v cmake)" && ! -f ./cmake-3.26.0-rc3-linux-x86_64/bin/cmake ]]; then
+if [[ ! -f ./cmake-3.26.1-linux-x86_64/bin/cmake ]]; then
     echo "Unpacking dependencies for build"
-    tar -xf ./cmake-3.26.0-rc3-linux-x86_64.tar.gz
+    tar -xf ./cmake-3.26.1-linux-x86_64.tar.gz
 fi
 
-PATH="$PATH:$(pwd)/cmake-3.26.0-rc3-linux-x86_64/bin"
+PATH="$PATH:$(pwd)/cmake-3.26.1-linux-x86_64/bin"
 
 popd &> /dev/null
 
