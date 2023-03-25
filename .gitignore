@@ -1,7 +1,5 @@
 .vscode/
 build/
-tests/samples
-*.out
 CMake*
 CTest*
 *.cmake

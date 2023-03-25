@@ -352,6 +352,7 @@ Scanner::Token Scanner::Lexer::getNextToken()
         token.subType = sub->second;
 
     token.value = tokenBuffer.str();
+    token.lineInfo = lineStream.str();
 
     return token;
 }

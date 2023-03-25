@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 #include "ParseTree.hpp"
 
 FormalVariableDeclaration::FormalVariableDeclaration(VariableDeclaration *var)
@@ -30,300 +31,334 @@ PrintStmt::PrintStmt(CallExpression *expr)
 }
 
 
-std::string Identifier::toString(int numSpaces)
+std::string Identifier::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << ident.getValue<std::string>() << std::endl;
+    ss << std::setw(3) << ident.lineNumber
+        << std::setw(numSpaces) << " " << extra
+        << nodeName() << ident.getValue<std::string>() << std::endl;
 
     return ss.str();
 }
 
-std::string DeclarationType::toString(int numSpaces)
+std::string DeclarationType::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
     // we don't print number line for type
-    ss << nodeName() << type.getValue<std::string>() << std::endl;
+    ss  << std::setw(numSpaces + 3) << " " << extra 
+        << nodeName() << type.getValue<std::string>() << std::endl;
 
     return ss.str();
 }
 
-std::string Declarations::toString(int numSpaces)
+std::string Declarations::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss  << this->nodeName() << std::endl
-        << std::setw(numSpaces + 3) << " " 
-        << type->toString(numSpaces + 3)
-        << std::setw(3) << ident->line()
+    ss  << std::setw(3) << ident->line() 
         << std::setw(numSpaces) << " "
+        << extra << this->nodeName() << std::endl
+        << type->toString(numSpaces + 3)
         << ident->toString(numSpaces + 3);
 
     return ss.str();
 }
 
-std::string LValue::toString(int numSpaces)
+std::string LValue::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << "FieldAccess:" << std::endl
-        << std::setw(3) << ident->line()
+    ss  << std::setw(3) << ident->line()
         << std::setw(numSpaces) << " "
+        << extra <<"FieldAccess:" << std::endl
         << ident->toString(numSpaces+3);
 
     return ss.str();
 }
 
-std::string Constant::toString(int numSpaces)
+std::string Constant::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss  << Scanner::Token::getTypeName(constant.type) 
-        << ": " << constant.getValue<std::string>() << std::endl;
+    ss  << std::setw(3) << constant.lineNumber
+        << std::setw(numSpaces) << " "
+        << extra << nodeName();
+        
+    if (constant.type == Scanner::Token::Type::DoubleConstant)
+    {
+
+        double integral = 0;
+        double value = std::modf(constant.getValue<double>(), &integral);
+
+        if (value == 0)
+        {
+            ss << constant.getValue<double>();
+        }
+        else
+        {
+            std::size_t decimal_index = constant.value.find('.');
+
+            int decimal_places = constant.value.length() - decimal_index - 1;
+
+            ss << std::fixed << std::setprecision((decimal_places < 1) ? 1 : decimal_places)
+                << constant.getValue<double>();
+        }
+
+
+
+    }
+    else if (constant.type == Scanner::Token::Type::IntConstant)
+        ss << constant.getValue<int>();
+    else
+        ss << constant.getValue<std::string>();
+
+    ss << std::endl;
 
     return ss.str();
 }
 
-std::string ParenExpr::toString(int numSpaces)
+std::string ParenExpr::toString(int numSpaces, std::string extra)
 {
-    return expr->toString(numSpaces);
+    return expr->toString(numSpaces, extra);
 }
 
 
-std::string Statement::toString(int numSpaces)
+std::string Statement::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss  << std::setw(3) << line()
+        << std::setw(numSpaces) << " "
+        << extra << nodeName() << std::endl;
 
     return ss.str();
 }
 
-std::string Expression::toString(int numSpaces)
+std::string Expression::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss  << Statement::toString(numSpaces);
+    ss  << Statement::toString(numSpaces, extra);
     
     if (expr != nullptr)
     {
-        ss << std::setw(3) << line()
-            << std::setw(numSpaces) << " "
-            << expr->toString(numSpaces+3);
+        ss << expr->toString(numSpaces+3);
     }
 
     return ss.str();
 }
 
-std::string BinaryExpression::toString(int numSpaces)
+std::string BinaryExpression::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << Expression::toString(numSpaces)
+    ss  << Expression::toString(numSpaces, extra)
         << std::setw(3) << line()
-        << std::setw(numSpaces) << " "
+        << std::setw(numSpaces+3) << " "
         << "Operator: " << op.getValue<std::string>() << std::endl
-        << std::setw(3) << line()
-        << std::setw(numSpaces) << " "
         << right->toString(numSpaces+3);
 
     return ss.str();
 }
 
-std::string CallExpression::toString(int numSpaces)
+std::string CallExpression::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss << Statement::toString(numSpaces, extra);
 
     if (ident != nullptr)
     {
-        ss << std::setw(3) << line()
-            << std::setw(numSpaces) << " "
-            << ident->toString(numSpaces+3);
+        ss << ident->toString(numSpaces+3);
     }
 
     for (auto actual : actuals)
     {
-        ss << std::setw(3) << actual->line()
-            << std::setw(numSpaces) << " "
-            << "(actuals) "
-            << actual->toString(numSpaces+3);
+        ss << actual->toString(numSpaces+3, "(actuals) ");
     }
 
     return ss.str();
 }
 
-std::string PrintStmt::toString(int numSpaces)
+std::string PrintStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss  << std::setw(numSpaces+3) << " "
+        << extra <<nodeName() << std::endl;
 
     for (auto actual : actuals)
     {
-        ss << std::setw(3) << actual->line()
-            << std::setw(numSpaces) << " "
-            << "(args) "
-            << actual->toString(numSpaces+3);
+        ss << actual->toString(numSpaces+3, "(args) ");
     }
 
     return ss.str();
 }
 
-std::string ReadIntExpr::toString(int numSpaces)
+std::string ReadIntExpr::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss << Statement::toString(numSpaces, extra);
 
     return ss.str();
 }
 
-std::string ReadLineExpr::toString(int numSpaces)
+std::string ReadLineExpr::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss << Statement::toString(numSpaces, extra);
 
     return ss.str();
 }
 
 
-std::string StatementBlock::toString(int numSpaces)
+std::string StatementBlock::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << Statement::toString(numSpaces);
+    ss  << std::setw(3+numSpaces) << " "
+        << extra << nodeName() << std::endl;
 
     for(auto var : vars)
     {
-        ss << std::setw(3) << var->line();
-        ss << std::setw(numSpaces) << " "; 
         ss << var->toString(numSpaces+3);
     }
 
     for(auto stmt : stmts)
     {
-        ss << std::setw(3) << stmt->line();
-        ss << std::setw(numSpaces) << " "; 
         ss << stmt->toString(numSpaces+3);
     }
 
     return ss.str();
 }
 
-std::string FunctionDeclaration::toString(int numSpaces)
+std::string FunctionDeclaration::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss  << Declarations::toString(numSpaces);
+    ss  << Declarations::toString(numSpaces, extra);
 
     for (auto formal : formals)
     {
-        ss  << std::setw(3) << ident->line()
-            << std::setw(numSpaces) << " " 
-            << formal->toString(numSpaces + 3);
+        ss << formal->toString(numSpaces + 3);
     }
 
-    ss << std::setw(numSpaces + 3) << " ";
-    ss << "(body) ";
-    ss << block->toString(numSpaces+3);
+    ss  << block->toString(numSpaces + 3, "(body) ");
 
     return ss.str();
 }
 
-std::string KeywordStmt::toString(int numSpaces)
+std::string KeywordStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss  << std::setw(3) << line()
+        << std::setw(numSpaces) << " "
+        << extra << nodeName() << std::endl;
 
     if (expr != nullptr) {
-        ss  << std::setw(3) << expr->line()
-            << std::setw(numSpaces) << " "
-            << expr->toString(numSpaces+3);
+        ss << expr->toString(numSpaces+3);
     }
 
     return ss.str();
 }
 
-std::string WhileStmt::toString(int numSpaces)
+std::string ReturnStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl
-        << std::setw(3) << expr->line()
-        << std::setw(numSpaces) << " "
-        << "(cond) " << expr->toString(numSpaces+3);
+    ss << KeywordStmt::toString(numSpaces, extra);
 
-    if (stmt->line() < 1)
+    if (expr == nullptr && keyword.type == Scanner::Token::Type::Return)
     {
-        ss << std::setw(numSpaces+3) << " ";
+        ss << std::setw(3) << " "
+            << std::setw(numSpaces+3) << " "
+            << "Empty: " << std::endl;
     }
-    else
-    {
-        ss << std::setw(3) << stmt->line()
-            << std::setw(numSpaces) << " ";
-    }
+
+    return ss.str();
+}
+
+std::string WhileStmt::toString(int numSpaces, std::string extra)
+{
+    std::stringstream ss;
+
+    ss  << std::setw(numSpaces+3) << " "
+        << nodeName() << std::endl
+        << expr->toString(numSpaces+3, "(test) ");
     
-    ss << "(body) " << stmt->toString(numSpaces+3);
+    ss << stmt->toString(numSpaces+3, "(body) ");
 
     return ss.str();
 }
 
-std::string IfStmt::toString(int numSpaces)
+std::string IfStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << WhileStmt::toString(numSpaces);
+    ss  << std::setw(numSpaces+3) << " "
+        << extra << nodeName() << std::endl
+        << expr->toString(numSpaces+3, "(test) ");
+
+    ss << stmt->toString(numSpaces+3, "(then) ");
 
     if ( elseBlock != nullptr)
     {
-        ss << std::setw(3) << " "
-            << std::setw(numSpaces) << " "
-            << "(else body) " << elseBlock->toString(numSpaces+3);
+        ss  << elseBlock->toString(numSpaces+3, "(else) ");
     }
 
     return ss.str();
 }
 
 
-std::string ForStmt::toString(int numSpaces)
+std::string ForStmt::toString(int numSpaces, std::string extra)
 {
     std::stringstream ss;
 
-    ss << nodeName() << std::endl;
+    ss  << std::setw(numSpaces+3) << " "
+        << extra << nodeName() << std::endl;
     
     if (startExpr != nullptr)
     {
-        ss << std::setw(3) << startExpr->line()
-            << std::setw(numSpaces) << " "
-            << "(initial) " << startExpr->toString(numSpaces+3);
+        ss << startExpr->toString(numSpaces+3, "(init) ");
+    } else 
+    {
+        ss  << std::setw(numSpaces+3) << " "
+            << "(init) Empty:" << std::endl;
     }
 
-    ss << std::setw(3) << expr->line()
-        << std::setw(numSpaces) << " "
-        << "(cond) " << expr->toString(numSpaces+3);
+    ss  << expr->toString(numSpaces+3,"(test) ");
 
     if (loopExpr != nullptr)
     {
-        ss << std::setw(3) << loopExpr->line()
+        ss << loopExpr->toString(numSpaces+3, "(step) ");
+    } else 
+    {
+        ss  << std::setw(3) << expr->line()
             << std::setw(numSpaces) << " "
-            << "(after loop) " << loopExpr->toString(numSpaces+3);
-    }
-
-    if (stmt->line() < 1)
-    {
-        ss << std::setw(numSpaces+3) << " ";
-    }
-    else
-    {
-        ss << std::setw(3) << stmt->line()
-            << std::setw(numSpaces) << " ";
+            << "Empty: " << std::endl;
     }
     
-    ss << "(body) " << stmt->toString(numSpaces+3);
+    ss << stmt->toString(numSpaces+3, "(body) ");
+
+    return ss.str();
+}
+
+
+std::string Program::toString(int numSpaces, std::string extra)
+{
+    std::stringstream ss;
+
+    ss << std::setw(3) << " "
+        << nodeName() << std::endl;
+
+    for (auto decl : decls)
+    {
+        ss << decl->toString(numSpaces+3);
+    }
 
     return ss.str();
 }

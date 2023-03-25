@@ -3,6 +3,7 @@
 #include "lexer.hpp"
 #include "exceptions.hpp"
 #include "TreeGeneration.hpp"
+#include "ParseExceptions.hpp"
 
 #define VERSION 0.1.0
 
@@ -25,7 +26,13 @@ int main(int argc, char** argv) {
 
     if (argc == 2) 
     {
-        treeGeneration(&lexer);
+        try {
+            treeGeneration(&lexer);
+        }
+        catch ( Parser::ParseException &exc)
+        {
+            std::cout << exc.what() << std::endl;
+        }
     } else
     {
         Scanner::Token token;
@@ -47,6 +54,8 @@ int main(int argc, char** argv) {
 
         } while (token.type != Token::Type::END);
     }
+
+    
 
     return 0;
 }
