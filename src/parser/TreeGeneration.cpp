@@ -390,7 +390,7 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             Scanner::Token op = tokenStack.top();
             if (op.subType == Scanner::Token::SubType::And || op.subType == Scanner::Token::SubType::Or)
                 logic = new LogicalExpression();
-            if (op.subType == Scanner::Token::SubType::Equal || op.subType == Scanner::Token::SubType::NotEqual)
+            else if (op.subType == Scanner::Token::SubType::Equal || op.subType == Scanner::Token::SubType::NotEqual)
                 logic = new EqualityExpression();
             else
                 logic = new RelationalExpression();
@@ -966,16 +966,16 @@ Declarations* parseDecl()
     return decl;
 }
 
-void parseProgram()
+Program* parseProgram()
 {
     // Program Decl Tree node
     // ParseTree root;
 
+    Program *program = new Program();
+
     while(tokenLookAhead->front().type != Scanner::Token::Type::END )
     {
         Scanner::Token token = tokenLookAhead->front();
-
-        Declarations* decl;
 
         switch(token.type)
         {
@@ -984,24 +984,21 @@ void parseProgram()
             case Scanner::Token::Type::Bool:
             case Scanner::Token::Type::Double:
             case Scanner::Token::Type::String:
-                decl = parseDecl();
+                {
+                    Declarations* decl = parseDecl();
+                    if (decl == nullptr)
+                        throw Parser::ParseException(tokenLookAhead->at(0));
+
+                    program->decls.push_back(decl);
+                }    
                 break;
             default:
-                // print error
-                std::cout << "Prog: ";
-                std::cout << "Skipping Token: " << token;
-                takeTokens(1);
+                throw Parser::ParseException(tokenLookAhead->at(0));
 
         }
-
-        if (decl != nullptr)
-        {
-            std::cout << std::setw(3) << decl->line() 
-                        << std::setw(3) << " " 
-                        << decl->toString(6);
-        }
-        decl = nullptr;
     }
+
+    return program;
 }
 
 void treeGeneration(Scanner::Lexer *lexer)
@@ -1016,7 +1013,9 @@ void treeGeneration(Scanner::Lexer *lexer)
     try
     {
         addLookAhead();
-        parseProgram();
+        Program* p = parseProgram();
+
+        std::cout << p->toString(0);
     }
     catch( Scanner::GenericException &exc )
     {
