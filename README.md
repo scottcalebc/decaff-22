@@ -8,7 +8,7 @@ This project is an implementation of the lexer portion to tokenize files written
 
 ### Dependencies
  - cmake (>=3.2.0) 
-    - Provided in source release is cmake-3.2.0-rc3-linux-x86_64
+    - Provided in source release is cmake-3.26.1-linux-x86_64
 
 
 Use the provided build script to build the project. 
