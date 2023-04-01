@@ -1,5 +1,7 @@
 #pragma once 
 
+#include "ParseTree.hpp"
+
 #include "lexer/lexer.hpp"
 
 namespace Parser {
@@ -8,5 +10,5 @@ namespace Parser {
      * 
      * @param lexer 
      */
-    void treeGeneration(Scanner::Lexer *lexer);
+    Program* treeGeneration(Scanner::Lexer *lexer);
 };

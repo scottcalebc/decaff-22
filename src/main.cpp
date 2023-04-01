@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <algorithm>
 
 // lexer includes to run only lexer
 #include "lexer/lexer.hpp"
@@ -9,38 +10,55 @@
 #include "parser/TreeGeneration.hpp"
 #include "parser/exceptions.hpp"
 
-
+#include <AST/AbstractSyntaxTree.hpp>
 
 #define VERSION 0.1.0
 
-using namespace Scanner;
+std::vector<std::string> vecFunctions{
+    "--parser",
+    "--lexer",
+    "--semantic-check",
+    "--code-gen"
+};
+
+int usage(const char* progName)
+{
+    std::cerr << "Usage: " << progName << " <file_path>" << std::endl;
+    std::cerr << "  file_path    -   path to source file to convert" << std::endl;
+
+    return 1;
+}
 
 int main(int argc, char** argv) {
 
     if (argc < 2 || argc > 3)
     {
-        std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
-        std::cerr << "  file_path    -   path to source file to convert" << std::endl;
-
-        return 1;
+        usage(argv[0]);
     }
 
-    
+    std::string function("--parser");
     std::string file_path(argv[1]);
+
+    if (argc > 2 )
+    {
+        function = std::string(argv[1]);
+        file_path = std::string(argv[2]);
+
+        auto it = std::find(vecFunctions.begin(), vecFunctions.end(), function);
+
+        if (it == vecFunctions.end())
+        {
+            std::cerr << "Invalid function: " << function << std::endl << std::endl;
+            return usage(argv[0]);
+        }
+    }
+    
 
     Scanner::Lexer lexer(file_path);
 
-    if (argc == 2) 
+    if (function.compare("--lexer") == 0)
     {
-        try {
-            Parser::treeGeneration(&lexer);
-        }
-        catch ( Parser::ParseException &exc)
-        {
-            std::cout << exc.what() << std::endl;
-        }
-    } else
-    {
+        // convert file to tokens
         Scanner::Token token;
         do {
             try {
@@ -48,20 +66,41 @@ int main(int argc, char** argv) {
                 token = lexer.getNextToken();
 
                 std::cout << token;
-                // exit(1);
-                // sleep(1);
             } 
             catch( Scanner::GenericException &exc ) {
-                // std::cout << std::endl;
                 std::cout << exc.what() << std::endl;
-                // std::cout << std::endl;
-                token.type = Token::Type::ERROR;
+                token.type = Scanner::Token::Type::ERROR;
             }
+        } while (token.type != Scanner::Token::Type::END);
+        
+        // std::cout << "Ended at lexer function" << std::endl;
+        return 0;
+    }
+    // we continue onto parser
+    // convert file to AST
 
-        } while (token.type != Token::Type::END);
+    try {
+        AST::Program prog(Parser::treeGeneration(&lexer));
+    }
+    catch ( Parser::ParseException &exc)
+    {
+        std::cout << exc.what() << std::endl;
+    }
+    
+    if (function.compare("--parser") == 0)
+    {
+        // std::cout << "Ended at parser function" << std::endl;
+        return 0;
     }
 
-    
+    // stop after semantic checking
+    if (function.compare("--semantic-check") == 0)
+    {
+        // std::cout << "Ended at semantic-check function" << std::endl;
+        return 0;
+    }
+
+    // code gen
 
     return 0;
 }

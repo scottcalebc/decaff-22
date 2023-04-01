@@ -1,6 +1,7 @@
 #pragma once
 
 #include <visitor/visitor.hpp>
+#include <parser/ParseTree.hpp>
 #include <token/token.hpp>
 
 namespace AST {
@@ -18,18 +19,36 @@ namespace AST {
             // // visitor acceptor method for semantic, type, and code gen
             // template< typename Visitor>
             // void accept(Visitor visitor) { visitor.visit(this); };
+            virtual void accept(Visitor visitor) { visitor.visit(this); };
     };
 
     // represents either identifier or constant
     class Value: public Node
     {
         public:
+            Value()
+                : Node()
+                , value()
+                {};
+            
             Scanner::Token              value;
     };
 
     class Declaration: public Node
     {
         public:
+            Declaration()
+                : Node()
+                , type()
+                , ident()
+                {};
+
+            Declaration(Parser::Declarations *decl)
+                : Node()
+                , type(decl->type->type.type)
+                , ident(decl->ident->ident)
+            {};
+            
             Scanner::Token::Type        type;
             Scanner::Token              ident;
     };
@@ -45,6 +64,13 @@ namespace AST {
     class StatementBlock: public Node
     {
         public:
+            StatementBlock()
+                : Node()
+                , stmts()
+                {};
+
+            StatementBlock(Parser::StatementBlock *block);
+            
             // is this even needed? parsing already ensured that decls are at the front
             // std::vector<Declaration*>   decls;  
             std::vector<Node*>          stmts;
@@ -52,19 +78,39 @@ namespace AST {
     class FunctionDeclaration: public Declaration
     {
         public:
+            FunctionDeclaration()
+                : Declaration()
+                , formals()
+                , stmts(nullptr)
+                {};
+
+            FunctionDeclaration(Parser::FunctionDeclaration *func);
+            
             std::vector<Declaration*>   formals;
-            StatementBlock*              stmts;
+            StatementBlock*             stmts;
     };
 
     class Call: public Value
     {
         public:
-            std::deque<Node*> actuals;
+            Call()
+                : Value()
+                , actuals()
+                {};
+            
+            std::deque<Node> actuals;
     };
 
     class Expr: public Node
     {
         public:
+            Expr()
+                : Node()
+                , left(nullptr)
+                , op(Scanner::Token::Type::EMPTY)
+                , right(nullptr)
+                {};
+
             // Binary expressions will have both left and right as non null
             // Unary expressions will have right as non null
             // Values/calls will have no op (i.e. empty)
@@ -76,6 +122,11 @@ namespace AST {
     class KeywordStmt: public Value
     {
         public:
+            KeywordStmt()
+                : Value()
+                , expr(nullptr)
+                {};
+
             // for most keywords this will be conditional expression
             // for return this will be return value or null/void
             // for break this should be null
@@ -136,18 +187,33 @@ namespace AST {
     class While: public KeywordStmt
     {
         public:
+            While()
+                : KeywordStmt()
+                , stmt(nullptr)
+                {};
+            
             Node* stmt; // this will be singluar statment or statement block
     };
 
     class If: public While
     {
         public:
+            If()
+                : While()
+                , elseStmt(nullptr)
+                {};
             Node* elseStmt; // this will hold else statement/block
     };
 
     class For: public While
     {
         public:
+            For()
+                : While()
+                , startExpr(nullptr)
+                , loopExpr(nullptr)
+                {};
+            
             Expr* startExpr;
             Expr* loopExpr;
     };
@@ -165,10 +231,16 @@ namespace AST {
     class Program: public Node
     {
         public:
-            std::vector<Declaration*> decls;
+            Program()
+                : Node()
+                , vars()
+                , func()
+                {};
+
+            Program(Parser::Program *p);
+            
+            std::vector<Declaration*> vars;
+            std::vector<FunctionDeclaration*> func;
     };
-
-
-
 
 }

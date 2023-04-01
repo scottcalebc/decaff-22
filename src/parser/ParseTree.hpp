@@ -24,7 +24,7 @@ namespace Parser {
             virtual Scanner::Token firstToken() = 0;
 
             template< typename AbstractType, typename Visitor>
-            AbstractType convert(Visitor visitor) { visitor.visit(this); };
+            AbstractType convert(Visitor visitor) { return visitor.visit(this); };
     };
 
 
