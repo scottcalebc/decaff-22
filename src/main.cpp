@@ -9,6 +9,8 @@
 #include "parser/TreeGeneration.hpp"
 #include "parser/exceptions.hpp"
 
+
+
 #define VERSION 0.1.0
 
 using namespace Scanner;
@@ -31,7 +33,7 @@ int main(int argc, char** argv) {
     if (argc == 2) 
     {
         try {
-            treeGeneration(&lexer);
+            Parser::treeGeneration(&lexer);
         }
         catch ( Parser::ParseException &exc)
         {
