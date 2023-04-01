@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "token/token.hpp"
+#include <token/token.hpp>
 
 namespace Scanner {
     class Lexer {
