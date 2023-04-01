@@ -8,6 +8,7 @@ target_sources(Token
 )
 
 target_include_directories(Token
-  PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-  )
+PUBLIC
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  ${CMAKE_CURRENT_LIST_DIR}
+)

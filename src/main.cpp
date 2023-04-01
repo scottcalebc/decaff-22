@@ -1,9 +1,13 @@
 #include <iostream>
 #include <unistd.h>
-#include "lexer.hpp"
-#include "exceptions.hpp"
-#include "TreeGeneration.hpp"
-#include "ParseExceptions.hpp"
+
+// lexer includes to run only lexer
+#include "lexer/lexer.hpp"
+#include "lexer/exceptions.hpp"
+
+// parser includes to run parsing after lexing input
+#include "parser/TreeGeneration.hpp"
+#include "parser/exceptions.hpp"
 
 #define VERSION 0.1.0
 

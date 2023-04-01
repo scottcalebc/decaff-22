@@ -3,13 +3,15 @@
 #include <iomanip>
 #include <exception>
 
-#include "TreeGeneration.hpp"
-#include "lexer.hpp"
-#include "exceptions.hpp"
-#include "token.hpp"
-#include "ParseTree.hpp"
-#include "ParseExceptions.hpp"
+// custom library includes
+#include "lexer/lexer.hpp"
+#include "lexer/exceptions.hpp"
+#include "token/token.hpp"
 
+// this libraries includes
+#include "TreeGeneration.hpp"
+#include "ParseTree.hpp"
+#include "exceptions.hpp"
 
 
 // Forward Decls for Recursive calls

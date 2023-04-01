@@ -2,7 +2,9 @@
 
 #include <vector>
 #include <deque>
-#include "token.hpp"
+
+#include "lexer/lexer.hpp"
+#include "token/token.hpp"
 
 /** Non-Abstract / Derived Classes */
 /**
@@ -19,6 +21,9 @@ class ParseNode
         virtual int line() = 0;
         virtual std::string toString(int numSpaces, std::string extra="") = 0;
         virtual Scanner::Token firstToken() = 0;
+
+        template< typename AbstractType, typename Visitor>
+        AbstractType convert(Visitor visitor) { visitor.visit(this); };
 };
 
 
