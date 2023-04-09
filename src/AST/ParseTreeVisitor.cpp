@@ -38,14 +38,21 @@ void AST::ParseTreeConverter::convert(Parser::UnaryExpression *p)
 {
     std::cout << "Unary Expr hit\n";
 
-    if (p->op.getValue<std::string>().compare("-") == 0)
+    switch(p->op.subType)
     {
-        pNode = new Subtract(p);
+        case Scanner::Token::SubType::UnaryNegative:
+            pNode = new Subtract(p);
+            break;
+        case Scanner::Token::SubType::Not:
+            pNode = new Not(p);
+            break;
+        default:
+            break;
     }
-    else if ( p->op.getValue<std::string>().compare("!") == 0 )
-    {
-        pNode = new Not(p);
-    }
+    
+    if (pNode == nullptr)
+        throw Parser::ParseException( p->firstToken() );
+
 }
 
 void AST::ParseTreeConverter::convert(Parser::CallExpression *p)
