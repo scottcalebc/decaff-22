@@ -167,7 +167,14 @@ namespace AST {
 
     // Arithmetic Objects
     class Add: public Expr
-    {};
+    {
+        public:
+            Add()
+                : Expr()
+            {};
+
+            Add(Parser::ArithmeticExpression *expr);
+    };
 
     // If right is null this will be unary minus
     class Subtract: public Expr
