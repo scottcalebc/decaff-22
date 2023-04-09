@@ -10,6 +10,17 @@ namespace SymbolTable {
     class IdEntry {
 
         public:
+            IdEntry( std::string ident, Scanner::Token::Type type, int block )
+                : ident(ident)
+                , type(type)
+                , block(block)
+                , offset(0)
+            {
+                std::cout   << "Adding entry for ident: " << ident << " " 
+                            << Scanner::Token::getTypeName(type) << " at block " 
+                            << block << std::endl;
+            };
+
             std::string ident;
             Scanner::Token::Type type;
 
@@ -25,6 +36,27 @@ namespace SymbolTable {
             */
             int offset;
 
+    };
+
+    class Scope {
+
+        public:
+            Scope()
+                : parentScope(nullptr)
+                , table()
+                , funcTable()
+            {};
+
+
+            Scope *parentScope;
+            std::map<std::string, IdEntry> table;
+
+
+            IdEntry install(std::string id, Scanner::Token::Type type, int block);
+            IdEntry install(AST::Declaration*, int block);
+            // IdEntry install(AST::FunctionDeclaration*, int block);
+            // IdEntry install(AST::StatementBlock*, int block);
+            // IdEntry idLookup(std::string);
     };
 
     void generate(AST::Program *prog);

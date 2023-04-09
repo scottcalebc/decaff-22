@@ -57,7 +57,7 @@ namespace AST {
                 , ident(decl->ident->ident)
             {};
 
-            void accept(Visitor *v) { v->visit(this); };
+            virtual void accept(Visitor *v) { v->visit(this); };
             
             Scanner::Token::Type        type;
             Scanner::Token              ident;
@@ -97,7 +97,11 @@ namespace AST {
                 {};
 
             FunctionDeclaration(Parser::FunctionDeclaration *func);
-            void accept(Visitor *v) { v->visit(this); };
+            void accept(Visitor *v) 
+            { 
+                std::cout << "Function accepting visitor: "; 
+                v->visit(this); 
+            };
             
             std::vector<Declaration*>   formals;
             StatementBlock*             stmts;
@@ -544,8 +548,5 @@ namespace AST {
 
             std::vector<Node*> decls;
     };
-
-    // Node * ExprParseNode(Parser::Expression *parseNode);
-
 
 }
