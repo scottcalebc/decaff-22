@@ -22,7 +22,7 @@ namespace AST {
             // template< typename Visitor>
             // void accept(Visitor visitor) { visitor.visit(this); };
             // virtual void accept(Visitor *visitor) { visitor->visit(this); };
-            virtual void accept(Visitor* v) { v->visit(this); };
+            virtual void accept(Visitor* v) = 0;
     };
 
     // represents either identifier or constant
@@ -56,6 +56,8 @@ namespace AST {
                 , type(decl->type->type.type)
                 , ident(decl->ident->ident)
             {};
+
+            void accept(Visitor *v) { v->visit(this); };
             
             Scanner::Token::Type        type;
             Scanner::Token              ident;
@@ -79,6 +81,7 @@ namespace AST {
                 {};
 
             StatementBlock(Parser::StatementBlock *block);
+            void accept(Visitor *v) { v->visit(this); };
             
             // is this even needed? parsing already ensured that decls are at the front
             std::vector<Declaration*>   decls;  
@@ -94,6 +97,7 @@ namespace AST {
                 {};
 
             FunctionDeclaration(Parser::FunctionDeclaration *func);
+            void accept(Visitor *v) { v->visit(this); };
             
             std::vector<Declaration*>   formals;
             StatementBlock*             stmts;
@@ -107,6 +111,8 @@ namespace AST {
                 {
                     std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
                 };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Constant: public Value
@@ -117,6 +123,8 @@ namespace AST {
                 {
                     std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
                 };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Call: public Value
@@ -128,6 +136,7 @@ namespace AST {
                 {};
 
             Call(Parser::CallExpression *c);
+            void accept(Visitor *v) { v->visit(this); };
             
             std::deque<Node*> actuals;
     };
@@ -190,6 +199,8 @@ namespace AST {
             {
                 std::cout << "Add: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // If right is null this will be unary minus
@@ -211,6 +222,8 @@ namespace AST {
             {
                 std::cout << "Subtract: Generating unary minus\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Multiply: public Expr
@@ -225,6 +238,8 @@ namespace AST {
             {
                 std::cout << "Multiply: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Divide: public Expr
@@ -239,6 +254,8 @@ namespace AST {
             {
                 std::cout << "Divide: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Modulus: public Expr
@@ -253,6 +270,8 @@ namespace AST {
             {
                 std::cout << "Modulus: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // Boolean or conditional objects
@@ -267,7 +286,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "LessThan: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class LTE: public LessThan
@@ -281,7 +302,9 @@ namespace AST {
                 : LessThan(expr)
             {
                 std::cout << "LessThanEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class GreaterThan: public Expr
@@ -295,7 +318,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "GreaterThan: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class GTE: public GreaterThan
@@ -309,7 +334,9 @@ namespace AST {
                 : GreaterThan(expr)
             {
                 std::cout << "GreaterThanEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Equal: public Expr
@@ -323,7 +350,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "Equal: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class NotEqual: public Expr
@@ -337,7 +366,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "NotEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class And: public Expr
@@ -352,6 +383,8 @@ namespace AST {
             {
                 std::cout << "And: generating\n";
             };
+            
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Or: public Expr
@@ -366,6 +399,8 @@ namespace AST {
             {
                 std::cout << "Or: generating\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Not: public Expr
@@ -380,6 +415,8 @@ namespace AST {
             {
                 std::cout << "Not: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Assign: public Expr
@@ -394,11 +431,16 @@ namespace AST {
             {
                 std::cout << "Assign: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // Keyword statements
     class Break: public KeywordStmt
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class Return: public KeywordStmt
     {
@@ -408,6 +450,8 @@ namespace AST {
                 {};
 
             Return(Parser::ReturnStmt *smt);
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class While: public KeywordStmt
@@ -419,6 +463,7 @@ namespace AST {
                 {};
 
             While(Parser::WhileStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
             
             Node* stmt; // this will be singluar statment or statement block
     };
@@ -432,6 +477,8 @@ namespace AST {
                 {};
 
             If(Parser::IfStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
+
             Node* elseStmt; // this will hold else statement/block
     };
 
@@ -445,6 +492,7 @@ namespace AST {
                 {};
 
             For(Parser::ForStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
             
             Node* startExpr;
             Node* loopExpr;
@@ -463,13 +511,21 @@ namespace AST {
             {
                 std::cout << "Print: Generating\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class ReadInteger: public Call
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class ReadLine: public Call
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class Program: public Node
     {
@@ -480,6 +536,8 @@ namespace AST {
                 {};
 
             Program(Parser::Program *p);
+
+            void accept(Visitor *v) { v->visit(this); };
             
             // std::vector<Declaration*> vars;
             // std::vector<FunctionDeclaration*> func;

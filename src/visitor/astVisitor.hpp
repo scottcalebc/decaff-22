@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/ASTForward.hpp>
+
 
 class Acceptor;
 
@@ -14,6 +16,7 @@ class Visitor {
 
     public:
         virtual void visit(Acceptor *a) = 0;
+        virtual void visit(AST::Program *p) = 0;
 };
 
 

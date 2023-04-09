@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <visitor/astVisitor.hpp>
+#include <AST/AbstractSyntaxTree.hpp>
 
 namespace SymbolTable
 {
@@ -14,5 +15,6 @@ namespace SymbolTable
                 {};
 
                 void visit(Acceptor *a) { std::cout << "Got acceptor\n"; };
+                void visit(AST::Program *p);
         };
 }
