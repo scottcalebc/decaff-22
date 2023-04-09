@@ -37,11 +37,21 @@ void AST::ParseTreeConverter::convert(Parser::ReturnType *p)
 void AST::ParseTreeConverter::convert(Parser::UnaryExpression *p)
 {
     std::cout << "Unary Expr hit\n";
+
+    if (p->op.getValue<std::string>().compare("-") == 0)
+    {
+        pNode = new Subtract(p);
+    }
+    else if ( p->op.getValue<std::string>().compare("!") == 0 )
+    {
+        pNode = new Not(p);
+    }
 }
 
 void AST::ParseTreeConverter::convert(Parser::CallExpression *p)
 {
     std::cout << "Call Expr hit\n";
+    pNode = new Call(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::ParenExpr *p)

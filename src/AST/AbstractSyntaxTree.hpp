@@ -194,6 +194,12 @@ namespace AST {
             {
                 std::cout << "Subtract: Generating expr\n";
             };
+
+            Subtract(Parser::UnaryExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Subtract: Generating unary minus\n";
+            };
     };
 
     class Multiply: public Expr
@@ -258,7 +264,18 @@ namespace AST {
     {};
 
     class Not: public Expr
-    {};
+    {
+        public:
+            Not()
+                : Expr()
+                {};
+            
+            Not(Parser::UnaryExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Not: Generating expr\n";
+            };
+    };
 
     class Assign: public Expr
     {

@@ -23,10 +23,10 @@ namespace AST
             actuals.push_back(visitor.pNode);
 
             if (visitor.pNode == nullptr)
-                throw Parser::ParseException( var->firstToken() );
+                throw Parser::ParseException( c->firstToken() );
         }
     }
-    
+
     Expr::Expr(Parser::Expression *expr)
     {
         std::cout << "Expr: Generating abstract expr\n";
@@ -40,7 +40,7 @@ namespace AST
             left = visitor.pNode;
 
             if (visitor.pNode == nullptr)
-                throw Parser::ParseException( expr->expr->firstToken() );
+                throw Parser::ParseException( expr->firstToken() );
         }
     }
 
