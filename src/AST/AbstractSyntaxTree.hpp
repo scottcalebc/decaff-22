@@ -103,7 +103,9 @@ namespace AST {
         public:
             Ident(Scanner::Token token)
                 : Value(token)
-                {};
+                {
+                    std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
+                };
     };
 
     class Constant: public Value
@@ -111,7 +113,9 @@ namespace AST {
         public:
             Constant(Scanner::Token token)
                 : Value(token)
-                {};
+                {
+                    std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
+                };
     };
 
     class Call: public Value
@@ -156,6 +160,8 @@ namespace AST {
                 , expr(nullptr)
                 {};
 
+            KeywordStmt(Parser::KeywordStmt *stmt);
+
             // for most keywords this will be conditional expression
             // for return this will be return value or null/void
             // for break this should be null
@@ -178,7 +184,11 @@ namespace AST {
                 : Expr()
             {};
 
-            Add(Parser::ArithmeticExpression *expr);
+            Add(Parser::ArithmeticExpression *expr)
+            : Expr(expr)
+            {
+                std::cout << "Add: Generating expr\n";
+            };
     };
 
     // If right is null this will be unary minus
@@ -246,16 +256,60 @@ namespace AST {
 
     // Boolean or conditional objects
     class LessThan: public Expr
-    {};
+    {
+        public:
+            LessThan()
+                : Expr()
+                {};
+            
+            LessThan(Parser::RelationalExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "LessThan: generating\n";
+            }
+    };
 
     class LTE: public LessThan
-    {};
+    {
+        public:
+            LTE()
+                : LessThan()
+                {};
+            
+            LTE(Parser::RelationalExpression *expr)
+                : LessThan(expr)
+            {
+                std::cout << "LessThanEqual: generating\n";
+            }
+    };
 
     class GreaterThan: public Expr
-    {};
+    {
+        public:
+            GreaterThan()
+                : Expr()
+                {};
+            
+            GreaterThan(Parser::RelationalExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "GreaterThan: generating\n";
+            }
+    };
 
-    class GTE: public Expr
-    {};
+    class GTE: public GreaterThan
+    {
+        public:
+            GTE()
+                : GreaterThan()
+                {};
+            
+            GTE(Parser::RelationalExpression *expr)
+                : GreaterThan(expr)
+            {
+                std::cout << "GreaterThanEqual: generating\n";
+            }
+    };
 
     class Equal: public Expr
     {
@@ -334,7 +388,11 @@ namespace AST {
                 : Expr()
             {};
 
-            Assign(Parser::AssignExpression *expr);
+            Assign(Parser::AssignExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Assign: Generating expr\n";
+            };
     };
 
     // Keyword statements
@@ -358,6 +416,8 @@ namespace AST {
                 : KeywordStmt()
                 , stmt(nullptr)
                 {};
+
+            While(Parser::WhileStmt *stmt);
             
             Node* stmt; // this will be singluar statment or statement block
     };
@@ -369,6 +429,8 @@ namespace AST {
                 : While()
                 , elseStmt(nullptr)
                 {};
+
+            If(Parser::IfStmt *stmt);
             Node* elseStmt; // this will hold else statement/block
     };
 
@@ -380,9 +442,11 @@ namespace AST {
                 , startExpr(nullptr)
                 , loopExpr(nullptr)
                 {};
+
+            For(Parser::ForStmt *stmt);
             
-            Expr* startExpr;
-            Expr* loopExpr;
+            Node* startExpr;
+            Node* loopExpr;
     };
 
     // Builtin Function objects
