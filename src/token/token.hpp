@@ -117,6 +117,14 @@ namespace Scanner {
             colStart(-1)
         {};
 
+        Token(Scanner::Token::Type type)
+            : type(type)
+            , subType(SubType::Operand)
+            , value("")
+            , lineNumber(-1)
+            , colStart(-1)
+        {};
+
 
         template<typename TokenValue>
         const TokenValue getValue() const;

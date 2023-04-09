@@ -3,15 +3,17 @@
 #include <iomanip>
 #include <exception>
 
+// custom library includes
+#include <lexer/lexer.hpp>
+#include <lexer/exceptions.hpp>
+#include <token/token.hpp>
+
+// this libraries includes
 #include "TreeGeneration.hpp"
-#include "lexer.hpp"
-#include "exceptions.hpp"
-#include "token.hpp"
 #include "ParseTree.hpp"
-#include "ParseExceptions.hpp"
+#include "exceptions.hpp"
 
-
-
+namespace Parser {
 // Forward Decls for Recursive calls
 StatementBlock* parseStmtBlock();
 Statement* parseStmt();
@@ -1001,25 +1003,32 @@ Program* parseProgram()
     return program;
 }
 
-void treeGeneration(Scanner::Lexer *lexer)
-{
-    // Setup look ahead if necessary for certain parsing calls
-    if (tokenLookAhead == nullptr)
-    {
-        tokenLookAhead = new std::deque<Scanner::Token>();
-    }
-    
-    glexer = lexer;
-    try
-    {
-        addLookAhead();
-        Program* p = parseProgram();
 
-        std::cout << std::endl << p->toString(0);
-    }
-    catch( Scanner::GenericException &exc )
+    Program* treeGeneration(Scanner::Lexer *lexer)
     {
-        std::cout << exc.what() << std::endl;
+        // Setup look ahead if necessary for certain parsing calls
+        if (Parser::tokenLookAhead == nullptr)
+        {
+            Parser::tokenLookAhead = new std::deque<Scanner::Token>();
+        }
+        
+        Parser::glexer = lexer;
+        try
+        {
+            Parser::addLookAhead();
+            Parser::Program* p = Parser::parseProgram();
+
+            std::cout << std::endl << p->toString(0);
+
+            return p;
+        }
+        catch( Scanner::GenericException &exc )
+        {
+            std::cout << exc.what() << std::endl;
+        }
+
+        return nullptr;
     }
 }
+
 

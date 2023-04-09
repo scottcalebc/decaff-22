@@ -13,5 +13,6 @@ target_sources(Lexer
 
 target_include_directories(Lexer
   PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}
-  )
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  ${CMAKE_CURRENT_LIST_DIR}
+)

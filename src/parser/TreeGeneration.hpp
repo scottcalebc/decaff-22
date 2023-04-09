@@ -1,11 +1,14 @@
 #pragma once 
 
-#include "lexer.hpp"
+#include "ParseTree.hpp"
 
+#include "lexer/lexer.hpp"
 
-/**
- * @brief Starts Parser Tree generation by taking in a lexer object for token stream
- * 
- * @param lexer 
- */
-void treeGeneration(Scanner::Lexer *lexer);
+namespace Parser {
+    /**
+     * @brief Starts Parser Tree generation by taking in a lexer object for token stream
+     * 
+     * @param lexer 
+     */
+    Program* treeGeneration(Scanner::Lexer *lexer);
+};

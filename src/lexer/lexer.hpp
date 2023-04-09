@@ -1,11 +1,11 @@
 #pragma once
 
-#include "token.hpp"
-
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include <token/token.hpp>
 
 namespace Scanner {
     class Lexer {

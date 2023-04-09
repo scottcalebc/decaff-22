@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo $@
+
 project_dir=$1
 shift
 test_type=$1
@@ -11,7 +13,8 @@ samples_dir=./samples
 
 for frag in $(ls $samples_dir/$test_type/*.[fd]* ); do
     output_file=$(basename $frag | sed 's/\.[fd].*/\.out/')
-    $project_dir/build/bin/decaf-22 $frag $OPTS > $output_file
+    echo "Running decaf-22 $OPTS $frag > $output_file"
+    $project_dir/build/bin/decaf-22 $OPTS $frag  > $output_file
 done
 
 ret=0

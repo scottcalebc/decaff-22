@@ -3,7 +3,7 @@
 #include <exception>
 #include <string>
 
-#include "token.hpp"
+#include "token/token.hpp"
 
 namespace Scanner {
     class GenericException : public std::exception {
