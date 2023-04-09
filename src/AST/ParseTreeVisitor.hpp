@@ -1,6 +1,6 @@
 #pragma once
 
-#include <visitor/visitor.hpp>
+#include <visitor/parseVisitor.hpp>
 #include "AbstractSyntaxTree.hpp"
 
 namespace AST

@@ -12,6 +12,8 @@
 
 #include <AST/AbstractSyntaxTree.hpp>
 
+#include <SymbolTable/generate.hpp>
+
 #define VERSION 0.1.0
 
 std::vector<std::string> vecFunctions{
@@ -81,6 +83,10 @@ int main(int argc, char** argv) {
 
     try {
         AST::Program prog(Parser::treeGeneration(&lexer));
+
+        std::cout << "Generating symbol tree\n";
+        SymbolTable::generate(&prog);
+
     }
     catch ( Parser::ParseException &exc)
     {

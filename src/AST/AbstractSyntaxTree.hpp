@@ -1,6 +1,7 @@
 #pragma once
 
-#include <visitor/visitor.hpp>
+#include <visitor/parseVisitor.hpp>
+#include <visitor/astVisitor.hpp>
 
 #include <parser/ParseTree.hpp>
 #include <token/token.hpp>
@@ -21,7 +22,7 @@ namespace AST {
             // template< typename Visitor>
             // void accept(Visitor visitor) { visitor.visit(this); };
             // virtual void accept(Visitor *visitor) { visitor->visit(this); };
-            virtual void accept() { };
+            virtual void accept(Visitor* v) { v->visit(this); };
     };
 
     // represents either identifier or constant
