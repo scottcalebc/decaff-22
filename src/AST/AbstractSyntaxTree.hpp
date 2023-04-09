@@ -257,11 +257,61 @@ namespace AST {
     class GTE: public Expr
     {};
 
+    class Equal: public Expr
+    {
+        public:
+            Equal()
+                : Expr()
+                {};
+            
+            Equal(Parser::EqualityExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Equal: generating\n";
+            }
+    };
+
+    class NotEqual: public Expr
+    {
+        public:
+            NotEqual()
+                : Expr()
+                {};
+            
+            NotEqual(Parser::EqualityExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "NotEqual: generating\n";
+            }
+    };
+
     class And: public Expr
-    {};
+    {
+        public:
+            And()
+                : Expr()
+                {};
+            
+            And(Parser::LogicalExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "And: generating\n";
+            };
+    };
 
     class Or: public Expr
-    {};
+    {
+        public:
+            Or()
+                : Expr()
+                {};
+            
+            Or(Parser::LogicalExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Or: generating\n";
+            };
+    };
 
     class Not: public Expr
     {

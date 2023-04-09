@@ -75,6 +75,7 @@ void AST::ParseTreeConverter::convert(Parser::ReadIntExpr *p)
 void AST::ParseTreeConverter::convert(Parser::ReadLineExpr *p)
 {
     std::cout << "Read line hit\n";
+    pNode = new ReadLine();
 }
 
 void AST::ParseTreeConverter::convert(Parser::RelationalExpression *p)
@@ -85,40 +86,67 @@ void AST::ParseTreeConverter::convert(Parser::RelationalExpression *p)
 void AST::ParseTreeConverter::convert(Parser::EqualityExpression *p)
 {
     std::cout << "Equality Expr hit\n";
+
+    switch(p->op.subType)
+    {
+        case Scanner::Token::SubType::Equal :
+            pNode = new Equal(p);
+            break;
+        case Scanner::Token::SubType::NotEqual :
+            pNode = new NotEqual(p);
+            break;
+        default:
+            break;
+    }
+
+    
+    if (pNode == nullptr)
+        throw Parser::ParseException( p->firstToken() );
 }
 
 void AST::ParseTreeConverter::convert(Parser::LogicalExpression *p)
 {
     std::cout << "Logical Expr hit\n";
+    
+    switch (p->op.subType)
+    {
+        case Scanner::Token::SubType::And :
+            pNode = new And(p);
+            break;
+        case Scanner::Token::SubType::Or:
+            pNode = new Or(p);
+            break;    
+        default:
+            break;
+    }
+
+    if (pNode == nullptr)
+        throw Parser::ParseException( p->firstToken() );
 }
 
 void AST::ParseTreeConverter::convert(Parser::ArithmeticExpression *p)
 {
     std::cout << "Arithmetic Expr hit\n";
 
-    if (p->op.getValue<std::string>().compare("+") == 0)
+    switch(p->op.subType)
     {
-        pNode = new Add(p);
-    }
-    else if (p->op.getValue<std::string>().compare("-") == 0)
-    {
-        pNode = new Subtract(p);
-    }
-    else if (p->op.getValue<std::string>().compare("/") == 0)
-    {
-        pNode = new Divide(p);
-    }
-    else if (p->op.getValue<std::string>().compare("*") == 0)
-    {
-        pNode = new Multiply(p);
-    }
-    else if (p->op.getValue<std::string>().compare("%") == 0)
-    {
-        pNode = new Modulus(p);
-    }
-    else 
-    {
-        std::cout << "Unexpected token: " << p->op.getValue<std::string>() << std::endl;
+        case Scanner::Token::SubType::Add:
+            pNode = new Add(p);
+            break;
+        case Scanner::Token::SubType::Subtract:
+            pNode = new Subtract(p);
+            break;
+        case Scanner::Token::SubType::Divide:
+            pNode = new Divide(p);
+            break;
+        case Scanner::Token::SubType::Multiply:
+            pNode = new Multiply(p);
+            break;
+        case Scanner::Token::SubType::Modulus:
+            pNode = new Modulus(p);
+            break;
+        default:
+            std::cout << "Unexpected token: " << p->op.getValue<std::string>() << std::endl;
     }
 
     if (pNode == nullptr)
