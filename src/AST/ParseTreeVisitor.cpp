@@ -1,4 +1,5 @@
 #include "ParseTreeVisitor.hpp"
+#include "parser/exceptions.hpp"
 
 
 void AST::ParseTreeConverter::convert(Parser::Identifier *p)
@@ -46,16 +47,19 @@ void AST::ParseTreeConverter::convert(Parser::CallExpression *p)
 void AST::ParseTreeConverter::convert(Parser::ParenExpr *p)
 {
     std::cout << "Paren Expr hit\n";
+    p->expr->accept(this);
 }
 
 void AST::ParseTreeConverter::convert(Parser::PrintStmt *p)
 {
     std::cout << "Print Stmt hit\n";
+    pNode = new Print(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReadIntExpr *p)
 {
     std::cout << "Read Int hit\n";
+    pNode = new ReadInteger();
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReadLineExpr *p)
@@ -88,29 +92,34 @@ void AST::ParseTreeConverter::convert(Parser::ArithmeticExpression *p)
     }
     else if (p->op.getValue<std::string>().compare("-") == 0)
     {
-
+        pNode = new Subtract(p);
     }
     else if (p->op.getValue<std::string>().compare("/") == 0)
     {
-
+        pNode = new Divide(p);
     }
     else if (p->op.getValue<std::string>().compare("*") == 0)
     {
-
+        pNode = new Multiply(p);
     }
     else if (p->op.getValue<std::string>().compare("%") == 0)
     {
-
+        pNode = new Modulus(p);
     }
     else 
     {
         std::cout << "Unexpected token: " << p->op.getValue<std::string>() << std::endl;
     }
+
+    if (pNode == nullptr)
+        throw Parser::ParseException( p->firstToken() );
+
 }
 
 void AST::ParseTreeConverter::convert(Parser::AssignExpression *p)
 {
     std::cout << "Assign Expr hit\n";
+    pNode = new Assign(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::BreakStmt *p)

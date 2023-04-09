@@ -121,8 +121,10 @@ namespace AST {
                 : Value()
                 , actuals()
                 {};
+
+            Call(Parser::CallExpression *c);
             
-            std::deque<Node> actuals;
+            std::deque<Node*> actuals;
     };
 
     class Expr: public Node
@@ -134,6 +136,9 @@ namespace AST {
                 , op(Scanner::Token::Type::EMPTY)
                 , right(nullptr)
                 {};
+
+            Expr(Parser::Expression *expr);
+            Expr(Parser::BinaryExpression *exp);
 
             // Binary expressions will have both left and right as non null
             // Unary expressions will have right as non null
@@ -178,13 +183,60 @@ namespace AST {
 
     // If right is null this will be unary minus
     class Subtract: public Expr
-    {};
+    {
+        public:
+            Subtract()
+                : Expr()
+            {};
+            
+            Subtract(Parser::ArithmeticExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Subtract: Generating expr\n";
+            };
+    };
 
     class Multiply: public Expr
-    {};
+    {
+        public:
+            Multiply()
+                : Expr()
+            {};
+            
+            Multiply(Parser::ArithmeticExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Multiply: Generating expr\n";
+            };
+    };
 
     class Divide: public Expr
-    {};
+    {
+        public:
+            Divide()
+                : Expr()
+            {};
+            
+            Divide(Parser::ArithmeticExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Divide: Generating expr\n";
+            };
+    };
+
+    class Modulus: public Expr
+    {
+        public:
+            Modulus()
+                : Expr()
+            {};
+            
+            Modulus(Parser::ArithmeticExpression *expr)
+                : Expr(expr)
+            {
+                std::cout << "Modulus: Generating expr\n";
+            };
+    };
 
     // Boolean or conditional objects
     class LessThan: public Expr
@@ -209,7 +261,14 @@ namespace AST {
     {};
 
     class Assign: public Expr
-    {};
+    {
+        public:
+            Assign()
+                : Expr()
+            {};
+
+            Assign(Parser::AssignExpression *expr);
+    };
 
     // Keyword statements
     class Break: public KeywordStmt
@@ -261,7 +320,18 @@ namespace AST {
 
     // Builtin Function objects
     class Print: public Call
-    {};
+    {
+        public:
+            Print()
+                :Call()
+                {};
+            
+            Print(Parser::PrintStmt *p)
+                : Call(p)
+            {
+                std::cout << "Print: Generating\n";
+            };
+    };
 
     class ReadInteger: public Call
     {};

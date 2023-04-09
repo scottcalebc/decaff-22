@@ -9,20 +9,81 @@
 
 namespace AST
 {
-    Add::Add(Parser::ArithmeticExpression *expr)
+
+    Call::Call(Parser::CallExpression *c)
+        : Value(c->ident->ident)
     {
-        std::cout << "Add: Generating expr\n";
+        std::cout << "Call: Generating call with identifier " << value.getValue<std::string>() << std::endl;
+
+        for ( auto &var : c->actuals )
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+
+            var->accept(&visitor);
+            actuals.push_back(visitor.pNode);
+
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( var->firstToken() );
+        }
+    }
+    
+    Expr::Expr(Parser::Expression *expr)
+    {
+        std::cout << "Expr: Generating abstract expr\n";
+        
+        if (expr->expr != nullptr )
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+
+            std::cout << "Expr: Visiting LHS expr\n";
+            expr->expr->accept(&visitor);
+            left = visitor.pNode;
+
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( expr->expr->firstToken() );
+        }
+    }
+
+    Expr::Expr(Parser::BinaryExpression *expr)
+    {
+        std::cout << "Expr: Generating abstract binary expr\n";
         op = expr->op;
         
         ParseTreeConverter visitor = ParseTreeConverter();
+        if (expr->expr != nullptr )
+        {
 
-        std::cout << "Add: Visiting LHS expr\n";
-        expr->expr->accept(&visitor);
-        left = visitor.pNode;
+            std::cout << "Expr: Visiting LHS expr\n";
+            expr->expr->accept(&visitor);
+            left = visitor.pNode;
 
-        std::cout << "Add: Visiting RHS expr\n";
-        expr->right->accept(&visitor);
-        right = visitor.pNode;
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( expr->expr->firstToken() );
+            visitor.pNode = nullptr;
+        }
+
+        if ( expr->right != nullptr )
+        {
+            std::cout << "Expr: Visiting RHS expr\n";
+            expr->right->accept(&visitor);
+            right = visitor.pNode;
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( expr->right->firstToken() );
+            visitor.pNode = nullptr;
+        }
+    }
+
+
+    Assign::Assign(Parser::AssignExpression *expr)
+        : Expr(expr)
+    {
+        std::cout << "Assign: Generating expr\n";
+    }
+
+    Add::Add(Parser::ArithmeticExpression *expr)
+        : Expr(expr)
+    {
+        std::cout << "Add: Generating expr\n";
     }
 
 
@@ -102,6 +163,9 @@ namespace AST
             ParseTreeConverter converter = ParseTreeConverter();
             decl->accept(&converter);
             decls.push_back(converter.pNode);
+
+            if (converter.pNode == nullptr)
+                throw Parser::ParseException( decl->firstToken() );
 
         }
 
