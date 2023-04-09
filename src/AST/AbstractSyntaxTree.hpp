@@ -1,6 +1,7 @@
 #pragma once
 
 #include <visitor/visitor.hpp>
+
 #include <parser/ParseTree.hpp>
 #include <token/token.hpp>
 
@@ -19,7 +20,8 @@ namespace AST {
             // // visitor acceptor method for semantic, type, and code gen
             // template< typename Visitor>
             // void accept(Visitor visitor) { visitor.visit(this); };
-            virtual void accept(Visitor visitor) { visitor.visit(this); };
+            // virtual void accept(Visitor *visitor) { visitor->visit(this); };
+            virtual void accept() { };
     };
 
     // represents either identifier or constant
@@ -30,6 +32,11 @@ namespace AST {
                 : Node()
                 , value()
                 {};
+
+            Value(Scanner::Token token)
+                : Node()
+                , value(token)
+            {};
             
             Scanner::Token              value;
     };
@@ -66,13 +73,14 @@ namespace AST {
         public:
             StatementBlock()
                 : Node()
+                , decls()
                 , stmts()
                 {};
 
             StatementBlock(Parser::StatementBlock *block);
             
             // is this even needed? parsing already ensured that decls are at the front
-            // std::vector<Declaration*>   decls;  
+            std::vector<Declaration*>   decls;  
             std::vector<Node*>          stmts;
     };
     class FunctionDeclaration: public Declaration
@@ -88,6 +96,22 @@ namespace AST {
             
             std::vector<Declaration*>   formals;
             StatementBlock*             stmts;
+    };
+
+    class Ident: public Value
+    {
+        public:
+            Ident(Scanner::Token token)
+                : Value(token)
+                {};
+    };
+
+    class Constant: public Value
+    {
+        public:
+            Constant(Scanner::Token token)
+                : Value(token)
+                {};
     };
 
     class Call: public Value
@@ -177,12 +201,22 @@ namespace AST {
     class Not: public Expr
     {};
 
+    class Assign: public Expr
+    {};
+
     // Keyword statements
     class Break: public KeywordStmt
     {};
 
     class Return: public KeywordStmt
-    {};
+    {
+        public:
+            Return()
+                : KeywordStmt()
+                {};
+
+            Return(Parser::ReturnStmt *smt);
+    };
 
     class While: public KeywordStmt
     {
@@ -233,14 +267,18 @@ namespace AST {
         public:
             Program()
                 : Node()
-                , vars()
-                , func()
+                , decls()
                 {};
 
             Program(Parser::Program *p);
             
-            std::vector<Declaration*> vars;
-            std::vector<FunctionDeclaration*> func;
+            // std::vector<Declaration*> vars;
+            // std::vector<FunctionDeclaration*> func;
+
+            std::vector<Node*> decls;
     };
+
+    // Node * ExprParseNode(Parser::Expression *parseNode);
+
 
 }

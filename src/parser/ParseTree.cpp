@@ -9,6 +9,115 @@
 
 namespace Parser {
 
+    // acceptor functions
+    void Identifier::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void Constant::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void DeclarationType::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void VariableDeclaration::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void FormalVariableDeclaration::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void FunctionDeclaration::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void UnaryExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void CallExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void LValue::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ParenExpr::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void PrintStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ReadIntExpr::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ReadLineExpr::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void StatementBlock::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ReturnStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void WhileStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void IfStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ForStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void RelationalExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void EqualityExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void LogicalExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ArithmeticExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void AssignExpression::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void BreakStmt::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void ReturnType::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+    void Program::accept(Converter *converter)
+    {
+        converter->convert(this);
+    }
+
+
+
+    // Constructor Copy Function
     FormalVariableDeclaration::FormalVariableDeclaration(VariableDeclaration *var)
     {
         if (var == nullptr)
@@ -35,6 +144,7 @@ namespace Parser {
     }
 
 
+    // ToString Functions for printing parse tree
     std::string Identifier::toString(int numSpaces, std::string extra)
     {
         std::stringstream ss;
@@ -109,8 +219,6 @@ namespace Parser {
                     << constant.getValue<double>();
             }
 
-
-
         }
         else if (constant.type == Scanner::Token::Type::IntConstant)
             ss << constant.getValue<int>();
@@ -126,7 +234,6 @@ namespace Parser {
     {
         return expr->toString(numSpaces, extra);
     }
-
 
     std::string Statement::toString(int numSpaces, std::string extra)
     {
@@ -217,7 +324,6 @@ namespace Parser {
 
         return ss.str();
     }
-
 
     std::string StatementBlock::toString(int numSpaces, std::string extra)
     {
@@ -350,7 +456,6 @@ namespace Parser {
 
         return ss.str();
     }
-
 
     std::string Program::toString(int numSpaces, std::string extra)
     {

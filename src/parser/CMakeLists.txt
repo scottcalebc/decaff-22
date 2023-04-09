@@ -1,6 +1,6 @@
 add_library(Parser "")
 
-target_link_libraries(Parser Token Lexer)
+target_link_libraries(Parser Token Lexer Visitor)
 
 target_sources(Parser
     PRIVATE

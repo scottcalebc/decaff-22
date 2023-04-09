@@ -3,9 +3,12 @@
 #include <vector>
 #include <deque>
 
+#include <common/VisitorForward.hpp>
+
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
 
+#include "visitor/visitor.hpp"
 namespace Parser {
     /** Non-Abstract / Derived Classes */
     /**
@@ -23,8 +26,7 @@ namespace Parser {
             virtual std::string toString(int numSpaces, std::string extra="") = 0;
             virtual Scanner::Token firstToken() = 0;
 
-            template< typename AbstractType, typename Visitor>
-            AbstractType convert(Visitor visitor) { return visitor.visit(this); };
+            virtual void accept(Converter *visitor) = 0;
     };
 
 
@@ -54,6 +56,8 @@ namespace Parser {
             std::string toString(int numSpaces, std::string extra="");
 
             Scanner::Token firstToken() { return ident; };
+
+            void accept(Converter *converter);
     };
 
     class DeclarationType : public ParseNode
@@ -80,6 +84,7 @@ namespace Parser {
             std::string nodeName() { return "Type: "; };
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return type; };
+            void accept(Converter *converter);
     };
 
     class ReturnType: public DeclarationType
@@ -91,6 +96,7 @@ namespace Parser {
                 
             };
             std::string nodeName() { return "(return type) " + DeclarationType::nodeName(); };
+            void accept(Converter *converter);
     };
 
     class Statement : public ParseNode
@@ -198,6 +204,7 @@ namespace Parser {
             };
 
             std::string nodeName() { return (op.subType == Scanner::Token::SubType::Not) ? "LogicalExpr:" : "ArithmeticExpr:"; };
+            void accept(Converter *converter);
     };
 
 
@@ -210,12 +217,14 @@ namespace Parser {
     {
         public:
             std::string nodeName() { return "AssignExpr: "; };
+            void accept(Converter *converter);
     };
 
     class ArithmeticExpression : public BinaryExpression
     {
         public:
             std::string nodeName() { return "ArithmeticExpr:"; };
+            void accept(Converter *converter);
     };
 
 
@@ -223,6 +232,7 @@ namespace Parser {
     {
         public:
             std::string nodeName() { return "LogicalExpr:"; };
+            void accept(Converter *converter);
 
             bool followExpr(LogicalExpression* follow) { 
                 if (op.subType == Scanner::Token::SubType::And ||
@@ -240,6 +250,7 @@ namespace Parser {
     {
         public:
             std::string nodeName() { return "RelationalExpr: ";};
+            void accept(Converter *converter);
 
     };
 
@@ -247,6 +258,7 @@ namespace Parser {
     {
         public:
             std::string nodeName() { return "EqualityExpr: "; };
+            void accept(Converter *converter);
     };
 
 
@@ -268,6 +280,7 @@ namespace Parser {
 
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return lparen; };
+            void accept(Converter *converter);
     };
 
 
@@ -294,6 +307,7 @@ namespace Parser {
             std::string nodeName() { return "FieldAccess: "; };
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return ident->firstToken(); };
+            void accept(Converter *converter);
     };
 
     class Constant : public Expression
@@ -312,6 +326,7 @@ namespace Parser {
             std::string nodeName() { return Scanner::Token::getTypeName(constant.type) + ": "; }; 
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return constant; };
+            void accept(Converter *converter);
     };
 
     /**
@@ -333,6 +348,7 @@ namespace Parser {
             };
 
             std::string nodeName() { return "VarDecl:"; };
+            void accept(Converter *converter);
     };
 
 
@@ -369,6 +385,7 @@ namespace Parser {
             std::string nodeName() { return "StmtBlock: "; };
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return lbrace; };
+            void accept(Converter *converter);
     };
 
 
@@ -383,6 +400,7 @@ namespace Parser {
 
             FormalVariableDeclaration(VariableDeclaration*var);
             std::string nodeName() { return "(formals) " + VariableDeclaration::nodeName(); };
+            void accept(Converter *converter);
     };
 
     class FunctionDeclaration : public Declarations
@@ -415,6 +433,7 @@ namespace Parser {
             std::string nodeName() { return "FnDecl:"; };
             std::string toString(int numSpaces, std::string extra="");
             
+            void accept(Converter *converter);
     };
 
     class Actual: public Expression
@@ -447,6 +466,7 @@ namespace Parser {
             std::string nodeName() { return "Call: "; };
             std::string toString(int numSpaces, std::string extra="");
             Scanner::Token firstToken() { return ident->firstToken(); };
+            void accept(Converter *converter);
     };
 
     class PrintStmt : public CallExpression
@@ -462,6 +482,7 @@ namespace Parser {
 
             std::string nodeName() { return "PrintStmt: "; };
             std::string toString(int numSpaces, std::string extra="");
+            void accept(Converter *converter);
     };
 
     class ReadIntExpr : public CallExpression
@@ -475,6 +496,7 @@ namespace Parser {
 
         std::string toString(int numSpaces, std::string extra="");
         std::string nodeName() { return "ReadIntegerExpr: "; };
+        void accept(Converter *converter);
     };
 
     class ReadLineExpr : public CallExpression
@@ -488,6 +510,7 @@ namespace Parser {
             
         std::string toString(int numSpaces, std::string extra="");
         std::string nodeName() { return "ReadLineExpr: "; };
+        void accept(Converter *converter);
     };
 
 
@@ -525,6 +548,7 @@ namespace Parser {
 
             std::string nodeName() { return "ReturnStmt: ";};
             std::string toString(int numSpaces, std::string extra="");
+            void accept(Converter *converter);
 
     };
 
@@ -538,6 +562,7 @@ namespace Parser {
                 };
 
             std::string nodeName() { return "BreakStmt: "; };
+            void accept(Converter *converter);
     };
 
     class WhileStmt : public KeywordStmt
@@ -558,6 +583,7 @@ namespace Parser {
 
             std::string nodeName() { return "WhileStmt: "; };
             std::string toString(int numSpaces, std::string extra="");
+            void accept(Converter *converter);
     };
 
     class IfStmt : public WhileStmt
@@ -576,6 +602,7 @@ namespace Parser {
 
             std::string nodeName() { return "IfStmt: "; };
             std::string toString(int numSpaces, std::string extra="");
+            void accept(Converter *converter);
     };
 
     class ForStmt : public WhileStmt
@@ -598,6 +625,7 @@ namespace Parser {
 
             std::string nodeName() { return "ForStmt: "; };
             std::string toString(int numSpace, std::string extra="");
+            void accept(Converter *converter);
     };
 
 
@@ -624,5 +652,6 @@ namespace Parser {
             std::string toString(int numSpaces=0, std::string extra="");
 
             Scanner::Token firstToken() { return decls.at(0)->firstToken(); };
+            void accept(Converter *converter);
     };
 }
