@@ -1,0 +1,87 @@
+
+#include <AST/AbstractSyntaxTree.hpp>
+#include "SymbolTableVisitor.hpp"
+#include "Entities.hpp"
+
+
+void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
+{
+
+    std::cout << "Visiting statement block" << std::endl;
+
+    Scope *parentScope = currScope;
+    currScope = new Scope();
+    currScope->parentScope = parentScope;
+    p->setScope( currScope );
+
+    for ( auto &var : p->decls )
+    {
+        currScope->install(var, 3);
+    }
+
+    for ( auto &stmt : p->stmts )
+    {
+        stmt->accept( this );
+    }
+
+}
+
+void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
+{
+    
+    std::cout << "Visiting function: " << p->ident.getValue<std::string>() << std::endl;
+
+    Scope *parentScope = currScope;
+    currScope = new Scope();
+    currScope->parentScope = parentScope;   // this will be useful for reverse lookups
+    p->setScope( currScope );
+
+    for ( auto &param : p->formals )
+    {
+        currScope->install(param, 2);
+    }
+
+    // add function decls to scope
+    for (auto &decl : p->stmts->decls)
+    {
+        currScope->install(decl, 3);
+    }
+
+    // visit statements for any that have their own scope (i.e. StatementBlock, If, etc.)
+    for (auto &stmt : p->stmts->stmts )
+    {
+        stmt->accept(this);
+    }
+
+
+    // reset scope
+    currScope = parentScope;
+}
+
+
+void SymbolTable::STVisitor::visit(AST::Program *p)
+{
+    std::cout << "Visiting program \n";
+
+    currScope = new Scope();
+    p->setScope( currScope );
+
+    // install functions
+    // currScope->install("ReadLine", Scanner::Token::Type::Identifier, 1);
+    // currScope->install("ReadInteger", Scanner::Token::Type::Identifier, 1);
+    // currScope->install("Print", Scanner::Token::Type::Identifier, 1);
+
+    for ( auto &node : p->vars )
+    {
+        // insert into symbol table as global
+        currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
+    }
+
+    for ( auto &node : p->func )
+    {
+        currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
+
+        node->accept(this);
+    }
+
+}

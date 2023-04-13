@@ -9,6 +9,7 @@
 
 namespace AST
 {
+    // Constructors
 
     KeywordStmt::KeywordStmt(Parser::KeywordStmt *stmt)
         : Value(stmt->keyword)
@@ -25,6 +26,7 @@ namespace AST
 
     While::While(Parser::WhileStmt *stmt)
         : KeywordStmt(stmt)
+        , stmt(nullptr)
     {
         ParseTreeConverter visitor = ParseTreeConverter();
 
@@ -37,6 +39,7 @@ namespace AST
 
     If::If(Parser::IfStmt *stmt)
         : While(stmt)
+        , elseStmt(nullptr)
     {
         if ( stmt->elseBlock != nullptr )
         {
@@ -52,6 +55,8 @@ namespace AST
 
     For::For(Parser::ForStmt *stmt)
         : While(stmt)
+        , startExpr(nullptr)
+        , loopExpr(nullptr)
     {
         if (stmt->startExpr != nullptr)
         {
@@ -195,19 +200,107 @@ namespace AST
 
     Program::Program(Parser::Program *p)
         : Node()
-        , decls()
+        , vars()
+        , func()
     {
         for(auto &decl : p->decls)
         {
-            ParseTreeConverter converter = ParseTreeConverter();
-            decl->accept(&converter);
-            decls.push_back(converter.pNode);
 
-            if (converter.pNode == nullptr)
-                throw Parser::ParseException( decl->firstToken() );
+            if (dynamic_cast<Parser::VariableDeclaration*>(decl) != nullptr)
+            {
+                vars.push_back(new Declaration(decl));
+            } 
+            else 
+            {
+                ParseTreeConverter converter = ParseTreeConverter();
+                decl->accept(&converter);
+                func.push_back(converter.pNode);
+
+                if (converter.pNode == nullptr)
+                    throw Parser::ParseException( decl->firstToken() );
+            }
 
         }
 
         return;
+    }
+
+
+    // SetScope to children nodes
+
+    void KeywordStmt::setScope(SymbolTable::Scope *p) 
+    { 
+        pScope = p; 
+        if (expr != nullptr)
+            expr->setScope(p);
+    }
+
+    void While::setScope(SymbolTable::Scope *p)
+    {
+        KeywordStmt::setScope(p);
+
+        if (stmt != nullptr)
+            stmt->setScope(p);
+    }
+
+    void If::setScope(SymbolTable::Scope *p)
+    {
+        While::setScope(p);
+
+        if (elseStmt != nullptr)
+            elseStmt->setScope(p);
+    }
+
+    void For::setScope(SymbolTable::Scope *p)
+    {
+        While::setScope(p);
+
+        if (startExpr != nullptr)
+            startExpr->setScope(p);
+
+        if (loopExpr != nullptr)
+            loopExpr->setScope(p);
+    }
+
+    void StatementBlock::setScope(SymbolTable::Scope *p)
+    {
+        pScope = p;
+
+        for ( auto &decl : decls )
+        {
+            decl->setScope( p );
+        }
+
+        for ( auto &stmt : stmts )
+        {
+            stmt->setScope( p );
+        }
+    }
+
+    void FunctionDeclaration::setScope(SymbolTable::Scope *p)
+    {
+        pScope = p;
+
+        for ( auto &formal : formals )
+        {
+            formal->setScope( p );
+        }
+
+        if (stmts != nullptr)
+            stmts->setScope( p );
+    }
+
+    void Program::setScope(SymbolTable::Scope *p)
+    {
+        pScope = p;
+
+        for ( auto &decls : vars )
+        {
+            decls->setScope( p );
+        }
+        for (auto &function : func)
+        {
+            function->setScope( p );
+        }
     }
 } // namespace AST

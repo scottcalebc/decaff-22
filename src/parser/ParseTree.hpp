@@ -8,7 +8,9 @@
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
 
-#include "visitor/visitor.hpp"
+#include "visitor/parseVisitor.hpp"
+
+
 namespace Parser {
     /** Non-Abstract / Derived Classes */
     /**

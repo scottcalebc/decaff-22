@@ -1,9 +1,12 @@
 #pragma once
 
-#include <visitor/visitor.hpp>
+#include <visitor/parseVisitor.hpp>
+#include <visitor/astVisitor.hpp>
 
 #include <parser/ParseTree.hpp>
 #include <token/token.hpp>
+
+#include <SymbolTable/Entities.hpp>
 
 namespace AST {
 
@@ -12,16 +15,19 @@ namespace AST {
      */
     class Node : public Acceptor {
         protected:            
-            Node() {};
+            Node() : pScope(nullptr)
+            {};
             
         public:
+            SymbolTable::Scope *pScope;
             // future meta information for symbol table, return type (function/expr), etc.
             
             // // visitor acceptor method for semantic, type, and code gen
             // template< typename Visitor>
             // void accept(Visitor visitor) { visitor.visit(this); };
             // virtual void accept(Visitor *visitor) { visitor->visit(this); };
-            virtual void accept() { };
+            virtual void accept(Visitor* v) = 0;
+            virtual void setScope(SymbolTable::Scope *pScope) = 0;
     };
 
     // represents either identifier or constant
@@ -39,6 +45,8 @@ namespace AST {
             {};
             
             Scanner::Token              value;
+
+            virtual void setScope(SymbolTable::Scope *p) { pScope = p; };
     };
 
     class Declaration: public Node
@@ -55,9 +63,13 @@ namespace AST {
                 , type(decl->type->type.type)
                 , ident(decl->ident->ident)
             {};
+
+            virtual void accept(Visitor *v) { v->visit(this); };
             
             Scanner::Token::Type        type;
             Scanner::Token              ident;
+
+            void setScope(SymbolTable::Scope *p) { pScope = p; };
     };
 
     /**
@@ -78,10 +90,13 @@ namespace AST {
                 {};
 
             StatementBlock(Parser::StatementBlock *block);
+            void accept(Visitor *v) { v->visit(this); };
             
             // is this even needed? parsing already ensured that decls are at the front
             std::vector<Declaration*>   decls;  
             std::vector<Node*>          stmts;
+
+            void setScope(SymbolTable::Scope *p);
     };
     class FunctionDeclaration: public Declaration
     {
@@ -93,9 +108,16 @@ namespace AST {
                 {};
 
             FunctionDeclaration(Parser::FunctionDeclaration *func);
+            void accept(Visitor *v) 
+            { 
+                std::cout << "Function accepting visitor: "; 
+                v->visit(this); 
+            };
             
             std::vector<Declaration*>   formals;
             StatementBlock*             stmts;
+
+            void setScope(SymbolTable::Scope *p);
     };
 
     class Ident: public Value
@@ -106,6 +128,8 @@ namespace AST {
                 {
                     std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
                 };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Constant: public Value
@@ -116,6 +140,8 @@ namespace AST {
                 {
                     std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
                 };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Call: public Value
@@ -127,6 +153,7 @@ namespace AST {
                 {};
 
             Call(Parser::CallExpression *c);
+            void accept(Visitor *v) { v->visit(this); };
             
             std::deque<Node*> actuals;
     };
@@ -150,6 +177,15 @@ namespace AST {
             Node*                       left;
             Scanner::Token              op; // may not need this
             Node*                       right;
+
+            void setScope(SymbolTable::Scope *p)
+            {
+                pScope = p;
+                if (left != nullptr)
+                    left->setScope(p);
+                if (right != nullptr)
+                    right->setScope(p);
+            };
     };
 
     class KeywordStmt: public Value
@@ -166,6 +202,7 @@ namespace AST {
             // for return this will be return value or null/void
             // for break this should be null
             Node* expr;
+            void setScope(SymbolTable::Scope *p);
     };
 
 
@@ -189,6 +226,8 @@ namespace AST {
             {
                 std::cout << "Add: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // If right is null this will be unary minus
@@ -210,6 +249,8 @@ namespace AST {
             {
                 std::cout << "Subtract: Generating unary minus\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Multiply: public Expr
@@ -224,6 +265,8 @@ namespace AST {
             {
                 std::cout << "Multiply: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Divide: public Expr
@@ -238,6 +281,8 @@ namespace AST {
             {
                 std::cout << "Divide: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Modulus: public Expr
@@ -252,6 +297,8 @@ namespace AST {
             {
                 std::cout << "Modulus: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // Boolean or conditional objects
@@ -266,7 +313,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "LessThan: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class LTE: public LessThan
@@ -280,7 +329,9 @@ namespace AST {
                 : LessThan(expr)
             {
                 std::cout << "LessThanEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class GreaterThan: public Expr
@@ -294,7 +345,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "GreaterThan: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class GTE: public GreaterThan
@@ -308,7 +361,9 @@ namespace AST {
                 : GreaterThan(expr)
             {
                 std::cout << "GreaterThanEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Equal: public Expr
@@ -322,7 +377,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "Equal: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class NotEqual: public Expr
@@ -336,7 +393,9 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "NotEqual: generating\n";
-            }
+            };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class And: public Expr
@@ -351,6 +410,8 @@ namespace AST {
             {
                 std::cout << "And: generating\n";
             };
+            
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Or: public Expr
@@ -365,6 +426,8 @@ namespace AST {
             {
                 std::cout << "Or: generating\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Not: public Expr
@@ -379,6 +442,8 @@ namespace AST {
             {
                 std::cout << "Not: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class Assign: public Expr
@@ -393,11 +458,16 @@ namespace AST {
             {
                 std::cout << "Assign: Generating expr\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     // Keyword statements
     class Break: public KeywordStmt
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class Return: public KeywordStmt
     {
@@ -407,6 +477,8 @@ namespace AST {
                 {};
 
             Return(Parser::ReturnStmt *smt);
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class While: public KeywordStmt
@@ -418,6 +490,8 @@ namespace AST {
                 {};
 
             While(Parser::WhileStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
             Node* stmt; // this will be singluar statment or statement block
     };
@@ -431,6 +505,9 @@ namespace AST {
                 {};
 
             If(Parser::IfStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
+
             Node* elseStmt; // this will hold else statement/block
     };
 
@@ -444,6 +521,8 @@ namespace AST {
                 {};
 
             For(Parser::ForStmt *stmt);
+            void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
             Node* startExpr;
             Node* loopExpr;
@@ -462,31 +541,40 @@ namespace AST {
             {
                 std::cout << "Print: Generating\n";
             };
+
+            void accept(Visitor *v) { v->visit(this); };
     };
 
     class ReadInteger: public Call
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class ReadLine: public Call
-    {};
+    {
+        public:
+            void accept(Visitor *v) { v->visit(this); };
+    };
 
     class Program: public Node
     {
         public:
             Program()
                 : Node()
-                , decls()
+                , vars()
+                , func()
                 {};
 
             Program(Parser::Program *p);
+
+            void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
-            // std::vector<Declaration*> vars;
-            // std::vector<FunctionDeclaration*> func;
+            std::vector<Declaration*> vars;
+            std::vector<Node*> func;
 
-            std::vector<Node*> decls;
+            // std::vector<Node*> decls;
     };
-
-    // Node * ExprParseNode(Parser::Expression *parseNode);
-
 
 }

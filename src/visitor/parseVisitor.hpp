@@ -50,30 +50,3 @@ class Converter {
         virtual void convert(Parser::ForStmt *p) = 0;
         virtual void convert(Parser::Program *p) = 0;
 };
-
-/**
- * @brief Visitor interface that will visit nodes that have an acceptor function
- * 
- */
-class Visitor {
-
-    protected:
-        Visitor() {};
-
-    public:
-        virtual void visit() = 0;
-};
-
-
-
-/**
- * @brief Acceptor interface that will accept someone from the Visitor Interface
- * 
- */
-class Acceptor {
-    protected:
-        Acceptor() {};
-
-    public:
-        virtual void accept() = 0;
-};

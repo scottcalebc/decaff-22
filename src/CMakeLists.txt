@@ -6,6 +6,7 @@ add_subdirectory(token)
 add_subdirectory(parser)
 add_subdirectory(visitor)
 add_subdirectory(common)
+add_subdirectory(SymbolTable)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
@@ -14,6 +15,7 @@ target_link_libraries(${PROJECT_NAME}
     Parser
     Visitor
     Common
+    SymbolTable
 )
 
 target_include_directories(${PROJECT_NAME}
