@@ -4,6 +4,35 @@
 #include "Entities.hpp"
 
 
+void SymbolTable::STVisitor::visit(AST::KeywordStmt *p)
+{
+    p->setScope( currScope );
+}
+
+void SymbolTable::STVisitor::visit(AST::While *p)
+{
+    p->setScope( currScope );
+    p->stmt->accept( this );
+}
+
+void SymbolTable::STVisitor::visit(AST::For *p)
+{
+    p->setScope( currScope );
+    p->stmt->accept( this );
+}
+
+void SymbolTable::STVisitor::visit(AST::If *p)
+{
+    p->setScope( currScope );
+
+    if (p->stmt != nullptr)
+        p->stmt->accept( this );
+
+    if (p->elseStmt != nullptr)
+        p->elseStmt->accept( this );
+}
+
+
 void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
 {
 

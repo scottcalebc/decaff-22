@@ -33,5 +33,9 @@ namespace SymbolTable
                 void visit(AST::FunctionDeclaration *p);
                 void visit(AST::Program *p);
                 void visit(AST::StatementBlock *p);
+                void visit(AST::KeywordStmt *p);
+                void visit(AST::While *p);
+                void visit(AST::For *p);
+                void visit(AST::If *p);
         };
 }

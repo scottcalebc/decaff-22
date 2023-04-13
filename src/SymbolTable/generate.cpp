@@ -12,6 +12,12 @@ SymbolTable::IdEntry SymbolTable::Scope::install(AST::Declaration* id, int block
     return IdEntry(id->ident.getValue<std::string>() , id->type, block);
 }
 
+SymbolTable::IdEntry SymbolTable::Scope::install(AST::FunctionDeclaration* id, int block)
+{
+    return IdEntry(id->ident.getValue<std::string>() , id->type, block, true);
+}
+
+
 SymbolTable::IdEntry SymbolTable::Scope::idLookup(std::string id)
 {
     std::map<std::string, IdEntry>::iterator it ( table.find(id) );
