@@ -1,8 +1,6 @@
-
-
+#include <exception>
 #include "generate.hpp"
 #include "SymbolTableVisitor.hpp"
-
 
 SymbolTable::IdEntry SymbolTable::Scope::install(std::string id, Scanner::Token::Type type, int block)
 {
@@ -14,12 +12,17 @@ SymbolTable::IdEntry SymbolTable::Scope::install(AST::Declaration* id, int block
     return IdEntry(id->ident.getValue<std::string>() , id->type, block);
 }
 
-// SymbolTable::IdEntry SymbolTable::Scope::idLookup(std::string id, int block)
-// {
-    
+SymbolTable::IdEntry SymbolTable::Scope::idLookup(std::string id)
+{
+    std::map<std::string, IdEntry>::iterator it ( table.find(id) );
 
-//     return IdEntry(id, block);
-// }
+    if ( it == table.end() )
+        throw std::runtime_error("No symbol with id: " + id);
+
+    return it->second;
+}
+
+
 
 void SymbolTable::generate(AST::Program *p)
 {

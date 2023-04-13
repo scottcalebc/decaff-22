@@ -7,6 +7,7 @@ ${CMAKE_CURRENT_LIST_DIR}/SymbolTableVisitor.cpp
 ${CMAKE_CURRENT_LIST_DIR}/generate.cpp
 PUBLIC
 ${CMAKE_CURRENT_LIST_DIR}/SymbolTableVisitor.hpp
+${CMAKE_CURRENT_LIST_DIR}/Entities.hpp
 ${CMAKE_CURRENT_LIST_DIR}/generate.hpp
 )
 

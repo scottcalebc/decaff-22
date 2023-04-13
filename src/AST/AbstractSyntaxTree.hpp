@@ -6,6 +6,8 @@
 #include <parser/ParseTree.hpp>
 #include <token/token.hpp>
 
+#include <SymbolTable/Entities.hpp>
+
 namespace AST {
 
     /**
@@ -13,9 +15,11 @@ namespace AST {
      */
     class Node : public Acceptor {
         protected:            
-            Node() {};
+            Node() : pScope(nullptr)
+            {};
             
         public:
+            SymbolTable::Scope *pScope;
             // future meta information for symbol table, return type (function/expr), etc.
             
             // // visitor acceptor method for semantic, type, and code gen
@@ -23,6 +27,7 @@ namespace AST {
             // void accept(Visitor visitor) { visitor.visit(this); };
             // virtual void accept(Visitor *visitor) { visitor->visit(this); };
             virtual void accept(Visitor* v) = 0;
+            virtual void setScope(SymbolTable::Scope *pScope) = 0;
     };
 
     // represents either identifier or constant
@@ -40,6 +45,8 @@ namespace AST {
             {};
             
             Scanner::Token              value;
+
+            virtual void setScope(SymbolTable::Scope *p) { pScope = p; };
     };
 
     class Declaration: public Node
@@ -61,6 +68,8 @@ namespace AST {
             
             Scanner::Token::Type        type;
             Scanner::Token              ident;
+
+            void setScope(SymbolTable::Scope *p) { pScope = p; };
     };
 
     /**
@@ -86,6 +95,8 @@ namespace AST {
             // is this even needed? parsing already ensured that decls are at the front
             std::vector<Declaration*>   decls;  
             std::vector<Node*>          stmts;
+
+            void setScope(SymbolTable::Scope *p);
     };
     class FunctionDeclaration: public Declaration
     {
@@ -105,6 +116,8 @@ namespace AST {
             
             std::vector<Declaration*>   formals;
             StatementBlock*             stmts;
+
+            void setScope(SymbolTable::Scope *p);
     };
 
     class Ident: public Value
@@ -164,6 +177,15 @@ namespace AST {
             Node*                       left;
             Scanner::Token              op; // may not need this
             Node*                       right;
+
+            void setScope(SymbolTable::Scope *p)
+            {
+                pScope = p;
+                if (left != nullptr)
+                    left->setScope(p);
+                if (right != nullptr)
+                    right->setScope(p);
+            };
     };
 
     class KeywordStmt: public Value
@@ -180,6 +202,7 @@ namespace AST {
             // for return this will be return value or null/void
             // for break this should be null
             Node* expr;
+            void setScope(SymbolTable::Scope *p);
     };
 
 
@@ -468,6 +491,7 @@ namespace AST {
 
             While(Parser::WhileStmt *stmt);
             void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
             Node* stmt; // this will be singluar statment or statement block
     };
@@ -482,6 +506,7 @@ namespace AST {
 
             If(Parser::IfStmt *stmt);
             void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
 
             Node* elseStmt; // this will hold else statement/block
     };
@@ -497,6 +522,7 @@ namespace AST {
 
             For(Parser::ForStmt *stmt);
             void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
             Node* startExpr;
             Node* loopExpr;
@@ -536,17 +562,19 @@ namespace AST {
         public:
             Program()
                 : Node()
-                , decls()
+                , vars()
+                , func()
                 {};
 
             Program(Parser::Program *p);
 
             void accept(Visitor *v) { v->visit(this); };
+            void setScope(SymbolTable::Scope *p);
             
-            // std::vector<Declaration*> vars;
-            // std::vector<FunctionDeclaration*> func;
+            std::vector<Declaration*> vars;
+            std::vector<Node*> func;
 
-            std::vector<Node*> decls;
+            // std::vector<Node*> decls;
     };
 
 }

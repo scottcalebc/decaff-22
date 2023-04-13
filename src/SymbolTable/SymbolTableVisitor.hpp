@@ -7,7 +7,8 @@
 #include <visitor/astVisitor.hpp>
 #include <AST/AbstractSyntaxTree.hpp>
 
-#include "generate.hpp"
+
+#include "Entities.hpp"
 
 namespace SymbolTable
 {
@@ -31,5 +32,6 @@ namespace SymbolTable
 
                 void visit(AST::FunctionDeclaration *p);
                 void visit(AST::Program *p);
+                void visit(AST::StatementBlock *p);
         };
 }

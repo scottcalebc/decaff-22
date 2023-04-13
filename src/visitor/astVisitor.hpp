@@ -16,6 +16,7 @@ class Visitor {
 
     public:
         virtual void visit(Acceptor *a) = 0;
+        virtual void visit(AST::StatementBlock *p) = 0;
         virtual void visit(AST::FunctionDeclaration *p) = 0;
         virtual void visit(AST::Program *p) = 0;
 };
