@@ -15,18 +15,27 @@ namespace AST {
      */
     class Node : public Acceptor {
         protected:            
-            Node() : pScope(nullptr)
+            Node() 
+                : pScope(nullptr)
             {};
             
         public:
-            SymbolTable::Scope *pScope;
             // future meta information for symbol table, return type (function/expr), etc.
-            
+
+            // Each node holds a ref to their closest scope, each scope holds a ref to their
+            // parent thus preserving static scoping rules
+            SymbolTable::Scope *pScope;
+
+            // Out type will be used by expressions to verify type of operation
+            // Will throw error if type mismatch
+            Scanner::Token::Type outType;
+
             // // visitor acceptor method for semantic, type, and code gen
-            // template< typename Visitor>
-            // void accept(Visitor visitor) { visitor.visit(this); };
-            // virtual void accept(Visitor *visitor) { visitor->visit(this); };
             virtual void accept(Visitor* v) = 0;
+
+            // virtual method to distribute scopes to children nodes
+            // this is to ensure we don't have to hit every object with visitor
+            // to set its local scope
             virtual void setScope(SymbolTable::Scope *pScope) = 0;
     };
 
@@ -110,7 +119,7 @@ namespace AST {
             FunctionDeclaration(Parser::FunctionDeclaration *func);
             void accept(Visitor *v) 
             { 
-                std::cout << "Function accepting visitor: "; 
+                // std::cout << "Function accepting visitor: "; 
                 v->visit(this); 
             };
             

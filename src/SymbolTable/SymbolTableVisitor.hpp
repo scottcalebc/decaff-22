@@ -20,6 +20,7 @@ namespace SymbolTable
 
                 Scope* currScope;
 
+                // default acceptor may remove
                 void visit(Acceptor *a) 
                 { 
                         std::cout << "Got acceptor"; 
@@ -29,7 +30,14 @@ namespace SymbolTable
                         std::cout << std::endl;
                 };
 
+                // non-used virtual overrides
+                void visit(AST::Add *p) {};
+                void visit(AST::Ident *p) {};
+                void visit(AST::Assign *p) {};
+                void visit(AST::Constant *p) {};
 
+
+                // actual implemented overrides
                 void visit(AST::FunctionDeclaration *p);
                 void visit(AST::Program *p);
                 void visit(AST::StatementBlock *p);
