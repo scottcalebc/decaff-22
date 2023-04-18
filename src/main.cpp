@@ -13,6 +13,7 @@
 #include <AST/AbstractSyntaxTree.hpp>
 
 #include <SymbolTable/generate.hpp>
+#include <semantic-analyzer/STTypeVisitor.hpp>
 
 #define VERSION 0.1.0
 
@@ -80,9 +81,10 @@ int main(int argc, char** argv) {
     }
     // we continue onto parser
     // convert file to AST
+    AST::Program prog;
 
     try {
-        AST::Program prog(Parser::treeGeneration(&lexer));
+        prog = AST::Program(Parser::treeGeneration(&lexer));
 
         std::cout << "Generating symbol tree\n";
         SymbolTable::generate(&prog);
@@ -97,6 +99,16 @@ int main(int argc, char** argv) {
     {
         // std::cout << "Ended at parser function" << std::endl;
         return 0;
+    }
+
+    try {
+        SemanticAnalyzer::typeCheck(&prog);
+    }
+    // Some Semantic checking can be "recoverable or at least ignore later invocations of issues"
+    // 
+    catch ( std::exception &exc )
+    {
+        std::cout << exc.what() << std::endl;
     }
 
     // stop after semantic checking

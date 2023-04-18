@@ -55,6 +55,8 @@ namespace SymbolTable {
             IdEntry install(AST::FunctionDeclaration*, int block);
             // IdEntry install(AST::StatementBlock*, int block);
             IdEntry idLookup(std::string);
+
+            std::string toString(int &space);
     };
 
 };
