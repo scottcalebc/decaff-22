@@ -28,10 +28,12 @@ namespace AST
         : KeywordStmt(stmt)
         , stmt(nullptr)
     {
+        std::cout << "While: getting start expr\n";
         ParseTreeConverter visitor = ParseTreeConverter();
 
+        std::cout << "While: getting statement\n";
         stmt->stmt->accept(&visitor);
-        expr = visitor.pNode;
+        this->stmt = visitor.pNode;
 
         if (visitor.pNode == nullptr)
             throw Parser::ParseException( stmt->firstToken() );
@@ -41,11 +43,12 @@ namespace AST
         : While(stmt)
         , elseStmt(nullptr)
     {
+        std::cout << "If: getting start expr\n";
         if ( stmt->elseBlock != nullptr )
         {
             ParseTreeConverter visitor = ParseTreeConverter();
 
-            stmt->stmt->accept(&visitor);
+            stmt->elseBlock->accept(&visitor);
             elseStmt = visitor.pNode;
 
             if (visitor.pNode == nullptr)

@@ -7,9 +7,10 @@ namespace SymbolTable {
     class IdEntry {
 
         public:
-            IdEntry( std::string ident, Scanner::Token::Type type, int block )
+            IdEntry( std::string ident, Scanner::Token::Type type, int block, bool func = false )
                 : ident(ident)
                 , type(type)
+                , func(true)
                 , block(block)
                 , offset(0)
             {
@@ -18,8 +19,9 @@ namespace SymbolTable {
                             << block << std::endl;
             };
 
-            std::string ident;
-            Scanner::Token::Type type;
+            std::string             ident;
+            Scanner::Token::Type    type;
+            bool                    func;
 
             /*
                 1 == global
@@ -50,7 +52,7 @@ namespace SymbolTable {
 
             IdEntry install(std::string id, Scanner::Token::Type type, int block);
             IdEntry install(AST::Declaration*, int block);
-            // IdEntry install(AST::FunctionDeclaration*, int block);
+            IdEntry install(AST::FunctionDeclaration*, int block);
             // IdEntry install(AST::StatementBlock*, int block);
             IdEntry idLookup(std::string);
     };
