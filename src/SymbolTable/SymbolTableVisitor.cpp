@@ -108,9 +108,10 @@ void SymbolTable::STVisitor::visit(AST::Program *p)
 
     for ( auto &node : p->func )
     {
-        currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
-
+        SymbolTable::IdEntry e = currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
         node->accept(this);
+
+        currScope->funcScope.insert( { e.ident, node->pScope });
     }
 
 }

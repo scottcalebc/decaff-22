@@ -43,11 +43,15 @@ namespace SymbolTable {
             Scope()
                 : parentScope(nullptr)
                 , table()
+                , funcScope()
             {};
 
 
             Scope *parentScope;
+
+            typedef std::map<std::string, IdEntry>::iterator TableIterator;
             std::map<std::string, IdEntry> table;
+            std::map<std::string, Scope*> funcScope;
 
 
             IdEntry install(std::string id, Scanner::Token::Type type, int block);
@@ -55,6 +59,8 @@ namespace SymbolTable {
             IdEntry install(AST::FunctionDeclaration*, int block);
             // IdEntry install(AST::StatementBlock*, int block);
             IdEntry idLookup(std::string);
+
+            Scope * funcLookup(IdEntry entry);
 
             std::string toString(int &space);
     };
