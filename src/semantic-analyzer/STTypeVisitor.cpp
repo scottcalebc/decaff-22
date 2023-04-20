@@ -92,6 +92,17 @@ namespace SemanticAnalyzer {
         }
     }
 
+    void STTypeVisitor::visit(AST::Multiply *p)
+    {
+        std::cout << "Evaluating Multiply\n";
+        if (binaryTypeCheck(p->left, p->right))
+        {
+            p->outType = p->left->outType;
+        }else {
+            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+        }
+    }
+
     void STTypeVisitor::visit(AST::Subtract *p)
     {
         std::cout << "Evaluating Subtract\n";
@@ -99,6 +110,8 @@ namespace SemanticAnalyzer {
         if (binaryTypeCheck(p->left, p->right, unary))
         {
             p->outType = p->left->outType;
+        }else {
+            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
         }
     }
 
@@ -108,6 +121,8 @@ namespace SemanticAnalyzer {
         if (binaryTypeCheck(p->left, p->right))
         {
             p->outType = p->left->outType;
+        }else {
+            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
         }
     }
 
@@ -118,6 +133,8 @@ namespace SemanticAnalyzer {
         if (binaryTypeCheck(p->left, p->right))
         {
             p->outType = p->left->outType;
+        } else {
+            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
         }
 
     }

@@ -28,6 +28,7 @@ namespace SemanticAnalyzer {
             void visit(AST::Add *p);
             void visit(AST::Assign *p);
             void visit(AST::Subtract *p);
+            void visit(AST::Multiply *p);
             
             void visit(AST::KeywordStmt *p) {};
             void visit(AST::While *p) {};
