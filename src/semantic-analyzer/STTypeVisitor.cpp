@@ -12,7 +12,7 @@ namespace SemanticAnalyzer {
         p->accept(&visitor);
     }
 
-    bool STTypeVisitor::binaryTypeCheck(AST::Node *left, AST::Node *right)
+    bool STTypeVisitor::binaryTypeCheck(AST::Node *left, AST::Node *right, bool unary)
     {
         Scanner::Token::Type ltype;
         Scanner::Token::Type rtype;
@@ -21,7 +21,7 @@ namespace SemanticAnalyzer {
             left->accept(this);
             ltype = left->outType;
 
-            if (right != nullptr)
+            if (right != nullptr && ! unary)
             {
                 right->accept(this);
                 rtype = right->outType;
@@ -41,9 +41,14 @@ namespace SemanticAnalyzer {
                         << ") to rtype of: " << Scanner::Token::getTypeName(rtype) << std::endl;
                 }
             }
-            else
+            else if ( ! unary )
             {
                 std::cout << "Cannot get right type from empty expression\n";
+            }
+            else 
+            {
+                // we hit a unary so return true
+                return true;
             }
         }
         else
@@ -84,6 +89,16 @@ namespace SemanticAnalyzer {
                 break;
             default:
                 p->outType = p->value.type;
+        }
+    }
+
+    void STTypeVisitor::visit(AST::Subtract *p)
+    {
+        std::cout << "Evaluating Subtract\n";
+        bool unary = p->right == nullptr;
+        if (binaryTypeCheck(p->left, p->right, unary))
+        {
+            p->outType = p->left->outType;
         }
     }
 

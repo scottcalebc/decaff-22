@@ -13,7 +13,7 @@ namespace SemanticAnalyzer {
         public:
             STTypeVisitor() {};
 
-            bool binaryTypeCheck(AST::Node* left, AST::Node*right);
+            bool binaryTypeCheck(AST::Node* left, AST::Node*right, bool unary=false);
             // bool unaryTypeCheck(AST::Node* left);
 
             // default acceptor to show missing virtual functions
@@ -27,6 +27,7 @@ namespace SemanticAnalyzer {
             // Expressions
             void visit(AST::Add *p);
             void visit(AST::Assign *p);
+            void visit(AST::Subtract *p);
             
             void visit(AST::KeywordStmt *p) {};
             void visit(AST::While *p) {};

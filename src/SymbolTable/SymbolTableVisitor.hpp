@@ -34,6 +34,7 @@ namespace SymbolTable
                 void visit(AST::Add *p) {};
                 void visit(AST::Ident *p) {};
                 void visit(AST::Assign *p) {};
+                void visit(AST::Subtract *p) {};
                 void visit(AST::Constant *p) {};
 
 
