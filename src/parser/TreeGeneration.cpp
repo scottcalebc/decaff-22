@@ -449,9 +449,9 @@ Expression* parseExpr(std::stack<Scanner::Token> &tokenStack)
             unary->op = tokenStack.top();
 
             tokenStack.pop();
-            unary->right = parseExpr(tokenStack);
+            unary->expr = parseExpr(tokenStack);
 
-            if (unary->right == nullptr)
+            if (unary->expr == nullptr)
                 throw Parser::ParseException(unary->op);
 
             return unary;

@@ -104,6 +104,10 @@ namespace AST
     }
 
     Expr::Expr(Parser::Expression *expr)
+        : Node()
+        , left(nullptr)
+        , op(Scanner::Token::Type::EMPTY)
+        , right(nullptr)
     {
         if (expr->expr != nullptr )
         {
@@ -117,6 +121,10 @@ namespace AST
     }
 
     Expr::Expr(Parser::BinaryExpression *expr)
+        : Node()
+        , left(nullptr)
+        , op(Scanner::Token::Type::EMPTY)
+        , right(nullptr)
     {
         op = expr->op;
         

@@ -196,11 +196,14 @@ namespace Parser {
             Scanner::Token firstToken() { return expr->firstToken(); };
     };
 
-    class UnaryExpression : public BinaryExpression
+    class UnaryExpression : public Expression
     {
         public:
+            Scanner::Token op;
+
             UnaryExpression()
-                : BinaryExpression()
+                : Expression()
+                , op()
             {
 
             };

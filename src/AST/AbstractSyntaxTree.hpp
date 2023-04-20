@@ -257,6 +257,8 @@ namespace AST {
                 : Expr(expr)
             {
                 std::cout << "Subtract: Generating unary minus\n";
+                std::cout << "Left should be non null: " << &left << std::endl;
+                std::cout << "Right should be null   : " << &right << std::endl;
             };
 
             void accept(Visitor *v) { v->visit(this); };
