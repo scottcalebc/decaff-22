@@ -13,6 +13,9 @@ namespace SemanticAnalyzer {
         public:
             STTypeVisitor() {};
 
+            bool binaryTypeCheck(AST::Node* left, AST::Node*right);
+            // bool unaryTypeCheck(AST::Node* left);
+
             // default acceptor to show missing virtual functions
             void visit(Acceptor *a) { std::cout << "STTypeVisitor: Got acceptor" << std::endl; };
 
