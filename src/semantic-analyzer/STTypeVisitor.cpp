@@ -92,6 +92,17 @@ namespace SemanticAnalyzer {
         }
     }
 
+    void STTypeVisitor::visit(AST::Divide *p)
+    {
+        std::cout << "Evaluating divide\n";
+        if (binaryTypeCheck(p->left, p->right))
+        {
+            p->outType = p->left->outType;
+        }else {
+            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+        }
+    }
+
     void STTypeVisitor::visit(AST::Multiply *p)
     {
         std::cout << "Evaluating Multiply\n";

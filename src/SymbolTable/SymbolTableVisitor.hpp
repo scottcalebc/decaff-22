@@ -36,6 +36,7 @@ namespace SymbolTable
                 void visit(AST::Assign *p) {};
                 void visit(AST::Subtract *p) {};
                 void visit(AST::Multiply *p) {};
+                void visit(AST::Divide *p) {};
                 void visit(AST::Constant *p) {};
 
 

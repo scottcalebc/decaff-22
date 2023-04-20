@@ -21,6 +21,7 @@ class Visitor {
         virtual void visit(AST::For *p) = 0;
         virtual void visit(AST::While *p) = 0;
         virtual void visit(AST::Ident *p) = 0;
+        virtual void visit(AST::Divide *p) = 0;
         virtual void visit(AST::Assign *p) = 0;
         virtual void visit(AST::Program *p) = 0;
         virtual void visit(AST::Multiply *p) = 0;
