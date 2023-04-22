@@ -165,6 +165,14 @@ namespace AST {
             void accept(Visitor *v) { v->visit(this); };
             
             std::deque<Node*> actuals;
+            void setScope(SymbolTable::Scope *p)
+            {
+                pScope = p;
+                for (auto node: actuals)
+                {
+                    node->setScope(p);
+                }
+            };
     };
 
     class Expr: public Node

@@ -65,10 +65,14 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
     currScope->parentScope = parentScope;   // this will be useful for reverse lookups
     p->setScope( currScope );
 
+    int i = 0;
     for ( auto &param : p->formals )
     {
-        currScope->install(param, 2);
+        // index should be parameter index, this will be used during type checking
+        currScope->install(param, i++);
     }
+
+    currScope->numOfParams = p->formals.size();
 
 
     // Statement block has it's own scope, this allows shadowing of parameters
@@ -100,10 +104,10 @@ void SymbolTable::STVisitor::visit(AST::Program *p)
 
     for ( auto &node : p->func )
     {
-        SymbolTable::IdEntry e = currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
+        SymbolTable::IdEntry *e = currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
         node->accept(this);
 
-        currScope->funcScope.insert( { e.ident, node->pScope });
+        currScope->funcScope.insert( { e->ident, node->pScope });
     }
 
 }

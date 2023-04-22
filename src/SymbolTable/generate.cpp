@@ -4,9 +4,9 @@
 #include "generate.hpp"
 #include "SymbolTableVisitor.hpp"
 
-SymbolTable::IdEntry SymbolTable::Scope::install(std::string id, Scanner::Token::Type type, int block)
+SymbolTable::IdEntry *SymbolTable::Scope::install(std::string id, Scanner::Token::Type type, int block)
 {
-    auto e = IdEntry(id, type, block);
+    auto e = new IdEntry(id, type, block);
 
     TableIterator it ( table.find(id) );
 
@@ -18,9 +18,9 @@ SymbolTable::IdEntry SymbolTable::Scope::install(std::string id, Scanner::Token:
     return e;
 }
 
-SymbolTable::IdEntry SymbolTable::Scope::install(AST::Declaration* id, int block)
+SymbolTable::IdEntry *SymbolTable::Scope::install(AST::Declaration* id, int block)
 {
-    auto e = IdEntry(id->ident.getValue<std::string>() , id->type, block);
+    auto e = new IdEntry(id->ident.getValue<std::string>() , id->type, block);
     TableIterator it ( table.find(id->ident.getValue<std::string>()) );
 
     // Handle name collisions within a single scope
@@ -30,9 +30,9 @@ SymbolTable::IdEntry SymbolTable::Scope::install(AST::Declaration* id, int block
     return e;
 }
 
-SymbolTable::IdEntry SymbolTable::Scope::install(AST::FunctionDeclaration* id, int block)
+SymbolTable::IdEntry *SymbolTable::Scope::install(AST::FunctionDeclaration* id, int block)
 {
-    auto e = IdEntry(id->ident.getValue<std::string>() , id->type, block, true);
+    auto e = new IdEntry(id->ident.getValue<std::string>() , id->type, block, true);
     TableIterator it ( table.find(id->ident.getValue<std::string>()) );
 
     // Handle name collisions within a single scope
@@ -43,7 +43,7 @@ SymbolTable::IdEntry SymbolTable::Scope::install(AST::FunctionDeclaration* id, i
 }
 
 
-SymbolTable::IdEntry SymbolTable::Scope::idLookup(std::string id)
+SymbolTable::IdEntry* SymbolTable::Scope::idLookup(std::string id)
 {
     TableIterator it ( table.find(id) );
 
@@ -79,15 +79,15 @@ std::string SymbolTable::Scope::toString(int &space)
 
 }
 
-SymbolTable::Scope * SymbolTable::Scope::funcLookup(SymbolTable::IdEntry entry)
+SymbolTable::Scope * SymbolTable::Scope::funcLookup(SymbolTable::IdEntry* entry)
 {
     if (parentScope != nullptr)
         return parentScope->funcLookup(entry);
 
-    std::map<std::string, SymbolTable::Scope*>::iterator it ( funcScope.find(entry.ident) );
+    std::map<std::string, SymbolTable::Scope*>::iterator it ( funcScope.find(entry->ident) );
 
     if ( it == funcScope.end() )
-        throw std::runtime_error( "No Scope for function " + entry.ident );
+        throw std::runtime_error( "No Scope for function " + entry->ident );
 
     return it->second;
 

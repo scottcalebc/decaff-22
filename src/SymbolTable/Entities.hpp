@@ -44,23 +44,25 @@ namespace SymbolTable {
                 : parentScope(nullptr)
                 , table()
                 , funcScope()
+                , numOfParams(0)
             {};
 
 
             Scope *parentScope;
+            int numOfParams;    // used by functions for type checking
 
-            typedef std::map<std::string, IdEntry>::iterator TableIterator;
-            std::map<std::string, IdEntry> table;
+            typedef std::map<std::string, IdEntry*>::iterator TableIterator;
+            std::map<std::string, IdEntry*> table;
             std::map<std::string, Scope*> funcScope;
 
 
-            IdEntry install(std::string id, Scanner::Token::Type type, int block);
-            IdEntry install(AST::Declaration*, int block);
-            IdEntry install(AST::FunctionDeclaration*, int block);
+            IdEntry* install(std::string id, Scanner::Token::Type type, int block);
+            IdEntry* install(AST::Declaration*, int block);
+            IdEntry* install(AST::FunctionDeclaration*, int block);
             // IdEntry install(AST::StatementBlock*, int block);
-            IdEntry idLookup(std::string);
+            IdEntry* idLookup(std::string);
 
-            Scope * funcLookup(IdEntry entry);
+            Scope * funcLookup(IdEntry *entry);
 
             std::string toString(int &space);
     };

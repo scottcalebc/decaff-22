@@ -43,14 +43,14 @@ namespace SemanticAnalyzer {
 
                 if (ltype == rtype)
                 {
-                    std::cout << "Type match for assign ltype (" 
+                    std::cout << "Type match for ltype (" 
                         << Scanner::Token::getTypeName(ltype)
                         << ") to rtype of: " << Scanner::Token::getTypeName(rtype) << std::endl;
                     return true;
                 }
                 else
                 {
-                    std::cout << "Type mismatch cannot assign ltype (" 
+                    std::cout << "Type mismatch for ltype (" 
                         << Scanner::Token::getTypeName(ltype)
                         << ") to rtype of: " << Scanner::Token::getTypeName(rtype) << std::endl;
                 }
@@ -79,10 +79,10 @@ namespace SemanticAnalyzer {
         // need to check if symbol is in table
         // std::cout << "Checking for symbol in table: " 
         //     << p->pScope->toString(space);
-        SymbolTable::IdEntry entry = p->pScope->idLookup(p->value.getValue<std::string>());
+        SymbolTable::IdEntry *entry = p->pScope->idLookup(p->value.getValue<std::string>());
 
         // need to handle if id doesn't exist in table;
-        p->outType = entry.type;
+        p->outType = entry->type;
     }
 
     void STTypeVisitor::visit(AST::Constant *p)
@@ -204,6 +204,50 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Call *p)
     {
         std::cout << "Got call for ident " << p->value;
+        SymbolTable::Scope *func( nullptr );
+        try 
+        {
+            SymbolTable::IdEntry *entry = p->pScope->idLookup(p->value.getValue<std::string>());
+            // set out type here since we have function entry
+            std::cout << "Setting type for call to: " << Scanner::Token::getTypeName(entry->type) << std::endl;
+            p->outType = entry->type;
+            // get scope to verify arguments
+            func = p->pScope->funcLookup(entry);
+        }
+        catch (std::exception &ex)
+        {
+            return;
+        }
+        int i = 0;
+        // std::cout << "Current Scope: " << p->pScope->toString(i);
+        if (func != nullptr )
+        {
+            if (p->actuals.size() != func->numOfParams)
+            {
+                std::cout << "Invalid num of params, expected: " << func->numOfParams << std::endl;
+            }
+
+            int i = 0;
+            // std::cout << "Function call scope: " <<  func->toString(i);
+            // verify parameters
+            for ( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
+            {
+                (*it)->accept(this);
+                // it->visit(this);
+                for( auto& formal : func->table )
+                {
+                    if (formal.second->block == i)
+                    {
+                        if ((*it)->outType != formal.second->type)
+                        {
+                            std::cout << "Error: expected " << Scanner::Token::getTypeName(formal.second->type) << " for expr\n";
+                        }
+                    }
+                }
+
+                i++;
+            }
+        }
     }
 
     void STTypeVisitor::visit(AST::FunctionDeclaration *p)
