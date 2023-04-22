@@ -12,6 +12,20 @@ namespace SemanticAnalyzer {
         p->accept(&visitor);
     }
 
+
+    bool STTypeVisitor::arithmeticCheck(Scanner::Token::Token::Type type)
+    {
+        switch(type)
+        {
+            case Scanner::Token::Type::Int:
+            case Scanner::Token::Type::Double:
+                return true;
+            default:
+                return false;
+
+        }
+    }
+
     bool STTypeVisitor::binaryTypeCheck(AST::Node *left, AST::Node *right, bool unary)
     {
         Scanner::Token::Type ltype;
@@ -95,7 +109,7 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Modulus *p)
     {
         std::cout << "Evaluating modulus\n";
-        if (binaryTypeCheck(p->left, p->right))
+        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
         {
             p->outType = p->left->outType;
         }else {
@@ -106,7 +120,7 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Divide *p)
     {
         std::cout << "Evaluating divide\n";
-        if (binaryTypeCheck(p->left, p->right))
+        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
         {
             p->outType = p->left->outType;
         }else {
@@ -117,7 +131,7 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Multiply *p)
     {
         std::cout << "Evaluating Multiply\n";
-        if (binaryTypeCheck(p->left, p->right))
+        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
         {
             p->outType = p->left->outType;
         }else {
@@ -129,7 +143,7 @@ namespace SemanticAnalyzer {
     {
         std::cout << "Evaluating Subtract\n";
         bool unary = p->right == nullptr;
-        if (binaryTypeCheck(p->left, p->right, unary))
+        if (binaryTypeCheck(p->left, p->right, unary) && arithmeticCheck(p->left->outType))
         {
             p->outType = p->left->outType;
         }else {
@@ -140,7 +154,7 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Add *p)
     {
         std::cout << "Evaluating Add\n";
-        if (binaryTypeCheck(p->left, p->right))
+        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {

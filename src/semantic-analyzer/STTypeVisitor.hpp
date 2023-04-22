@@ -13,6 +13,8 @@ namespace SemanticAnalyzer {
         public:
             STTypeVisitor() {};
 
+            bool arithmeticCheck(Scanner::Token::Type type);
+
             bool binaryTypeCheck(AST::Node* left, AST::Node*right, bool unary=false);
             // bool unaryTypeCheck(AST::Node* left);
 
