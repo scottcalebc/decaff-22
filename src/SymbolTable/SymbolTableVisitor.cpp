@@ -70,17 +70,9 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
         currScope->install(param, 2);
     }
 
-    // add function decls to scope
-    for (auto &decl : p->stmts->decls)
-    {
-        currScope->install(decl, 3);
-    }
 
-    // visit statements for any that have their own scope (i.e. StatementBlock, If, etc.)
-    for (auto &stmt : p->stmts->stmts )
-    {
-        stmt->accept(this);
-    }
+    // Statement block has it's own scope, this allows shadowing of parameters
+    p->stmts->accept(this);
 
 
     // reset scope

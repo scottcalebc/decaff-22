@@ -101,6 +101,9 @@ namespace SemanticAnalyzer {
             case Scanner::Token::Type::StringConstant:
                 p->outType = Scanner::Token::Type::String;
                 break;
+            case Scanner::Token::Type::NullConstant:
+                p->outType = Scanner::Token::Type::Void;
+                break;
             default:
                 p->outType = p->value.type;
         }
@@ -191,6 +194,11 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::ReadLine *p)
     {
         p->outType = Scanner::Token::Type::String;
+    }
+
+    void STTypeVisitor::visit(AST::Print *p)
+    {
+        p->outType = Scanner::Token::Type::Void;
     }
 
     void STTypeVisitor::visit(AST::Call *p)

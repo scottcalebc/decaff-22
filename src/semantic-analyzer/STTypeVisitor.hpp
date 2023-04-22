@@ -36,6 +36,7 @@ namespace SemanticAnalyzer {
 
             // function calls
             void visit(AST::Call *p);
+            void visit(AST::Print *p);
             void visit(AST::ReadLine *p);
             void visit(AST::ReadInteger *p);
             
