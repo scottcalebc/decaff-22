@@ -1,5 +1,6 @@
 add_library(SymbolTable "")
 
+target_link_libraries(SymbolTable AST Visitor)
 
 target_sources(SymbolTable 
 PRIVATE

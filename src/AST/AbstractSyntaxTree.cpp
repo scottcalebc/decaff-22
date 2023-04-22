@@ -10,6 +10,17 @@
 namespace AST
 {
     // Constructors
+    Modulus::Modulus()
+        : Expr()
+    {};
+            
+    Modulus::Modulus(Parser::ArithmeticExpression *expr)
+        : Expr(expr)
+    {
+        std::cout << "Modulus: Generating expr\n";
+    };
+
+    void Modulus::accept(Visitor *v) { v->visit(this); };
 
     KeywordStmt::KeywordStmt(Parser::KeywordStmt *stmt)
         : Value(stmt->keyword)

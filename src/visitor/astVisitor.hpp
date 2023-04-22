@@ -23,6 +23,7 @@ class Visitor {
         virtual void visit(AST::Ident *p) = 0;
         virtual void visit(AST::Divide *p) = 0;
         virtual void visit(AST::Assign *p) = 0;
+        virtual void visit(AST::Modulus *p) = 0;
         virtual void visit(AST::Program *p) = 0;
         virtual void visit(AST::Multiply *p) = 0;
         virtual void visit(AST::Subtract *p) = 0;

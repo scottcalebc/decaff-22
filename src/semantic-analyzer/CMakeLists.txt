@@ -1,5 +1,6 @@
 add_library(SemanticAnalyzer "")
 
+target_link_libraries(SemanticAnalyzer  AST Visitor)
 
 target_sources(SemanticAnalyzer 
   PRIVATE

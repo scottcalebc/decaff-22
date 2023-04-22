@@ -299,17 +299,11 @@ namespace AST {
     class Modulus: public Expr
     {
         public:
-            Modulus()
-                : Expr()
-            {};
+            Modulus();
             
-            Modulus(Parser::ArithmeticExpression *expr)
-                : Expr(expr)
-            {
-                std::cout << "Modulus: Generating expr\n";
-            };
+            Modulus(Parser::ArithmeticExpression *expr);
 
-            void accept(Visitor *v) { v->visit(this); };
+            void accept(Visitor *v);
     };
 
     // Boolean or conditional objects
