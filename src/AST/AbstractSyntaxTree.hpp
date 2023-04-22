@@ -553,12 +553,16 @@ namespace AST {
     class ReadInteger: public Call
     {
         public:
+            ReadInteger() : Call(){};
+            ReadInteger(Parser::ReadIntExpr *p) : Call(p) {std::cout << "ReadInteger: Generating\n"; };
             void accept(Visitor *v) { v->visit(this); };
     };
 
     class ReadLine: public Call
     {
         public:
+            ReadLine() : Call(){};
+            ReadLine(Parser::ReadLineExpr *p) : Call(p) {std::cout << "ReadInteger: Generating\n"; };
             void accept(Visitor *v) { v->visit(this); };
     };
 

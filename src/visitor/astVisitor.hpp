@@ -19,6 +19,7 @@ class Visitor {
         virtual void visit(AST::If *p) = 0;
         virtual void visit(AST::Add *p) = 0;
         virtual void visit(AST::For *p) = 0;
+        virtual void visit(AST::Call *p) = 0;
         virtual void visit(AST::While *p) = 0;
         virtual void visit(AST::Ident *p) = 0;
         virtual void visit(AST::Divide *p) = 0;
@@ -28,6 +29,8 @@ class Visitor {
         virtual void visit(AST::Multiply *p) = 0;
         virtual void visit(AST::Subtract *p) = 0;
         virtual void visit(AST::Constant *p) = 0;
+        virtual void visit(AST::ReadLine *p) = 0;
+        virtual void visit(AST::ReadInteger *p) = 0;
         virtual void visit(AST::KeywordStmt *p) = 0;
         virtual void visit(AST::StatementBlock *p) = 0;
         virtual void visit(AST::FunctionDeclaration *p) = 0;

@@ -67,12 +67,12 @@ void AST::ParseTreeConverter::convert(Parser::PrintStmt *p)
 
 void AST::ParseTreeConverter::convert(Parser::ReadIntExpr *p)
 {
-    pNode = new ReadInteger();
+    pNode = new ReadInteger(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReadLineExpr *p)
 {
-    pNode = new ReadLine();
+    pNode = new ReadLine(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::RelationalExpression *p)

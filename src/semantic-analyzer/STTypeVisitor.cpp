@@ -183,6 +183,21 @@ namespace SemanticAnalyzer {
         }
     }
 
+    void STTypeVisitor::visit(AST::ReadInteger *p)
+    {
+        p->outType = Scanner::Token::Type::Int;
+    }
+
+    void STTypeVisitor::visit(AST::ReadLine *p)
+    {
+        p->outType = Scanner::Token::Type::String;
+    }
+
+    void STTypeVisitor::visit(AST::Call *p)
+    {
+        std::cout << "Got call for ident " << p->value;
+    }
+
     void STTypeVisitor::visit(AST::FunctionDeclaration *p)
     {
         // scope should hold parameters to function

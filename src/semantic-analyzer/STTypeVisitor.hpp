@@ -33,7 +33,13 @@ namespace SemanticAnalyzer {
             void visit(AST::Modulus *p);
             void visit(AST::Subtract *p);
             void visit(AST::Multiply *p);
+
+            // function calls
+            void visit(AST::Call *p);
+            void visit(AST::ReadLine *p);
+            void visit(AST::ReadInteger *p);
             
+            // TODO @ccs need to implement
             void visit(AST::KeywordStmt *p) {};
             void visit(AST::While *p) {};
             void visit(AST::For *p) {};

@@ -39,6 +39,9 @@ namespace SymbolTable
                 void visit(AST::Modulus *p) {};
                 void visit(AST::Divide *p) {};
                 void visit(AST::Constant *p) {};
+                void visit(AST::Call *p) {};
+                void visit(AST::ReadLine *p) {};
+                void visit(AST::ReadInteger *p) {};
 
 
                 // actual implemented overrides
