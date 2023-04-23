@@ -49,7 +49,8 @@ namespace SymbolTable {
 
 
             Scope *parentScope;
-            int numOfParams;    // used by functions for type checking
+            int numOfParams;                    // used by functions for type checking
+            Scanner::Token::Type returnType;    // used by functions for type check
 
             typedef std::map<std::string, IdEntry*>::iterator TableIterator;
             std::map<std::string, IdEntry*> table;
@@ -63,6 +64,7 @@ namespace SymbolTable {
             IdEntry* idLookup(std::string);
 
             Scope * funcLookup(IdEntry *entry);
+            Scanner::Token::Type getReturnType();
 
             std::string toString(int &space);
     };

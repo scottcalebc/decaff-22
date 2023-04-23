@@ -250,6 +250,63 @@ namespace SemanticAnalyzer {
         }
     }
 
+    void STTypeVisitor::visit(AST::Return *p)
+    {
+        // Get type of expression if there is one available
+        if ( p->expr != nullptr )
+        {
+            // set the out type of the return 
+            p->expr->accept(this);
+            p->outType = p->expr->outType;
+        }
+        else
+        {
+            p->outType = Scanner::Token::Type::Void;
+        }
+
+        if (p->pScope->getReturnType() != p->outType)
+        {
+            std::cout   << "Invalid return type for expression, expected: " 
+                        << Scanner::Token::getTypeName(p->pScope->returnType) << std::endl;
+        }
+    }
+
+    void STTypeVisitor::visit(AST::For *p)
+    {
+        // verify loop expressions (start, cond, end) are type valid
+        if (p->startExpr != nullptr)
+            p->startExpr->accept(this);
+        
+        p->expr->accept(this);
+
+        if (p->loopExpr != nullptr)
+            p->loopExpr->accept(this);
+
+        // verify statements are type valid
+        p->stmt->accept(this);
+    }
+
+    void STTypeVisitor::visit(AST::If *p)
+    {
+        // verify expression is type valid
+        p->expr->accept(this);
+        // verify statement or statement block is type valid
+        p->stmt->accept(this);
+
+        if (p->elseStmt != nullptr)
+        {
+            p->elseStmt->accept(this);
+        }
+    }
+
+    void STTypeVisitor::visit(AST::While *p)
+    {
+        // verify expression is type valid
+        p->expr->accept(this);
+        // verify statement or statement block is type valid
+        p->stmt->accept(this);
+    }
+
     void STTypeVisitor::visit(AST::FunctionDeclaration *p)
     {
         // scope should hold parameters to function

@@ -63,6 +63,7 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
     Scope *parentScope = currScope;
     currScope = new Scope();
     currScope->parentScope = parentScope;   // this will be useful for reverse lookups
+    currScope->returnType = p->type;
     p->setScope( currScope );
 
     int i = 0;

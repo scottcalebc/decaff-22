@@ -79,6 +79,17 @@ std::string SymbolTable::Scope::toString(int &space)
 
 }
 
+Scanner::Token::Type SymbolTable::Scope::getReturnType()
+{
+    if (returnType != Scanner::Token::Type::ERROR)
+        return returnType;
+    
+    if (parentScope != nullptr)
+        return parentScope->getReturnType();
+
+    return returnType;
+}
+
 SymbolTable::Scope * SymbolTable::Scope::funcLookup(SymbolTable::IdEntry* entry)
 {
     if (parentScope != nullptr)

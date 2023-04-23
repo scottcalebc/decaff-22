@@ -40,11 +40,12 @@ namespace SemanticAnalyzer {
             void visit(AST::ReadLine *p);
             void visit(AST::ReadInteger *p);
             
-            // TODO @ccs need to implement
+            // keyword statments, break has no outtype
             void visit(AST::KeywordStmt *p) {};
-            void visit(AST::While *p) {};
-            void visit(AST::For *p) {};
-            void visit(AST::If *p) {};
+            void visit(AST::Return *p);
+            void visit(AST::While *p);
+            void visit(AST::For *p);
+            void visit(AST::If *p);
 
 
             void visit(AST::StatementBlock *p);
