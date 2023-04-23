@@ -44,6 +44,7 @@ namespace SymbolTable
                 void visit(AST::Return *p) {};
                 void visit(AST::ReadLine *p) {};
                 void visit(AST::ReadInteger *p) {};
+                void visit(AST::And *p) {};
 
 
                 // actual implemented overrides

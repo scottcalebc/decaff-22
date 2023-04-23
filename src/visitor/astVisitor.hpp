@@ -19,6 +19,7 @@ class Visitor {
         virtual void visit(AST::If *p) = 0;
         virtual void visit(AST::Add *p) = 0;
         virtual void visit(AST::For *p) = 0;
+        virtual void visit(AST::And *p) = 0;
         virtual void visit(AST::Call *p) = 0;
         virtual void visit(AST::While *p) = 0;
         virtual void visit(AST::Ident *p) = 0;

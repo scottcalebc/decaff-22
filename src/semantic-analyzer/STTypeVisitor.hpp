@@ -27,12 +27,17 @@ namespace SemanticAnalyzer {
             void visit(AST::Constant *p);
 
             // Expressions
+
+            // arithmetic expressions
             void visit(AST::Add *p);
             void visit(AST::Assign *p);
             void visit(AST::Divide *p);
             void visit(AST::Modulus *p);
             void visit(AST::Subtract *p);
             void visit(AST::Multiply *p);
+
+            // logical  epxressions
+            void visit(AST::And *p);
 
             // function calls
             void visit(AST::Call *p);
@@ -41,11 +46,11 @@ namespace SemanticAnalyzer {
             void visit(AST::ReadInteger *p);
             
             // keyword statments, break has no outtype
-            void visit(AST::KeywordStmt *p) {};
-            void visit(AST::Return *p);
-            void visit(AST::While *p);
-            void visit(AST::For *p);
             void visit(AST::If *p);
+            void visit(AST::For *p);
+            void visit(AST::While *p);
+            void visit(AST::Return *p);
+            void visit(AST::KeywordStmt *p) {};
 
 
             void visit(AST::StatementBlock *p);
