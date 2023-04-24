@@ -35,9 +35,6 @@ void SymbolTable::STVisitor::visit(AST::If *p)
 
 void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
 {
-
-    std::cout << "Visiting statement block" << std::endl;
-
     Scope *parentScope = currScope;
     currScope = new Scope();
     currScope->parentScope = parentScope;
@@ -57,9 +54,6 @@ void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
 
 void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
 {
-    
-    std::cout << "Visiting function: " << p->ident.getValue<std::string>() << std::endl;
-
     Scope *parentScope = currScope;
     currScope = new Scope();
     currScope->parentScope = parentScope;   // this will be useful for reverse lookups
@@ -87,8 +81,6 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
 
 void SymbolTable::STVisitor::visit(AST::Program *p)
 {
-    std::cout << "Visiting program \n";
-
     currScope = new Scope();
     p->setScope( currScope );
 

@@ -84,9 +84,9 @@ int main(int argc, char** argv) {
     AST::Program prog;
 
     try {
-        prog = AST::Program(Parser::treeGeneration(&lexer));
+        prog = AST::Program( Parser::treeGeneration( &lexer, function.compare("--parser") == 0 ) );
 
-        std::cout << "Generating symbol tree\n";
+        // std::cout << "Generating symbol tree\n";
         SymbolTable::generate(&prog);
 
     }

@@ -42,6 +42,14 @@ SymbolTable::IdEntry *SymbolTable::Scope::install(AST::FunctionDeclaration* id, 
     return e;
 }
 
+SymbolTable::IdEntry *SymbolTable::Scope::fakeInstall(std::string str)
+{
+    auto e = new IdEntry(str);
+    table.insert( {str, e});
+
+    return e;
+}
+
 
 SymbolTable::IdEntry* SymbolTable::Scope::idLookup(std::string id)
 {
@@ -54,7 +62,8 @@ SymbolTable::IdEntry* SymbolTable::Scope::idLookup(std::string id)
             return parentScope->idLookup(id);
         }
         else {
-            throw std::runtime_error("No symbol with id: " + id);
+            // throw std::runtime_error("No symbol with id: " + id);
+            return nullptr;
         }
     }
     
@@ -82,7 +91,9 @@ std::string SymbolTable::Scope::toString(int &space)
 Scanner::Token::Type SymbolTable::Scope::getReturnType()
 {
     if (returnType != Scanner::Token::Type::ERROR)
+    {
         return returnType;
+    }
     
     if (parentScope != nullptr)
         return parentScope->getReturnType();

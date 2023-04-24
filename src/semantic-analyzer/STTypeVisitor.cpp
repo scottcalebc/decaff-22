@@ -1,15 +1,33 @@
 #include <iostream>
-
+#include <iomanip>
+#include <bits/stdc++.h>
 
 #include "STTypeVisitor.hpp"
 
 
 namespace SemanticAnalyzer {
 
-    void typeCheck(AST::Program *p)
+    bool typeCheck(AST::Program *p)
     {
         STTypeVisitor visitor;
         p->accept(&visitor);
+
+        // returns true if type check passed
+        return ! visitor.err;
+    }
+
+    void STTypeVisitor::printTypeError(Scanner::Token token, std::string errStr)
+    {
+        err = true;
+        std::cout   << std::endl
+                    << "*** Error line " << token.lineNumber << ".\n"
+                    <<  token.lineInfo << std::endl
+                    << std::setw(token.colStart - 1) << " "
+                    << std::setfill('^') << std::setw(token.getValue<std::string>().length()) << "" << std::endl
+                    << "*** " << errStr << std::endl
+                    << std::endl;
+
+        std::cout << std::setfill(' ');
     }
 
 
@@ -35,24 +53,21 @@ namespace SemanticAnalyzer {
             left->accept(this);
             ltype = left->outType;
 
+            if ( ltype == Scanner::Token::Type::ERROR )
+            {   
+                std::cout << "Error getting type from left expression\n";
+                return false;
+            }
+
             if (right != nullptr && ! unary)
             {
                 right->accept(this);
                 rtype = right->outType;
 
 
-                if (ltype == rtype)
+                if ( ltype == rtype )
                 {
-                    std::cout << "Type match for ltype (" 
-                        << Scanner::Token::getTypeName(ltype)
-                        << ") to rtype of: " << Scanner::Token::getTypeName(rtype) << std::endl;
                     return true;
-                }
-                else
-                {
-                    std::cout << "Type mismatch for ltype (" 
-                        << Scanner::Token::getTypeName(ltype)
-                        << ") to rtype of: " << Scanner::Token::getTypeName(rtype) << std::endl;
                 }
             }
             else if ( ! unary )
@@ -81,6 +96,14 @@ namespace SemanticAnalyzer {
         //     << p->pScope->toString(space);
         SymbolTable::IdEntry *entry = p->pScope->idLookup(p->value.getValue<std::string>());
 
+        if (entry == nullptr || entry->func)
+        {
+            p->pScope->fakeInstall(p->value.getValue<std::string>());
+            std::stringstream ss;
+            ss << "No declaration found for variable '" << p->value.getValue<std::string>() << "'";
+            printTypeError(p->value, ss.str());
+        }
+
         // need to handle if id doesn't exist in table;
         p->outType = entry->type;
     }
@@ -107,93 +130,295 @@ namespace SemanticAnalyzer {
             default:
                 p->outType = p->value.type;
         }
+    } 
+
+    void STTypeVisitor::visit(AST::LessThan *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::GreaterThan *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::GTE *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::LTE *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::NotEqual *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::Not *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right, true) && p->left->outType == Scanner::Token::Type::Bool )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+
+            std::stringstream ss;
+            ss << "Incompatible operand: " << p->op.getValue<std::string>() << " " << ltype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::Equal *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
+    }
+
+    void STTypeVisitor::visit(AST::Or *p)
+    {
+        if ( binaryTypeCheck(p->left, p->right) && p->left->outType == Scanner::Token::Type::Bool )
+        {
+            p->outType = Scanner::Token::Type::Bool;
+        }else {
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
+        }
     }
 
     void STTypeVisitor::visit(AST::And *p)
     {
-        std::cout << "Evaluating And\n";
-        if (binaryTypeCheck(p->left, p->right) && p->left->outType == Scanner::Token::Type::Bool)
+        if ( binaryTypeCheck(p->left, p->right) && p->left->outType == Scanner::Token::Type::Bool )
         {
-            p->outType = p->left->outType;
+            p->outType = Scanner::Token::Type::Bool;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::Modulus *p)
     {
-        std::cout << "Evaluating modulus\n";
-        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
+        if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::Divide *p)
     {
-        std::cout << "Evaluating divide\n";
-        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
+        if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::Multiply *p)
     {
-        std::cout << "Evaluating Multiply\n";
-        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType))
+        if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::Subtract *p)
     {
-        std::cout << "Evaluating Subtract\n";
         bool unary = p->right == nullptr;
-        if (binaryTypeCheck(p->left, p->right, unary) && arithmeticCheck(p->left->outType))
+        if ( binaryTypeCheck(p->left, p->right, unary) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            // TODO may need to add check for unary
+            std::stringstream ss;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            if (! unary)
+            {
+                std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+                std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+                ss << "Incompatible operands: " << Scanner::Token::getTypeName(p->left->outType)
+                    << " " << p->op.getValue<std::string>() << " " << Scanner::Token::getTypeName(p->right->outType);
+                printTypeError(p->op, ss.str());
+            } else 
+            {
+                ss << "Incompatible operand: "<< p->op.getValue<std::string>() << " " << ltype;
+                printTypeError(p->op, ss.str());
+            }
         }
     }
 
     void STTypeVisitor::visit(AST::Add *p)
     {
-        std::cout << "Evaluating Add\n";
-        if (binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
+        if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
         }else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::Assign *p)
     {
-        std::cout << "Evaluating Assign\n";
 
-        if (binaryTypeCheck(p->left, p->right))
+        if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = p->left->outType;
         } else {
-            std::cout << "Error on line: " << p->op.lineInfo << std::endl;
+            std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
+            std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
+
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+            std::stringstream ss;
+            ss << "Incompatible operands: " << ltype
+                << " " << p->op.getValue<std::string>() << " " << rtype;
+            printTypeError(p->op, ss.str());
         }
 
     }
 
     void STTypeVisitor::visit(AST::StatementBlock *p)
     {
+        bool prevLoop = inLoop;
         for(auto &stmt : p->stmts)
         {
             stmt->accept(this);
+            
+            // set inLoop if we are in a loop but there is a sub loop that reset loop bool
+            inLoop = prevLoop;
         }
     }
 
@@ -214,13 +439,19 @@ namespace SemanticAnalyzer {
 
     void STTypeVisitor::visit(AST::Call *p)
     {
-        std::cout << "Got call for ident " << p->value;
         SymbolTable::Scope *func( nullptr );
         try 
         {
             SymbolTable::IdEntry *entry = p->pScope->idLookup(p->value.getValue<std::string>());
+
+            if (entry == nullptr)
+            {
+                std::stringstream ss;
+                ss << "No declaration for function '" << p->value.getValue<std::string>() << "'";
+                printTypeError(p->value, ss.str());
+                return;
+            }
             // set out type here since we have function entry
-            std::cout << "Setting type for call to: " << Scanner::Token::getTypeName(entry->type) << std::endl;
             p->outType = entry->type;
             // get scope to verify arguments
             func = p->pScope->funcLookup(entry);
@@ -235,13 +466,15 @@ namespace SemanticAnalyzer {
         {
             if (p->actuals.size() != func->numOfParams)
             {
-                std::cout << "Invalid num of params, expected: " << func->numOfParams << std::endl;
+                std::stringstream ss;
+                ss << "Function '" << p->value << "' expects " << func->numOfParams << " arguments but " << p->actuals.size() << " given";
+                printTypeError(p->value, ss.str());
             }
 
             int i = 0;
             // std::cout << "Function call scope: " <<  func->toString(i);
             // verify parameters
-            for ( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
+            for ( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
             {
                 (*it)->accept(this);
                 // it->visit(this);
@@ -251,13 +484,35 @@ namespace SemanticAnalyzer {
                     {
                         if ((*it)->outType != formal.second->type)
                         {
-                            std::cout << "Error: expected " << Scanner::Token::getTypeName(formal.second->type) << " for expr\n";
+                            std::stringstream ss;
+                            std::string ltype ( Scanner::Token::getTypeName(formal.second->type));
+                            std::string rtype ( Scanner::Token::getTypeName((*it)->outType));
+                            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+                            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+                            
+                            ss << "Incompatible argument " << i+1 << ": " << rtype << " given, " << ltype << " expected";
+
+                            if ( dynamic_cast<AST::Value*>((*it)) != nullptr )
+                            {
+                                printTypeError(dynamic_cast<AST::Value*>((*it))->value, ss.str());
+                            } else {
+                                std::cout << "Invalid node\n";
+                            }
+                            
                         }
                     }
                 }
 
                 i++;
             }
+        }
+    }
+
+    void STTypeVisitor::visit(AST::Break *p)
+    {
+        if (! inLoop )
+        {
+            printTypeError(p->value, "break is only allowed inside a loop");
         }
     }
 
@@ -274,33 +529,63 @@ namespace SemanticAnalyzer {
         {
             p->outType = Scanner::Token::Type::Void;
         }
+        Scanner::Token::Type returnType( p->pScope->getReturnType() );
 
-        if (p->pScope->getReturnType() != p->outType)
+        if ( returnType != p->outType)
         {
-            std::cout   << "Invalid return type for expression, expected: " 
-                        << Scanner::Token::getTypeName(p->pScope->returnType) << std::endl;
+            std::string ltype( Scanner::Token::getTypeName( returnType ) );
+            std::string rtype( Scanner::Token::getTypeName( p->outType ) );
+            std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+            std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
+                            
+            std::stringstream ss;
+
+            ss  << "Incompatible return: " 
+                << rtype << " given, " << ltype << " expected";
+            
+            if (dynamic_cast<AST::Value*>(p->expr) != nullptr )
+                printTypeError(dynamic_cast<AST::Value*>(p->expr)->value, ss.str());
+            else if (dynamic_cast<AST::Expr*>(p->expr) != nullptr )
+                printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+            else
+                printTypeError(p->value, ss.str());
         }
     }
 
     void STTypeVisitor::visit(AST::For *p)
     {
+        inLoop = true;
         // verify loop expressions (start, cond, end) are type valid
         if (p->startExpr != nullptr)
             p->startExpr->accept(this);
         
         p->expr->accept(this);
 
+        if (p->expr->outType != Scanner::Token::Type::Bool)
+        {
+            std::stringstream ss;
+            ss << "Test expression must have boolean type";
+            printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+        }
+
         if (p->loopExpr != nullptr)
             p->loopExpr->accept(this);
 
         // verify statements are type valid
         p->stmt->accept(this);
+        inLoop = false;
     }
 
     void STTypeVisitor::visit(AST::If *p)
     {
         // verify expression is type valid
         p->expr->accept(this);
+        if (p->expr->outType != Scanner::Token::Type::Bool)
+        {
+            std::stringstream ss;
+            ss << "Test expression must have boolean type";
+            printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+        }
         // verify statement or statement block is type valid
         p->stmt->accept(this);
 
@@ -312,10 +597,18 @@ namespace SemanticAnalyzer {
 
     void STTypeVisitor::visit(AST::While *p)
     {
+        inLoop = true;
         // verify expression is type valid
         p->expr->accept(this);
+        if (p->expr->outType != Scanner::Token::Type::Bool)
+        {
+            std::stringstream ss;
+            ss << "Test expression must have boolean type";
+            printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+        }
         // verify statement or statement block is type valid
         p->stmt->accept(this);
+        inLoop = false;
     }
 
     void STTypeVisitor::visit(AST::FunctionDeclaration *p)
@@ -326,8 +619,6 @@ namespace SemanticAnalyzer {
 
     void STTypeVisitor::visit(AST::Program *p)
     {
-        std::cout << "STTypeVisitor: Entering program\n";
-
         for ( auto &func : p->func)
         {
             func->accept(this);

@@ -37,6 +37,7 @@ namespace AST {
             // this is to ensure we don't have to hit every object with visitor
             // to set its local scope
             virtual void setScope(SymbolTable::Scope *pScope) = 0;
+            
     };
 
     // represents either identifier or constant
@@ -135,7 +136,7 @@ namespace AST {
             Ident(Scanner::Token token)
                 : Value(token)
                 {
-                    std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
+                    // std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
                 };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -147,7 +148,7 @@ namespace AST {
             Constant(Scanner::Token token)
                 : Value(token)
                 {
-                    std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
+                    // std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
                 };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -241,7 +242,7 @@ namespace AST {
             Add(Parser::ArithmeticExpression *expr)
             : Expr(expr)
             {
-                std::cout << "Add: Generating expr\n";
+                // std::cout << "Add: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -258,15 +259,15 @@ namespace AST {
             Subtract(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Subtract: Generating expr\n";
+                // std::cout << "Subtract: Generating expr\n";
             };
 
             Subtract(Parser::UnaryExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Subtract: Generating unary minus\n";
-                std::cout << "Left should be non null: " << &left << std::endl;
-                std::cout << "Right should be null   : " << &right << std::endl;
+                // std::cout << "Subtract: Generating unary minus\n";
+                // std::cout << "Left should be non null: " << &left << std::endl;
+                // std::cout << "Right should be null   : " << &right << std::endl;
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -282,7 +283,7 @@ namespace AST {
             Multiply(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Multiply: Generating expr\n";
+                // std::cout << "Multiply: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -298,7 +299,7 @@ namespace AST {
             Divide(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Divide: Generating expr\n";
+                // std::cout << "Divide: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -325,7 +326,7 @@ namespace AST {
             LessThan(Parser::RelationalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "LessThan: generating\n";
+                // std::cout << "LessThan: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -341,7 +342,7 @@ namespace AST {
             LTE(Parser::RelationalExpression *expr)
                 : LessThan(expr)
             {
-                std::cout << "LessThanEqual: generating\n";
+                // std::cout << "LessThanEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -357,7 +358,7 @@ namespace AST {
             GreaterThan(Parser::RelationalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "GreaterThan: generating\n";
+                // std::cout << "GreaterThan: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -373,7 +374,7 @@ namespace AST {
             GTE(Parser::RelationalExpression *expr)
                 : GreaterThan(expr)
             {
-                std::cout << "GreaterThanEqual: generating\n";
+                // std::cout << "GreaterThanEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -389,7 +390,7 @@ namespace AST {
             Equal(Parser::EqualityExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Equal: generating\n";
+                // std::cout << "Equal: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -405,7 +406,7 @@ namespace AST {
             NotEqual(Parser::EqualityExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "NotEqual: generating\n";
+                // std::cout << "NotEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -421,7 +422,7 @@ namespace AST {
             And(Parser::LogicalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "And: generating\n";
+                // std::cout << "And: generating\n";
             };
             
             void accept(Visitor *v) { v->visit(this); };
@@ -437,7 +438,7 @@ namespace AST {
             Or(Parser::LogicalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Or: generating\n";
+                // std::cout << "Or: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -453,7 +454,7 @@ namespace AST {
             Not(Parser::UnaryExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Not: Generating expr\n";
+                // std::cout << "Not: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -469,7 +470,7 @@ namespace AST {
             Assign(Parser::AssignExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Assign: Generating expr\n";
+                // std::cout << "Assign: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -552,7 +553,7 @@ namespace AST {
             Print(Parser::PrintStmt *p)
                 : Call(p)
             {
-                std::cout << "Print: Generating\n";
+                // std::cout << "Print: Generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -562,7 +563,10 @@ namespace AST {
     {
         public:
             ReadInteger() : Call(){};
-            ReadInteger(Parser::ReadIntExpr *p) : Call(p) {std::cout << "ReadInteger: Generating\n"; };
+            ReadInteger(Parser::ReadIntExpr *p) : Call(p) 
+            {
+                // std::cout << "ReadInteger: Generating\n"; 
+            };
             void accept(Visitor *v) { v->visit(this); };
     };
 
@@ -570,7 +574,10 @@ namespace AST {
     {
         public:
             ReadLine() : Call(){};
-            ReadLine(Parser::ReadLineExpr *p) : Call(p) {std::cout << "ReadInteger: Generating\n"; };
+            ReadLine(Parser::ReadLineExpr *p) : Call(p) 
+            {
+                // std::cout << "ReadInteger: Generating\n"; 
+            };
             void accept(Visitor *v) { v->visit(this); };
     };
 

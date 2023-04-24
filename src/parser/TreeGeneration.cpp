@@ -1004,7 +1004,7 @@ Program* parseProgram()
 }
 
 
-    Program* treeGeneration(Scanner::Lexer *lexer)
+    Program* treeGeneration(Scanner::Lexer *lexer, bool print)
     {
         // Setup look ahead if necessary for certain parsing calls
         if (Parser::tokenLookAhead == nullptr)
@@ -1018,7 +1018,8 @@ Program* parseProgram()
             Parser::addLookAhead();
             Parser::Program* p = Parser::parseProgram();
 
-            std::cout << std::endl << p->toString(0);
+            if (print)
+                std::cout << std::endl << p->toString(0);
 
             return p;
         }

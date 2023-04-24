@@ -11,7 +11,12 @@ namespace SemanticAnalyzer {
     class STTypeVisitor: public Visitor {
 
         public:
-            STTypeVisitor() {};
+            STTypeVisitor(): inLoop(false), err(false) {};
+
+            bool inLoop;
+            bool err;       // Set if error occurs, this will prevent code gen
+
+            void printTypeError(Scanner::Token token, std::string errStr);
 
             bool arithmeticCheck(Scanner::Token::Type type);
 
@@ -37,7 +42,15 @@ namespace SemanticAnalyzer {
             void visit(AST::Multiply *p);
 
             // logical  epxressions
+            void visit(AST::Or *p);
             void visit(AST::And *p);
+            void visit(AST::Not *p);
+            void visit(AST::GTE *p);
+            void visit(AST::LTE *p);
+            void visit(AST::Equal *p);
+            void visit(AST::NotEqual *p);
+            void visit(AST::LessThan *p);
+            void visit(AST::GreaterThan *p);
 
             // function calls
             void visit(AST::Call *p);
@@ -48,6 +61,7 @@ namespace SemanticAnalyzer {
             // keyword statments, break has no outtype
             void visit(AST::If *p);
             void visit(AST::For *p);
+            void visit(AST::Break *p);
             void visit(AST::While *p);
             void visit(AST::Return *p);
             void visit(AST::KeywordStmt *p) {};
@@ -59,6 +73,6 @@ namespace SemanticAnalyzer {
     };
 
 
-    void typeCheck(AST::Program *p);
+    bool typeCheck(AST::Program *p);
 
 };

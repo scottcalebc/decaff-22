@@ -45,6 +45,15 @@ namespace SymbolTable
                 void visit(AST::ReadLine *p) {};
                 void visit(AST::ReadInteger *p) {};
                 void visit(AST::And *p) {};
+                void visit(AST::Or *p) {};
+                void visit(AST::Not *p) {};
+                void visit(AST::Equal *p) {};
+                void visit(AST::NotEqual *p) {};
+                void visit(AST::GTE *p) {};
+                void visit(AST::LTE *p) {};
+                void visit(AST::GreaterThan *p) {};
+                void visit(AST::LessThan *p) {};
+                void visit(AST::Break *p) {};
 
 
                 // actual implemented overrides

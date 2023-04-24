@@ -9,12 +9,10 @@ void AST::ParseTreeConverter::convert(Parser::Identifier *p)
 
 void AST::ParseTreeConverter::convert(Parser::DeclarationType *p)
 {
-    std::cout << "Declaration type hit, not sure this should happen\n";
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReturnType *p)
 {
-    std::cout << "Return type hit\n";
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReturnStmt *p)
