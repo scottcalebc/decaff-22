@@ -463,6 +463,29 @@ namespace SemanticAnalyzer {
     void STTypeVisitor::visit(AST::Print *p)
     {
         p->outType = Scanner::Token::Type::Void;
+        int i = 1;
+        // type checking of parameters epxects int/bool/string
+        for ( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
+            {
+                exprErr = false;
+                (*it)->accept(this);
+                
+                if ( (*it)->outType != Scanner::Token::Type::Int &&
+                     (*it)->outType != Scanner::Token::Type::Bool &&
+                     (*it)->outType != Scanner::Token::Type::String && ! exprErr )
+                {
+                    std::stringstream ss;
+                    std::string ltype( Scanner::Token::getTypeName((*it)->outType) );
+                    std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+
+                    ss << "Incompatible argument " << i << ": " << ltype << " given, int/bool/string expected";
+
+                    printTypeError((*it), p->value.lineNumber, p->value.lineInfo, ss.str());
+                    
+                }
+
+                i++;
+            }
     }
 
     void STTypeVisitor::visit(AST::Call *p)

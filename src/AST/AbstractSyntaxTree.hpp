@@ -198,7 +198,7 @@ namespace AST {
                 }
             };
 
-            int maxCol() { return actuals.back()->maxCol(); };
+            int maxCol() { return actuals.back()->maxCol() + 1; };
     };
 
     class Expr: public Node
