@@ -535,6 +535,11 @@ namespace AST {
     class Break: public KeywordStmt
     {
         public:
+            Break()
+                : KeywordStmt()
+                {};
+
+            Break(Parser::BreakStmt *stmt) : KeywordStmt(stmt) {};
             void accept(Visitor *v) { v->visit(this); };
     };
 
@@ -545,7 +550,7 @@ namespace AST {
                 : KeywordStmt()
                 {};
 
-            Return(Parser::ReturnStmt *smt);
+            Return(Parser::ReturnStmt *stmt);
 
             void accept(Visitor *v) { v->visit(this); };
     };

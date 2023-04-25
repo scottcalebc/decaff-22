@@ -29,7 +29,6 @@ namespace SemanticAnalyzer {
 
     void STTypeVisitor::printTypeError(int start, int length, int lineNumber, std::string lineInfo, std::string errStr)
     {
-        // std::cout << "Got start/end: " << start << " " << length << std::endl;
         err = true;
         std::cout   << std::endl
                     << "*** Error line " << lineNumber << ".\n"

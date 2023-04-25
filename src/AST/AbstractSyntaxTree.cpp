@@ -26,13 +26,14 @@ namespace AST
         : Value(stmt->keyword)
         , expr(nullptr)
     {
-        ParseTreeConverter visitor = ParseTreeConverter();
-
-        stmt->expr->accept(&visitor);
-        expr = visitor.pNode;
-
-        if (visitor.pNode == nullptr)
-            throw Parser::ParseException( stmt->firstToken() );
+        if (stmt->expr != nullptr)
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+            stmt->expr->accept(&visitor);
+            expr = visitor.pNode;
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( stmt->firstToken() );
+        }
     }
 
     While::While(Parser::WhileStmt *stmt)

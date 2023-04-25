@@ -167,7 +167,7 @@ void AST::ParseTreeConverter::convert(Parser::AssignExpression *p)
 
 void AST::ParseTreeConverter::convert(Parser::BreakStmt *p)
 {
-    pNode = new Break();
+    pNode = new Break(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::WhileStmt *p)
