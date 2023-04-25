@@ -1,7 +1,6 @@
 
 
 int foo(int a, double b, bool c) {
-  int a;
   return a + 2;
 }
 
