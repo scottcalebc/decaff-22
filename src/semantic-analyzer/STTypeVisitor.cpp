@@ -619,7 +619,7 @@ namespace SemanticAnalyzer {
         {
             std::stringstream ss;
             ss << "Test expression must have boolean type";
-            printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+            printTypeError(p->expr, p->value.lineNumber, p->value.lineInfo, ss.str());
         }
         // verify statement or statement block is type valid
         p->stmt->accept(this);

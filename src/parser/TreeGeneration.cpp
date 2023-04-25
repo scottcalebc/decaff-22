@@ -152,7 +152,9 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
 
     // keep last token evaluated, for finding unary operators
     Scanner::Token last;
-    while ( tokenLookAhead->at(0).getValue<std::string>().compare(sep) != 0 
+    // keep going if we are evaluating a function call to prevent early outs in keyword statement parsing
+    bool gotLparen = false;
+    while ( (tokenLookAhead->at(0).getValue<std::string>().compare(sep) != 0 || gotLparen )
     && tokenLookAhead->at(0).type != Scanner::Token::Type::END )
     {
         // always make sure there are at least two tokens before parsing
@@ -209,7 +211,7 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                 {
                     // push opening paren onto token stack
                     tokenStack.push(tokenLookAhead->at(0));
-
+                    gotLparen = true;
                     // push into opHold to know how many operators are in a parenthesis section
                     opHold.push(tokenLookAhead->at(0));
                 } else if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren
@@ -234,6 +236,7 @@ std::stack<Scanner::Token> infix2postfix(std::string sep)
                         // if we finish call then we need to pull that off
                         if (tokenLookAhead->at(0).subType == Scanner::Token::SubType::Paren)
                         {
+                            gotLparen = false; // reset lparen state since call/paren expression finished
                             tokenStack.push(tokenLookAhead->at(0));
                             if (!opHold.empty() && opHold.top().subType == Scanner::Token::SubType::Call)
                             {
@@ -691,7 +694,7 @@ ForStmt* parseFor()
 Statement* parseStmt()
 {
     Scanner::Token token = tokenLookAhead->front();
-
+    
     switch(token.type)
     {
         case Scanner::Token::Type::If:
@@ -765,6 +768,7 @@ Statement* parseStmt()
             {
                 std::stack<Scanner::Token> tokens = infix2postfix(";");
                 Expression *expr = parseExpr(tokens);
+
 
                 // todo: add this logic to all expression parsing
                 if (!tokens.empty())

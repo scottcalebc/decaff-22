@@ -629,6 +629,8 @@ namespace AST {
                 // std::cout << "ReadInteger: Generating\n"; 
             };
             void accept(Visitor *v) { v->visit(this); };
+            int minCol() { return value.colStart; };
+            int maxCol() { return value.getValue<std::string>().length(); };
     };
 
     class ReadLine: public Call
@@ -640,6 +642,8 @@ namespace AST {
                 // std::cout << "ReadInteger: Generating\n"; 
             };
             void accept(Visitor *v) { v->visit(this); };
+            int minCol() { return value.colStart; };
+            int maxCol() { return value.getValue<std::string>().length(); };
     };
 
     class Program: public Node
