@@ -109,6 +109,7 @@ namespace SemanticAnalyzer {
 
         if (entry == nullptr || entry->func)
         {
+            exprErr = true;
             p->pScope->fakeInstall(p->value.getValue<std::string>());
             std::stringstream ss;
             ss << "No declaration found for variable '" << p->value.getValue<std::string>() << "'";
