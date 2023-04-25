@@ -1,5 +1,6 @@
 add_library(AST "")
 
+target_link_libraries(AST Visitor)
 
 target_sources(AST 
   PRIVATE

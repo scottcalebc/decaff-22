@@ -10,28 +10,40 @@
 namespace AST
 {
     // Constructors
+    Modulus::Modulus()
+        : Expr()
+    {};
+            
+    Modulus::Modulus(Parser::ArithmeticExpression *expr)
+        : Expr(expr)
+    {
+        // std::cout << "Modulus: Generating expr\n";
+    };
+
+    void Modulus::accept(Visitor *v) { v->visit(this); };
 
     KeywordStmt::KeywordStmt(Parser::KeywordStmt *stmt)
         : Value(stmt->keyword)
         , expr(nullptr)
     {
-        ParseTreeConverter visitor = ParseTreeConverter();
-
-        stmt->expr->accept(&visitor);
-        expr = visitor.pNode;
-
-        if (visitor.pNode == nullptr)
-            throw Parser::ParseException( stmt->firstToken() );
+        if (stmt->expr != nullptr)
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+            stmt->expr->accept(&visitor);
+            expr = visitor.pNode;
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( stmt->firstToken() );
+        }
     }
 
     While::While(Parser::WhileStmt *stmt)
         : KeywordStmt(stmt)
         , stmt(nullptr)
     {
-        std::cout << "While: getting start expr\n";
+        // std::cout << "While: getting start expr\n";
         ParseTreeConverter visitor = ParseTreeConverter();
 
-        std::cout << "While: getting statement\n";
+        // std::cout << "While: getting statement\n";
         stmt->stmt->accept(&visitor);
         this->stmt = visitor.pNode;
 
@@ -43,7 +55,7 @@ namespace AST
         : While(stmt)
         , elseStmt(nullptr)
     {
-        std::cout << "If: getting start expr\n";
+        // std::cout << "If: getting start expr\n";
         if ( stmt->elseBlock != nullptr )
         {
             ParseTreeConverter visitor = ParseTreeConverter();
@@ -63,7 +75,7 @@ namespace AST
     {
         if (stmt->startExpr != nullptr)
         {
-            std::cout << "For: getting start expr\n";
+            // std::cout << "For: getting start expr\n";
             ParseTreeConverter visitor = ParseTreeConverter();
 
             stmt->startExpr->accept(&visitor);
@@ -75,7 +87,7 @@ namespace AST
 
         if (stmt->loopExpr != nullptr)
         {
-            std::cout << "For: getting loop expr\n";
+            // std::cout << "For: getting loop expr\n";
             ParseTreeConverter visitor = ParseTreeConverter();
 
             stmt->loopExpr->accept(&visitor);
@@ -89,7 +101,7 @@ namespace AST
     Call::Call(Parser::CallExpression *c)
         : Value(c->ident->ident)
     {
-        std::cout << "Call: Generating call with identifier " << value.getValue<std::string>() << std::endl;
+        // std::cout << "Call: Generating call with identifier " << value.getValue<std::string>() << std::endl;
 
         for ( auto &var : c->actuals )
         {
@@ -104,6 +116,27 @@ namespace AST
     }
 
     Expr::Expr(Parser::Expression *expr)
+        : Node()
+        , left(nullptr)
+        , op(Scanner::Token::Type::EMPTY)
+        , right(nullptr)
+    {
+        if (expr->expr != nullptr )
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+            expr->expr->accept(&visitor);
+            left = visitor.pNode;
+
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( expr->firstToken() );
+        }
+    }
+
+    Expr::Expr(Parser::UnaryExpression *expr)
+        : Node()
+        , left(nullptr)
+        , op(expr->op)
+        , right(nullptr)
     {
         if (expr->expr != nullptr )
         {
@@ -117,6 +150,10 @@ namespace AST
     }
 
     Expr::Expr(Parser::BinaryExpression *expr)
+        : Node()
+        , left(nullptr)
+        , op(Scanner::Token::Type::EMPTY)
+        , right(nullptr)
     {
         op = expr->op;
         
@@ -142,11 +179,12 @@ namespace AST
     }
 
     Return::Return(Parser::ReturnStmt *stmt)
+        : KeywordStmt(stmt)
     {
         
         if ( stmt->expr != nullptr )
         {
-            std::cout << "Return: Getting expr\n";
+            // std::cout << "Return: Getting expr\n";
             // expr = new Expr
             ParseTreeConverter visitor = ParseTreeConverter();
 
@@ -155,9 +193,11 @@ namespace AST
 
             if ( pNode == nullptr )
                 throw Parser::ParseException( stmt->firstToken() );
+
+            expr = pNode;
         }
-        else
-            std::cout << "Return: \n";
+        // else
+            // std::cout << "Return: \n";
     }
 
     StatementBlock::StatementBlock(Parser::StatementBlock *block)

@@ -12,6 +12,7 @@ namespace AST {
     class Add;
     class Subtract;
     class Multiply;
+    class Modulus;
     class Divide;
     class LessThan;
     class LTE;
@@ -20,6 +21,8 @@ namespace AST {
     class And;
     class Or;
     class Not;
+    class Equal;
+    class NotEqual;
     class Assign;
     class Break;
     class Return;

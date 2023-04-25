@@ -10,5 +10,5 @@ namespace Parser {
      * 
      * @param lexer 
      */
-    Program* treeGeneration(Scanner::Lexer *lexer);
+    Program* treeGeneration(Scanner::Lexer *lexer, bool print=false);
 };

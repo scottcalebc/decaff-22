@@ -15,19 +15,42 @@ namespace AST {
      */
     class Node : public Acceptor {
         protected:            
-            Node() : pScope(nullptr)
+            Node() 
+                : pScope(nullptr)
             {};
             
         public:
-            SymbolTable::Scope *pScope;
             // future meta information for symbol table, return type (function/expr), etc.
-            
+
+            // Each node holds a ref to their closest scope, each scope holds a ref to their
+            // parent thus preserving static scoping rules
+            SymbolTable::Scope *pScope;
+
+            // Out type will be used by expressions to verify type of operation
+            // Will throw error if type mismatch
+            Scanner::Token::Type outType;
+
             // // visitor acceptor method for semantic, type, and code gen
-            // template< typename Visitor>
-            // void accept(Visitor visitor) { visitor.visit(this); };
-            // virtual void accept(Visitor *visitor) { visitor->visit(this); };
             virtual void accept(Visitor* v) = 0;
+
+            // virtual method to distribute scopes to children nodes
+            // this is to ensure we don't have to hit every object with visitor
+            // to set its local scope
             virtual void setScope(SymbolTable::Scope *pScope) = 0;
+
+            /**
+             * @brief Get the min col start for node and it's children
+             * 
+             * @return int 
+             */
+            virtual int minCol() = 0;
+            /**
+             * @brief Get the max col start for node and it's children
+             * 
+             * @return int 
+             */
+            virtual int maxCol() = 0;
+            
     };
 
     // represents either identifier or constant
@@ -47,6 +70,10 @@ namespace AST {
             Scanner::Token              value;
 
             virtual void setScope(SymbolTable::Scope *p) { pScope = p; };
+
+            // helper functions for min max columen info
+            virtual int minCol() { return value.colStart; };
+            virtual int maxCol() { return value.colStart + value.getValue<std::string>().length(); };
     };
 
     class Declaration: public Node
@@ -70,6 +97,9 @@ namespace AST {
             Scanner::Token              ident;
 
             void setScope(SymbolTable::Scope *p) { pScope = p; };
+
+            virtual int minCol() { return ident.colStart; };
+            virtual int maxCol() { return ident.colStart + ident.getValue<std::string>().length(); };
     };
 
     /**
@@ -97,6 +127,9 @@ namespace AST {
             std::vector<Node*>          stmts;
 
             void setScope(SymbolTable::Scope *p);
+
+            int minCol() { return decls.front()->minCol(); };
+            int maxCol() { return stmts.back()->maxCol();  };
     };
     class FunctionDeclaration: public Declaration
     {
@@ -110,7 +143,7 @@ namespace AST {
             FunctionDeclaration(Parser::FunctionDeclaration *func);
             void accept(Visitor *v) 
             { 
-                std::cout << "Function accepting visitor: "; 
+                // std::cout << "Function accepting visitor: "; 
                 v->visit(this); 
             };
             
@@ -126,7 +159,7 @@ namespace AST {
             Ident(Scanner::Token token)
                 : Value(token)
                 {
-                    std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
+                    // std::cout << "Identifier: " << token.getValue<std::string>() << std::endl;
                 };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -138,7 +171,7 @@ namespace AST {
             Constant(Scanner::Token token)
                 : Value(token)
                 {
-                    std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
+                    // std::cout << "Constant: " << token.getValue<std::string>() << std::endl;
                 };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -156,6 +189,16 @@ namespace AST {
             void accept(Visitor *v) { v->visit(this); };
             
             std::deque<Node*> actuals;
+            void setScope(SymbolTable::Scope *p)
+            {
+                pScope = p;
+                for (auto node: actuals)
+                {
+                    node->setScope(p);
+                }
+            };
+
+            int maxCol() { return actuals.back()->maxCol() + 1; };
     };
 
     class Expr: public Node
@@ -169,6 +212,7 @@ namespace AST {
                 {};
 
             Expr(Parser::Expression *expr);
+            Expr(Parser::UnaryExpression *expr);
             Expr(Parser::BinaryExpression *exp);
 
             // Binary expressions will have both left and right as non null
@@ -177,6 +221,36 @@ namespace AST {
             Node*                       left;
             Scanner::Token              op; // may not need this
             Node*                       right;
+
+            virtual int minCol()
+            {
+                int lmin( -1 );
+                
+                if (left != nullptr)
+                    lmin = left->minCol();
+
+                int rmin( lmin + 1 );
+
+                if (right != nullptr)
+                    rmin = right->minCol();
+
+                return std::min(lmin, rmin);
+            }
+
+            virtual int maxCol()
+            {
+                int lmax( -1 );
+
+                if (left != nullptr)
+                    lmax = left->maxCol();
+
+                int rmax( lmax - 1 );
+
+                if (right != nullptr)
+                    rmax = right->maxCol();
+
+                return std::max(lmax, rmax);
+            }
 
             void setScope(SymbolTable::Scope *p)
             {
@@ -224,7 +298,7 @@ namespace AST {
             Add(Parser::ArithmeticExpression *expr)
             : Expr(expr)
             {
-                std::cout << "Add: Generating expr\n";
+                // std::cout << "Add: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -241,13 +315,15 @@ namespace AST {
             Subtract(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Subtract: Generating expr\n";
+                // std::cout << "Subtract: Generating expr\n";
             };
 
             Subtract(Parser::UnaryExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Subtract: Generating unary minus\n";
+                // std::cout << "Subtract: Generating unary minus\n";
+                // std::cout << "Left should be non null: " << &left << std::endl;
+                // std::cout << "Right should be null   : " << &right << std::endl;
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -263,7 +339,7 @@ namespace AST {
             Multiply(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Multiply: Generating expr\n";
+                // std::cout << "Multiply: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -279,7 +355,7 @@ namespace AST {
             Divide(Parser::ArithmeticExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Divide: Generating expr\n";
+                // std::cout << "Divide: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -288,17 +364,11 @@ namespace AST {
     class Modulus: public Expr
     {
         public:
-            Modulus()
-                : Expr()
-            {};
+            Modulus();
             
-            Modulus(Parser::ArithmeticExpression *expr)
-                : Expr(expr)
-            {
-                std::cout << "Modulus: Generating expr\n";
-            };
+            Modulus(Parser::ArithmeticExpression *expr);
 
-            void accept(Visitor *v) { v->visit(this); };
+            void accept(Visitor *v);
     };
 
     // Boolean or conditional objects
@@ -312,7 +382,7 @@ namespace AST {
             LessThan(Parser::RelationalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "LessThan: generating\n";
+                // std::cout << "LessThan: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -328,7 +398,7 @@ namespace AST {
             LTE(Parser::RelationalExpression *expr)
                 : LessThan(expr)
             {
-                std::cout << "LessThanEqual: generating\n";
+                // std::cout << "LessThanEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -344,7 +414,7 @@ namespace AST {
             GreaterThan(Parser::RelationalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "GreaterThan: generating\n";
+                // std::cout << "GreaterThan: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -360,7 +430,7 @@ namespace AST {
             GTE(Parser::RelationalExpression *expr)
                 : GreaterThan(expr)
             {
-                std::cout << "GreaterThanEqual: generating\n";
+                // std::cout << "GreaterThanEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -376,7 +446,7 @@ namespace AST {
             Equal(Parser::EqualityExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Equal: generating\n";
+                // std::cout << "Equal: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -392,7 +462,7 @@ namespace AST {
             NotEqual(Parser::EqualityExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "NotEqual: generating\n";
+                // std::cout << "NotEqual: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -408,7 +478,7 @@ namespace AST {
             And(Parser::LogicalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "And: generating\n";
+                // std::cout << "And: generating\n";
             };
             
             void accept(Visitor *v) { v->visit(this); };
@@ -424,7 +494,7 @@ namespace AST {
             Or(Parser::LogicalExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Or: generating\n";
+                // std::cout << "Or: generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -440,7 +510,7 @@ namespace AST {
             Not(Parser::UnaryExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Not: Generating expr\n";
+                // std::cout << "Not: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -456,7 +526,7 @@ namespace AST {
             Assign(Parser::AssignExpression *expr)
                 : Expr(expr)
             {
-                std::cout << "Assign: Generating expr\n";
+                // std::cout << "Assign: Generating expr\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -466,6 +536,11 @@ namespace AST {
     class Break: public KeywordStmt
     {
         public:
+            Break()
+                : KeywordStmt()
+                {};
+
+            Break(Parser::BreakStmt *stmt) : KeywordStmt(stmt) {};
             void accept(Visitor *v) { v->visit(this); };
     };
 
@@ -476,7 +551,7 @@ namespace AST {
                 : KeywordStmt()
                 {};
 
-            Return(Parser::ReturnStmt *smt);
+            Return(Parser::ReturnStmt *stmt);
 
             void accept(Visitor *v) { v->visit(this); };
     };
@@ -539,7 +614,7 @@ namespace AST {
             Print(Parser::PrintStmt *p)
                 : Call(p)
             {
-                std::cout << "Print: Generating\n";
+                // std::cout << "Print: Generating\n";
             };
 
             void accept(Visitor *v) { v->visit(this); };
@@ -548,13 +623,27 @@ namespace AST {
     class ReadInteger: public Call
     {
         public:
+            ReadInteger() : Call(){};
+            ReadInteger(Parser::ReadIntExpr *p) : Call(p) 
+            {
+                // std::cout << "ReadInteger: Generating\n"; 
+            };
             void accept(Visitor *v) { v->visit(this); };
+            int minCol() { return value.colStart; };
+            int maxCol() { return value.colStart + value.getValue<std::string>().length() + 2; };
     };
 
     class ReadLine: public Call
     {
         public:
+            ReadLine() : Call(){};
+            ReadLine(Parser::ReadLineExpr *p) : Call(p) 
+            {
+                // std::cout << "ReadInteger: Generating\n"; 
+            };
             void accept(Visitor *v) { v->visit(this); };
+            int minCol() { return value.colStart; };
+            int maxCol() { return value.colStart + value.getValue<std::string>().length() + 2; };
     };
 
     class Program: public Node
@@ -575,6 +664,8 @@ namespace AST {
             std::vector<Node*> func;
 
             // std::vector<Node*> decls;
+            int minCol() { return 0; };
+            int maxCol() { return func.back()->maxCol(); };
     };
 
 }

@@ -9,12 +9,10 @@ void AST::ParseTreeConverter::convert(Parser::Identifier *p)
 
 void AST::ParseTreeConverter::convert(Parser::DeclarationType *p)
 {
-    std::cout << "Declaration type hit, not sure this should happen\n";
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReturnType *p)
 {
-    std::cout << "Return type hit\n";
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReturnStmt *p)
@@ -67,12 +65,12 @@ void AST::ParseTreeConverter::convert(Parser::PrintStmt *p)
 
 void AST::ParseTreeConverter::convert(Parser::ReadIntExpr *p)
 {
-    pNode = new ReadInteger();
+    pNode = new ReadInteger(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::ReadLineExpr *p)
 {
-    pNode = new ReadLine();
+    pNode = new ReadLine(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::RelationalExpression *p)
@@ -169,7 +167,7 @@ void AST::ParseTreeConverter::convert(Parser::AssignExpression *p)
 
 void AST::ParseTreeConverter::convert(Parser::BreakStmt *p)
 {
-    pNode = new Break();
+    pNode = new Break(p);
 }
 
 void AST::ParseTreeConverter::convert(Parser::WhileStmt *p)

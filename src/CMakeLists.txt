@@ -7,6 +7,7 @@ add_subdirectory(parser)
 add_subdirectory(visitor)
 add_subdirectory(common)
 add_subdirectory(SymbolTable)
+add_subdirectory(semantic-analyzer)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
@@ -16,6 +17,7 @@ target_link_libraries(${PROJECT_NAME}
     Visitor
     Common
     SymbolTable
+    SemanticAnalyzer
 )
 
 target_include_directories(${PROJECT_NAME}

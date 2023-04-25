@@ -35,9 +35,6 @@ void SymbolTable::STVisitor::visit(AST::If *p)
 
 void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
 {
-
-    std::cout << "Visiting statement block" << std::endl;
-
     Scope *parentScope = currScope;
     currScope = new Scope();
     currScope->parentScope = parentScope;
@@ -57,30 +54,24 @@ void SymbolTable::STVisitor::visit(AST::StatementBlock *p)
 
 void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
 {
-    
-    std::cout << "Visiting function: " << p->ident.getValue<std::string>() << std::endl;
-
     Scope *parentScope = currScope;
     currScope = new Scope();
-    currScope->parentScope = parentScope;   // this will be useful for reverse lookups
+    currScope->parentScope = parentScope;   // this will be useful for reverse lookups 
+    currScope->returnType = p->type;
     p->setScope( currScope );
 
+    int i = 0;
     for ( auto &param : p->formals )
     {
-        currScope->install(param, 2);
+        // index should be parameter index, this will be used during type checking
+        currScope->install(param, i++);
     }
 
-    // add function decls to scope
-    for (auto &decl : p->stmts->decls)
-    {
-        currScope->install(decl, 3);
-    }
+    currScope->numOfParams = p->formals.size();
 
-    // visit statements for any that have their own scope (i.e. StatementBlock, If, etc.)
-    for (auto &stmt : p->stmts->stmts )
-    {
-        stmt->accept(this);
-    }
+
+    // Statement block has it's own scope, this allows shadowing of parameters
+    p->stmts->accept(this);
 
 
     // reset scope
@@ -90,8 +81,6 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
 
 void SymbolTable::STVisitor::visit(AST::Program *p)
 {
-    std::cout << "Visiting program \n";
-
     currScope = new Scope();
     p->setScope( currScope );
 
@@ -108,9 +97,11 @@ void SymbolTable::STVisitor::visit(AST::Program *p)
 
     for ( auto &node : p->func )
     {
-        currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
-
+        SymbolTable::IdEntry *e = currScope->install(dynamic_cast<AST::Declaration*>(node), 1);
+        e->func = true;
         node->accept(this);
+
+        currScope->funcScope.insert( { e->ident, node->pScope });
     }
 
 }

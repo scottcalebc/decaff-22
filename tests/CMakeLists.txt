@@ -47,7 +47,16 @@ add_test(
   NAME
     test_parser_outputs
   COMMAND
-    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR} parser
+    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR} parser --parser
+    WORKING_DIRECTORY
+    ${PROJECT_SOURCE_DIR}/tests
+)
+
+add_test(
+  NAME
+    test_semantic_analyzer_outputs
+  COMMAND
+    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR} semantic --semantic-check
     WORKING_DIRECTORY
     ${PROJECT_SOURCE_DIR}/tests
 )
