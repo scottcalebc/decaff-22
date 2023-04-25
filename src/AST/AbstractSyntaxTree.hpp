@@ -630,7 +630,7 @@ namespace AST {
             };
             void accept(Visitor *v) { v->visit(this); };
             int minCol() { return value.colStart; };
-            int maxCol() { return value.getValue<std::string>().length(); };
+            int maxCol() { return value.colStart + value.getValue<std::string>().length() + 2; };
     };
 
     class ReadLine: public Call
@@ -643,7 +643,7 @@ namespace AST {
             };
             void accept(Visitor *v) { v->visit(this); };
             int minCol() { return value.colStart; };
-            int maxCol() { return value.getValue<std::string>().length(); };
+            int maxCol() { return value.colStart + value.getValue<std::string>().length() + 2; };
     };
 
     class Program: public Node
