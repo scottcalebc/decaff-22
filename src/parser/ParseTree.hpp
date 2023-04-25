@@ -208,8 +208,10 @@ namespace Parser {
 
             };
 
+            int line() { return op.lineNumber; };
             std::string nodeName() { return (op.subType == Scanner::Token::SubType::Not) ? "LogicalExpr:" : "ArithmeticExpr:"; };
             void accept(Converter *converter);
+            std::string toString(int numSpaces, std::string extra);
     };
 
 

@@ -260,6 +260,24 @@ namespace Parser {
         return ss.str();
     }
 
+    std::string UnaryExpression::toString(int numSpaces, std::string extra)
+    {
+        std::stringstream ss;
+
+        // setup node name
+        ss  << std::setw(3) << line()
+            << std::setw(numSpaces) << " "
+            << extra << nodeName() << std::endl;
+
+        // setup expr printing
+        ss  << std::setw(3) << line()
+            << std::setw(numSpaces+3) << " "
+            << "Operator: " << op.getValue<std::string>() << std::endl
+            << expr->toString(numSpaces+3);
+
+        return ss.str();
+    }
+
     std::string BinaryExpression::toString(int numSpaces, std::string extra)
     {
         std::stringstream ss;
