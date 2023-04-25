@@ -11,12 +11,15 @@ namespace SemanticAnalyzer {
     class STTypeVisitor: public Visitor {
 
         public:
-            STTypeVisitor(): inLoop(false), err(false) {};
+            STTypeVisitor(): inLoop(false), err(false), exprErr(false) {};
 
             bool inLoop;
             bool err;       // Set if error occurs, this will prevent code gen
+            bool exprErr;
 
             void printTypeError(Scanner::Token token, std::string errStr);
+            void printTypeError(AST::Node* p, int lineNumber, std::string lineInfo, std::string errStr);
+            void printTypeError(int start, int end, int lineNumber, std::string lineInfo, std::string errStr);
 
             bool arithmeticCheck(Scanner::Token::Type type);
 

@@ -18,12 +18,24 @@ namespace SemanticAnalyzer {
 
     void STTypeVisitor::printTypeError(Scanner::Token token, std::string errStr)
     {
+        printTypeError(token.colStart - 1, token.getValue<std::string>().length(), 
+                        token.lineNumber, token.lineInfo, errStr);
+    }
+
+    void STTypeVisitor::printTypeError(AST::Node* p, int lineNumber, std::string lineInfo, std::string errStr)
+    {
+        printTypeError(p->minCol() - 1, p->maxCol() - p->minCol(), lineNumber, lineInfo, errStr);
+    }
+
+    void STTypeVisitor::printTypeError(int start, int length, int lineNumber, std::string lineInfo, std::string errStr)
+    {
+        // std::cout << "Got start/end: " << start << " " << length << std::endl;
         err = true;
         std::cout   << std::endl
-                    << "*** Error line " << token.lineNumber << ".\n"
-                    <<  token.lineInfo << std::endl
-                    << std::setw(token.colStart - 1) << " "
-                    << std::setfill('^') << std::setw(token.getValue<std::string>().length()) << "" << std::endl
+                    << "*** Error line " << lineNumber << ".\n"
+                    <<  lineInfo << std::endl
+                    << std::setw(start) << " "
+                    << std::setfill('^') << std::setw(length) << "" << std::endl
                     << "*** " << errStr << std::endl
                     << std::endl;
 
@@ -137,7 +149,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -155,7 +168,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -173,7 +187,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -191,7 +206,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -209,7 +225,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -227,7 +244,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right, true) && p->left->outType == Scanner::Token::Type::Bool )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
 
             std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
@@ -243,7 +261,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -261,7 +280,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && p->left->outType == Scanner::Token::Type::Bool )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -279,7 +299,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && p->left->outType == Scanner::Token::Type::Bool )
         {
             p->outType = Scanner::Token::Type::Bool;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -297,7 +318,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -315,7 +337,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -333,7 +356,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -352,7 +376,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right, unary) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
-        }else {
+        }else if (! exprErr) {
+            exprErr = true;
             // TODO may need to add check for unary
             std::stringstream ss;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
@@ -361,8 +386,8 @@ namespace SemanticAnalyzer {
             {
                 std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
                 std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
-                ss << "Incompatible operands: " << Scanner::Token::getTypeName(p->left->outType)
-                    << " " << p->op.getValue<std::string>() << " " << Scanner::Token::getTypeName(p->right->outType);
+                ss << "Incompatible operands: " << ltype
+                    << " " << p->op.getValue<std::string>() << " " << rtype;
                 printTypeError(p->op, ss.str());
             } else 
             {
@@ -377,7 +402,8 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) && arithmeticCheck(p->left->outType) )
         {
             p->outType = p->left->outType;
-        }else {
+        }else if (! exprErr){
+            exprErr = true;
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -395,8 +421,9 @@ namespace SemanticAnalyzer {
 
         if ( binaryTypeCheck(p->left, p->right) )
         {
-            p->outType = p->left->outType;
-        } else {
+            // Do I need an out type on assign? Probably not, cannot have multiple assignments
+            // p->outType = p->left->outType;
+        } else if (! exprErr){
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
 
@@ -415,6 +442,7 @@ namespace SemanticAnalyzer {
         bool prevLoop = inLoop;
         for(auto &stmt : p->stmts)
         {
+            exprErr = false;    // set expr err to false to ensure correct error printing
             stmt->accept(this);
             
             // set inLoop if we are in a loop but there is a sub loop that reset loop bool
@@ -476,13 +504,14 @@ namespace SemanticAnalyzer {
             // verify parameters
             for ( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
             {
+                exprErr = false;
                 (*it)->accept(this);
                 // it->visit(this);
                 for( auto& formal : func->table )
                 {
                     if (formal.second->block == i)
                     {
-                        if ((*it)->outType != formal.second->type)
+                        if ((*it)->outType != formal.second->type && ! exprErr)
                         {
                             std::stringstream ss;
                             std::string ltype ( Scanner::Token::getTypeName(formal.second->type));
@@ -491,13 +520,14 @@ namespace SemanticAnalyzer {
                             std::transform(rtype.begin(), rtype.end(), rtype.begin(), ::tolower);
                             
                             ss << "Incompatible argument " << i+1 << ": " << rtype << " given, " << ltype << " expected";
+                            printTypeError((*it), p->value.lineNumber, p->value.lineInfo, ss.str());
 
-                            if ( dynamic_cast<AST::Value*>((*it)) != nullptr )
-                            {
-                                printTypeError(dynamic_cast<AST::Value*>((*it))->value, ss.str());
-                            } else {
-                                std::cout << "Invalid node\n";
-                            }
+                            // if ( dynamic_cast<AST::Value*>((*it)) != nullptr )
+                            // {
+                            //     printTypeError(dynamic_cast<AST::Value*>((*it))->value, ss.str());
+                            // } else {
+                            //     std::cout << "Invalid node\n";
+                            // }
                             
                         }
                     }
@@ -531,7 +561,7 @@ namespace SemanticAnalyzer {
         }
         Scanner::Token::Type returnType( p->pScope->getReturnType() );
 
-        if ( returnType != p->outType)
+        if ( returnType != p->outType && ! exprErr)
         {
             std::string ltype( Scanner::Token::getTypeName( returnType ) );
             std::string rtype( Scanner::Token::getTypeName( p->outType ) );
@@ -543,12 +573,14 @@ namespace SemanticAnalyzer {
             ss  << "Incompatible return: " 
                 << rtype << " given, " << ltype << " expected";
             
-            if (dynamic_cast<AST::Value*>(p->expr) != nullptr )
-                printTypeError(dynamic_cast<AST::Value*>(p->expr)->value, ss.str());
-            else if (dynamic_cast<AST::Expr*>(p->expr) != nullptr )
-                printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
-            else
-                printTypeError(p->value, ss.str());
+            printTypeError(p->expr, p->value.lineNumber, p->value.lineInfo, ss.str());
+
+            // if (dynamic_cast<AST::Value*>(p->expr) != nullptr )
+            //     printTypeError(dynamic_cast<AST::Value*>(p->expr)->value, ss.str());
+            // else if (dynamic_cast<AST::Expr*>(p->expr) != nullptr )
+            //     printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+            // else
+            //     printTypeError(p->value, ss.str());
         }
     }
 
@@ -559,15 +591,17 @@ namespace SemanticAnalyzer {
         if (p->startExpr != nullptr)
             p->startExpr->accept(this);
         
+        exprErr = false;
         p->expr->accept(this);
 
-        if (p->expr->outType != Scanner::Token::Type::Bool)
+        if (p->expr->outType != Scanner::Token::Type::Bool && ! exprErr)
         {
             std::stringstream ss;
             ss << "Test expression must have boolean type";
             printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
         }
 
+        exprErr = false;
         if (p->loopExpr != nullptr)
             p->loopExpr->accept(this);
 
@@ -580,7 +614,8 @@ namespace SemanticAnalyzer {
     {
         // verify expression is type valid
         p->expr->accept(this);
-        if (p->expr->outType != Scanner::Token::Type::Bool)
+
+        if (p->expr->outType != Scanner::Token::Type::Bool && ! exprErr)
         {
             std::stringstream ss;
             ss << "Test expression must have boolean type";
@@ -600,7 +635,8 @@ namespace SemanticAnalyzer {
         inLoop = true;
         // verify expression is type valid
         p->expr->accept(this);
-        if (p->expr->outType != Scanner::Token::Type::Bool)
+        
+        if (p->expr->outType != Scanner::Token::Type::Bool && ! exprErr)
         {
             std::stringstream ss;
             ss << "Test expression must have boolean type";

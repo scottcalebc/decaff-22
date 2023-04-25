@@ -37,6 +37,19 @@ namespace AST {
             // this is to ensure we don't have to hit every object with visitor
             // to set its local scope
             virtual void setScope(SymbolTable::Scope *pScope) = 0;
+
+            /**
+             * @brief Get the min col start for node and it's children
+             * 
+             * @return int 
+             */
+            virtual int minCol() = 0;
+            /**
+             * @brief Get the max col start for node and it's children
+             * 
+             * @return int 
+             */
+            virtual int maxCol() = 0;
             
     };
 
@@ -57,6 +70,10 @@ namespace AST {
             Scanner::Token              value;
 
             virtual void setScope(SymbolTable::Scope *p) { pScope = p; };
+
+            // helper functions for min max columen info
+            virtual int minCol() { return value.colStart; };
+            virtual int maxCol() { return value.colStart + value.getValue<std::string>().length(); };
     };
 
     class Declaration: public Node
@@ -80,6 +97,9 @@ namespace AST {
             Scanner::Token              ident;
 
             void setScope(SymbolTable::Scope *p) { pScope = p; };
+
+            virtual int minCol() { return ident.colStart; };
+            virtual int maxCol() { return ident.colStart + ident.getValue<std::string>().length(); };
     };
 
     /**
@@ -107,6 +127,9 @@ namespace AST {
             std::vector<Node*>          stmts;
 
             void setScope(SymbolTable::Scope *p);
+
+            int minCol() { return decls.front()->minCol(); };
+            int maxCol() { return stmts.back()->maxCol();  };
     };
     class FunctionDeclaration: public Declaration
     {
@@ -174,6 +197,8 @@ namespace AST {
                     node->setScope(p);
                 }
             };
+
+            int maxCol() { return actuals.back()->maxCol(); };
     };
 
     class Expr: public Node
@@ -195,6 +220,36 @@ namespace AST {
             Node*                       left;
             Scanner::Token              op; // may not need this
             Node*                       right;
+
+            virtual int minCol()
+            {
+                int lmin( -1 );
+                
+                if (left != nullptr)
+                    lmin = left->minCol();
+
+                int rmin( lmin + 1 );
+
+                if (right != nullptr)
+                    rmin = right->minCol();
+
+                return std::min(lmin, rmin);
+            }
+
+            virtual int maxCol()
+            {
+                int lmax( -1 );
+
+                if (left != nullptr)
+                    lmax = left->maxCol();
+
+                int rmax( lmax - 1 );
+
+                if (right != nullptr)
+                    rmax = right->maxCol();
+
+                return std::max(lmax, rmax);
+            }
 
             void setScope(SymbolTable::Scope *p)
             {
@@ -599,6 +654,8 @@ namespace AST {
             std::vector<Node*> func;
 
             // std::vector<Node*> decls;
+            int minCol() { return 0; };
+            int maxCol() { return func.back()->maxCol(); };
     };
 
 }
