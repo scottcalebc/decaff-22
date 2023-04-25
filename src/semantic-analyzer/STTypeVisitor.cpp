@@ -494,7 +494,7 @@ namespace SemanticAnalyzer {
             if (p->actuals.size() != func->numOfParams)
             {
                 std::stringstream ss;
-                ss << "Function '" << p->value << "' expects " << func->numOfParams << " arguments but " << p->actuals.size() << " given";
+                ss << "Function '" << p->value.getValue<std::string>() << "' expects " << func->numOfParams << " arguments but " << p->actuals.size() << " given";
                 printTypeError(p->value, ss.str());
             }
 
@@ -597,7 +597,7 @@ namespace SemanticAnalyzer {
         {
             std::stringstream ss;
             ss << "Test expression must have boolean type";
-            printTypeError(dynamic_cast<AST::Expr*>(p->expr)->op, ss.str());
+            printTypeError(p->expr, p->value.lineNumber, p->value.lineInfo, ss.str());
         }
 
         exprErr = false;
