@@ -132,6 +132,23 @@ namespace AST
         }
     }
 
+    Expr::Expr(Parser::UnaryExpression *expr)
+        : Node()
+        , left(nullptr)
+        , op(expr->op)
+        , right(nullptr)
+    {
+        if (expr->expr != nullptr )
+        {
+            ParseTreeConverter visitor = ParseTreeConverter();
+            expr->expr->accept(&visitor);
+            left = visitor.pNode;
+
+            if (visitor.pNode == nullptr)
+                throw Parser::ParseException( expr->firstToken() );
+        }
+    }
+
     Expr::Expr(Parser::BinaryExpression *expr)
         : Node()
         , left(nullptr)

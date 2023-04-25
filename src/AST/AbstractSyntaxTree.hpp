@@ -212,6 +212,7 @@ namespace AST {
                 {};
 
             Expr(Parser::Expression *expr);
+            Expr(Parser::UnaryExpression *expr);
             Expr(Parser::BinaryExpression *exp);
 
             // Binary expressions will have both left and right as non null
