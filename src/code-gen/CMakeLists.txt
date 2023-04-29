@@ -7,6 +7,7 @@ target_sources(CodeGen
   ${CMAKE_CURRENT_LIST_DIR}/CodeGenVisitor.cpp
   PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/CodeGenVisitor.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/Entities.hpp
 )
 
 target_include_directories(CodeGen

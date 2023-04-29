@@ -5,110 +5,27 @@
 #include <visitor/astVisitor.hpp>
 #include <AST/AbstractSyntaxTree.hpp>
 
+#include "Entities.hpp"
+
 
 namespace CodeGen {
-    void generate(AST::Program *p);
-
-    /**
-     * @brief Abstract Base class for describing storage of location of variables / temporaries
-     * 
-     */
-    class Location {
-
-        protected:
-            Location() {};
-
-        public:
-        // virtual methods to be overriden
-            virtual std::string emit() = 0;
-    };
-
-
-    class Immediate {
-        public:
-            Immediate();
-            Immediate(std::string value);
-            std::string immediate;
-            std::string emit();
-    };
-
-    class Label {
-        public:
-            Label();
-            Label(std::string value);
-            std::string label;
-            std::string emit();
-    };
-
-    /**
-     * @brief Class for generating register locations
-     * 
-     */
-    class Register : public Location {
-
-        public:
-            std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
-            std::string emit();
-
-    };
-
-    /**
-     * @brief Class for describing memory location
-     * 
-     */
-    class Memory : public Location {
-
-        public:
-            Register    baseReg; // base register (frame pointer, stack pointer, global pointer)
-            int         offset; // offset from register
-            std::string emit();
-    };
-
-    class InstructionStreamItems {
-        protected:
-            InstructionStreamItems() {};
-
-        public:
-            virtual std::string emit() = 0;
-    };
-
-    class Comment : public InstructionStreamItems {
-
-        public:
-            Comment();
-            Comment(std::string comment);
-
-            std::string comment;
-
-            std::string emit();
-    };
-
-
-    class Instruction : public InstructionStreamItems {
-
-        public:
-            Instruction();
-            Instruction(std::string op, Location* op1);
-            Instruction(std::string op, Location*op1, Location* op2);
-            Instruction(std::string op, Location*op1, Location* op2, Location* op3);
-
-            std::string op;     // string of operations
-
-            // Always Assume first operand is a register
-            // caller will handle if op2/3 need to be registers, just assume their right
-            Location *operand1; // some ops only have a single operand
-            Location *operand2; // some ops only have two operands
-            Location *operand3; // some ops have three
-
-
-            std::string emit();
-    };
-
+    void generate(AST::Program *p, std::string file_name);
     
     class CodeGenVisitor: public Visitor {
 
         public:
             CodeGenVisitor();
+
+            void emit(Label* label);
+            void emit(std::string output);
+            void emit(std::string op, Location* operand1);
+            void emit(std::string op, Location* operand1, Location* operand2);
+            void emit(std::string op, Location* operand1, Location* operand2, Location* operand3);
+
+
+            std::vector<InstructionStreamItems*> instructions;
+
+            void write(std::string fileName);
 
             // Keep references to an instance Register & Memory
             // this will allow for calls to Next() for next available register and
@@ -159,7 +76,7 @@ namespace CodeGen {
 
 
             void visit(AST::StatementBlock *p){};
-            void visit(AST::FunctionDeclaration *p){};
+            void visit(AST::FunctionDeclaration *p);
             void visit(AST::Program *p);
 
     };

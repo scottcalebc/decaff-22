@@ -34,6 +34,18 @@ int usage(const char* progName)
     return 1;
 }
 
+std::string getFileName(const std::string &file_path)
+{
+    std::cout << "Splitting: " << file_path << '\n';
+
+    std::size_t start = file_path.find_last_of("/");
+    std::size_t end = file_path.find_last_of(".");
+    std::cout << " name: " << file_path.substr(start+1, end-start-1) << '\n';
+    std::cout << " ext : " << file_path.substr(end+1)<< '\n';
+
+    return file_path.substr(start+1, end-start-1);
+}
+
 int main(int argc, char** argv) {
 
     if (argc < 2 || argc > 3)
@@ -58,7 +70,7 @@ int main(int argc, char** argv) {
         }
     }
     
-
+    std::string file_name( getFileName(file_path) );
     Scanner::Lexer lexer(file_path);
 
     if (function.compare("--lexer") == 0)
@@ -122,7 +134,7 @@ int main(int argc, char** argv) {
 
     // code gen
     if (bTypeCheck)
-        CodeGen::generate(&prog);
+        CodeGen::generate(&prog, file_name);
 
     return 0;
 }

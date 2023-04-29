@@ -8,6 +8,8 @@
 
 #include <SymbolTable/Entities.hpp>
 
+#include <code-gen/Entities.hpp>
+
 namespace AST {
 
     /**
@@ -17,6 +19,7 @@ namespace AST {
         protected:            
             Node() 
                 : pScope(nullptr)
+                , reg(nullptr)
             {};
             
         public:
@@ -25,6 +28,9 @@ namespace AST {
             // Each node holds a ref to their closest scope, each scope holds a ref to their
             // parent thus preserving static scoping rules
             SymbolTable::Scope *pScope;
+
+            // Out register holding value of sub expression
+            CodeGen::Register *reg;
 
             // Out type will be used by expressions to verify type of operation
             // Will throw error if type mismatch
