@@ -15,6 +15,8 @@
 #include <SymbolTable/generate.hpp>
 #include <semantic-analyzer/STTypeVisitor.hpp>
 
+#include <code-gen/CodeGenVisitor.hpp>
+
 #define VERSION 0.1.0
 
 std::vector<std::string> vecFunctions{
@@ -100,9 +102,9 @@ int main(int argc, char** argv) {
         // std::cout << "Ended at parser function" << std::endl;
         return 0;
     }
-
+    bool bTypeCheck(true);
     try {
-        SemanticAnalyzer::typeCheck(&prog);
+        bTypeCheck = SemanticAnalyzer::typeCheck(&prog);
     }
     // Some Semantic checking can be "recoverable or at least ignore later invocations of issues"
     // 
@@ -119,6 +121,8 @@ int main(int argc, char** argv) {
     }
 
     // code gen
+    if (bTypeCheck)
+        CodeGen::generate(&prog);
 
     return 0;
 }

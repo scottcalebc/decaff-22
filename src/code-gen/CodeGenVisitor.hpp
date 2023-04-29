@@ -7,6 +7,7 @@
 
 
 namespace CodeGen {
+    void generate(AST::Program *p);
 
     /**
      * @brief Abstract Base class for describing storage of location of variables / temporaries
@@ -25,7 +26,7 @@ namespace CodeGen {
     class Immediate {
         public:
             std::string immediate;
-    }
+    };
 
     /**
      * @brief Class for generating register locations
@@ -39,7 +40,7 @@ namespace CodeGen {
     };
 
     /**
-     * @brief Clas for describing memory location
+     * @brief Class for describing memory location
      * 
      */
     class Memory : public Location {
@@ -118,7 +119,9 @@ namespace CodeGen {
 
             void visit(AST::StatementBlock *p){};
             void visit(AST::FunctionDeclaration *p){};
-            void visit(AST::Program *p){};
+            void visit(AST::Program *p);
 
     };
+
+    
 }
