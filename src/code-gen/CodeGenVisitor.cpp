@@ -268,60 +268,61 @@ namespace CodeGen {
         std::cout << "Staring gen of function: " << p->ident.getValue<std::string>() << std::endl;
 
         if (funcName.compare("main") == 0)
-        {
             emit(new Label(funcName));
-            instructions.back()->comment = new Comment("Start of main function");
+        else
+            emit(new Label("_" + funcName));
 
-            // TODO figure out how to insert ref to offset size here
-            emit("BeginFunc ");
+        // TODO figure out how to insert ref to offset size here
+        emit("BeginFunc ");
 
-            // setup frame
+        // setup frame
 
-            emit("subu", new Register("sp"), new Register("sp"), new Immediate("8"));
-            instructions.back()->comment = new Comment("decrement sp to make space to save ra, fp");
+        emit("subu", new Register("sp"), new Register("sp"), new Immediate("8"));
+        instructions.back()->comment = new Comment("decrement sp to make space to save ra, fp");
 
-            emit("sw", new Register("fp"), new Memory("sp", 8));
-            instructions.back()->comment = new Comment("save fp");
+        emit("sw", new Register("fp"), new Memory("sp", 8));
+        instructions.back()->comment = new Comment("save fp");
 
-            emit("sw", new Register("ra"), new Memory("sp", 8));
-            instructions.back()->comment = new Comment("save ra");
+        emit("sw", new Register("ra"), new Memory("sp", 8));
+        instructions.back()->comment = new Comment("save ra");
 
-            emit("addiu", new Register("fp"), new Register("sp"), new Immediate("8"));
-            instructions.back()->comment = new Comment("set up new fp");
+        emit("addiu", new Register("fp"), new Register("sp"), new Immediate("8"));
+        instructions.back()->comment = new Comment("set up new fp");
 
-            // visit declarations to generate offsets for parameters (not needed in main)
+        // visit declarations to generate offsets for parameters (not needed in main)
 
-            for(auto formal : p->formals )
-            {
-                formal->accept(this);
-            }
-
-            // get ref to current scopes space offset, this will be used later for instr
-            //  output
-            // TODO @ccs need to make Immediate value / location a ref so it's modifiable
-            emit("subu", new Register("sp"), new Register("sp"), new Immediate("24"));
-            instructions.back()->comment = new Comment("decrement sp to make space for locals/temps");
-
-            // generate sub expression
-
-
-            // return from function
-            emit("EndFunc");
-            emit("(below handles reaching end of fn body with no explicit return)");
-            
-            emit("move", new Register("sp"), new Register("fp"));
-            instructions.back()->comment = new Comment("pop callee frame off stack");
-
-            emit("lw", new Register("ra"), new Memory("fp", -4));
-            instructions.back()->comment = new Comment("restore saved ra");
-
-            emit("lw", new Register("fp"), new Memory("fp", 0));
-            instructions.back()->comment = new Comment("restore saved fp");
-
-            emit("jr", new Register("ra"));
-            instructions.back()->comment = new Comment("return from function");
-
+        for(auto formal : p->formals )
+        {
+            formal->accept(this);
         }
+
+        // get ref to current scopes space offset, this will be used later for instr
+        //  output
+        // TODO @ccs need to make Immediate value / location a ref so it's modifiable
+        emit("subu", new Register("sp"), new Register("sp"), new Immediate("24"));
+        instructions.back()->comment = new Comment("decrement sp to make space for locals/temps");
+
+        emit("End frame setup");
+
+        // generate sub expression
+        emit("Statement Body");
+
+
+        // return from function
+        emit("EndFunc");
+        emit("(below handles reaching end of fn body with no explicit return)");
+        
+        emit("move", new Register("sp"), new Register("fp"));
+        instructions.back()->comment = new Comment("pop callee frame off stack");
+
+        emit("lw", new Register("ra"), new Memory("fp", -4));
+        instructions.back()->comment = new Comment("restore saved ra");
+
+        emit("lw", new Register("fp"), new Memory("fp", 0));
+        instructions.back()->comment = new Comment("restore saved fp");
+
+        emit("jr", new Register("ra"));
+        instructions.back()->comment = new Comment("return from function");
     }
 
     void CodeGenVisitor::visit(AST::Program *p)
