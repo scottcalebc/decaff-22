@@ -57,6 +57,11 @@ namespace SymbolTable {
             int numOfParams;                    // used by functions for type checking
             Scanner::Token::Type returnType;    // used by functions for type check
 
+            // this will hold the offset necessary for the function scope
+            // children scopes allocating locals/temporaries
+            int baseOffset;                     // used during code gen
+
+
             typedef std::map<std::string, IdEntry*>::iterator TableIterator;
             std::map<std::string, IdEntry*> table;
             std::map<std::string, Scope*> funcScope;

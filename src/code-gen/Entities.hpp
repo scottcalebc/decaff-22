@@ -33,6 +33,8 @@ namespace CodeGen {
     class Register : public Location {
 
         public:
+            Register();
+            Register(std::string reg);
             std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
             std::string emit();
 
@@ -45,6 +47,8 @@ namespace CodeGen {
     class Memory : public Location {
 
         public:
+            Memory();
+            Memory(std::string reg, int offset);
             Register    baseReg; // base register (frame pointer, stack pointer, global pointer)
             int         offset; // offset from register
             std::string emit();

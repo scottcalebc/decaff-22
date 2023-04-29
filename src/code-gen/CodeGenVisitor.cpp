@@ -57,6 +57,17 @@ namespace CodeGen {
         return ss.str();
     }
 
+    Register::Register()
+    {
+
+    }
+
+    Register::Register(std::string reg)
+        : name(reg)
+    {
+
+    }
+
 
     std::string Register::emit()
     {
@@ -65,6 +76,18 @@ namespace CodeGen {
         ss << "$" << name;
 
         return ss.str();
+    }
+
+    Memory::Memory()
+    {
+
+    }
+
+    Memory::Memory(std::string reg, int offset)
+        : baseReg(Register(reg))
+        , offset(offset)
+    {
+
     }
 
     std::string Memory::emit()
@@ -153,16 +176,16 @@ namespace CodeGen {
         std::stringstream ss;
 
         ss  << "  " << op << " "
-            << operand1->emit() << " ";
+            << operand1->emit();
 
         if ( operand2 != nullptr )
-            ss << operand2->emit() << " ";
+            ss << ", " << operand2->emit();
         
         if ( operand3 != nullptr )
-            ss << operand3->emit() << " ";
+            ss << ", " << operand3->emit() << " ";
 
         if ( comment != nullptr )
-            ss << comment->emit() << " ";
+            ss << "\t" << comment->emit() << " ";
 
         return ss.str();
     }
@@ -248,6 +271,56 @@ namespace CodeGen {
         {
             emit(new Label(funcName));
             instructions.back()->comment = new Comment("Start of main function");
+
+            // TODO figure out how to insert ref to offset size here
+            emit("BeginFunc ");
+
+            // setup frame
+
+            emit("subu", new Register("sp"), new Register("sp"), new Immediate("8"));
+            instructions.back()->comment = new Comment("decrement sp to make space to save ra, fp");
+
+            emit("sw", new Register("fp"), new Memory("sp", 8));
+            instructions.back()->comment = new Comment("save fp");
+
+            emit("sw", new Register("ra"), new Memory("sp", 8));
+            instructions.back()->comment = new Comment("save ra");
+
+            emit("addiu", new Register("fp"), new Register("sp"), new Immediate("8"));
+            instructions.back()->comment = new Comment("set up new fp");
+
+            // visit declarations to generate offsets for parameters (not needed in main)
+
+            for(auto formal : p->formals )
+            {
+                formal->accept(this);
+            }
+
+            // get ref to current scopes space offset, this will be used later for instr
+            //  output
+            // TODO @ccs need to make Immediate value / location a ref so it's modifiable
+            emit("subu", new Register("sp"), new Register("sp"), new Immediate("24"));
+            instructions.back()->comment = new Comment("decrement sp to make space for locals/temps");
+
+            // generate sub expression
+
+
+            // return from function
+            emit("EndFunc");
+            emit("(below handles reaching end of fn body with no explicit return)");
+            
+            emit("move", new Register("sp"), new Register("fp"));
+            instructions.back()->comment = new Comment("pop callee frame off stack");
+
+            emit("lw", new Register("ra"), new Memory("fp", -4));
+            instructions.back()->comment = new Comment("restore saved ra");
+
+            emit("lw", new Register("fp"), new Memory("fp", 0));
+            instructions.back()->comment = new Comment("restore saved fp");
+
+            emit("jr", new Register("ra"));
+            instructions.back()->comment = new Comment("return from function");
+
         }
     }
 
