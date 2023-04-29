@@ -35,10 +35,16 @@ namespace CodeGen {
     class Register : public Location {
 
         public:
+            static int registerCount;
+            static int registerIndex;
+
             Register();
             Register(std::string reg);
             std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
             std::string emit();
+
+            static Register* Next();
+            static void Free();
 
     };
 

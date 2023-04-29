@@ -85,6 +85,10 @@ namespace CodeGen {
 
     }
 
+    // Using three registers
+    int Register::registerCount = 3;
+    int Register::registerIndex = 0;
+
 
     std::string Register::emit()
     {
@@ -93,6 +97,19 @@ namespace CodeGen {
         ss << "$" << name;
 
         return ss.str();
+    }
+
+    Register * Register::Next()
+    {
+        registerIndex = (registerIndex + 1)%registerCount;
+        std::stringstream ss;
+        ss << "t" << registerIndex;
+        return new Register(ss.str());
+    }
+
+    void Register::Free()
+    {
+        registerIndex = (registerIndex - 1)%registerCount;
     }
 
     Memory::Memory()
@@ -238,6 +255,11 @@ namespace CodeGen {
         else
             instructions.push_back(new Comment(output));
     }
+    
+    void CodeGenVisitor::emit(Comment *c)
+    {
+        instructions.push_back(c);
+    }
 
     void CodeGenVisitor::emit(std::string output, int *dataSize)
     {
@@ -262,6 +284,11 @@ namespace CodeGen {
     void CodeGenVisitor::emit(std::string op, Location* operand1, Location* operand2, Location* operand3)
     {
         instructions.push_back(new Instruction(op, operand1, operand2, operand3));
+    }
+
+    void CodeGenVisitor::addComment(Comment* comment)
+    {
+        instructions.back()->comment = comment;
     }
 
     void CodeGenVisitor::write(std::string file_name)
@@ -293,6 +320,122 @@ namespace CodeGen {
     }
 
 
+
+
+
+
+
+
+
+
+    void CodeGenVisitor::visit(AST::Ident *p)
+    {
+        // lookup in symbol table to retrieve register
+        SymbolTable::IdEntry *e = p->pScope->idLookup(p->value.getValue<std::string>());
+
+        p->reg = e->reg;
+
+        std::string reg("fp");
+
+        // TODO change how block is used for parameters
+        if (e->block == 0)
+            reg = "gp";
+
+        p->mem = new Memory(reg, e->offset);
+        p->memName = p->value.getValue<std::string>();
+    }
+
+    void CodeGenVisitor::visit(AST::Constant *p)
+    {
+        // load constant into temp
+        // get next offset for temporary
+
+        int offset = p->pScope->getNextOffset();
+        Memory *mem = new Memory("fp", -offset);
+
+        std::cout << "Visiting constant calculating tmp label\n";
+        std::stringstream ss;
+        ss << "_tmp" << offset/4;
+        std::string tmp(ss.str());
+        std::string constant(p->value.getValue<std::string>());
+
+        emit(new Comment(tmp + " = " + constant));
+
+        Register *reg = Register::Next(); //get next register
+
+        switch (p->value.type)
+        {
+            case Scanner::Token::Type::StringConstant:
+            case Scanner::Token::Type::BoolConstant:
+                break;
+            default:
+                emit("li", reg, new Immediate(constant));
+                addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
+                emit("sw", reg, mem);
+                addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
+                Register::Free();
+
+        }
+
+        p->mem = mem;
+        p->memName = tmp;
+    }
+
+
+    /**
+     * Visitor Functions
+     * 
+     */
+
+    void CodeGenVisitor::visit(AST::Assign *p)
+    {
+        std::cout << "Starting assignment\n";
+
+        // visit left to find reg
+        p->left->accept(this);
+        // evaluate right hand side
+        p->right->accept(this);
+
+        // every sub expression saves output to memory location thus
+        //  we need to load memory location from right into reg
+        //  then we move reg into memory locaiton of left
+        // therefor the following
+        //
+        //  lw reg, [right mem loc]
+        //  sw reg, [left mem loc]
+
+        if (p->left->mem != nullptr && p->right->mem != nullptr)
+        {
+            // load right location
+            emit(new Comment(p->left->memName + " = " + p->right->memName));
+            Register *reg = Register::Next();
+            emit("lw", reg, p->right->mem);
+            addComment(new Comment("fill " + p->right->memName + " to " + reg->emit() + " from " + p->right->mem->emit()));
+            emit("sw", reg, p->left->mem);
+            addComment(new Comment("spill " + p->right->memName + " from " + reg->emit() + " to " + p->left->mem->emit()));
+
+             if (dynamic_cast<AST::Ident*>(p->left) != nullptr)
+            {
+                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->left);
+                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
+
+                if (e != nullptr)
+                    e->loaded = true;
+            }
+        }
+        else
+        {
+            std::cout << "Could not assign due to invalid memory location\n";
+        }
+    }
+
+
+
+    /**
+     * @brief Visitor declaration and calculate offsets for expresions
+     * 
+     * @param p 
+     */
     void CodeGenVisitor::visit(AST::Declaration *p)
     {
         std::cout << "Allocation offsets for declarations\n";
@@ -332,6 +475,13 @@ namespace CodeGen {
         for(auto decl : p->decls)
         {
             decl->accept(this);
+        }
+
+        std::cout << "Visiting statement body\n";
+
+        for (auto stmt : p->stmts )
+        {
+            stmt->accept(this);
         }
 
     }
@@ -412,6 +562,7 @@ namespace CodeGen {
         emit(".globl main");
 
         std::cout << "Visiting declarations to assign memory locations\n";
+        // TODO visit global variables
 
         std::cout << "Visiting functions for generation\n";
         for( auto func : p->func )

@@ -17,11 +17,15 @@ namespace CodeGen {
             CodeGenVisitor();
 
             void emit(Label* label);
+            void emit(Comment *output);
             void emit(std::string output);
             void emit(std::string output, int *dataSize);
             void emit(std::string op, Location* operand1);
             void emit(std::string op, Location* operand1, Location* operand2);
             void emit(std::string op, Location* operand1, Location* operand2, Location* operand3);
+
+            // used to add comment to last emitted instruction
+            void addComment(Comment* comment);
 
 
             std::vector<InstructionStreamItems*> instructions;
@@ -36,15 +40,15 @@ namespace CodeGen {
             void visit(Acceptor *a) { std::cout << "STTypeVisitor: Got acceptor" << std::endl; };
 
             // Ident will lookup in ST and return type
-            void visit(AST::Ident *p){};
+            void visit(AST::Ident *p);
             // Constant will simply set their type
-            void visit(AST::Constant *p){};
+            void visit(AST::Constant *p);
 
             // Expressions
 
             // arithmetic expressions
             void visit(AST::Add *p){};
-            void visit(AST::Assign *p){};
+            void visit(AST::Assign *p);
             void visit(AST::Divide *p){};
             void visit(AST::Modulus *p){};
             void visit(AST::Subtract *p){};

@@ -31,6 +31,9 @@ namespace AST {
 
             // Out register holding value of sub expression
             CodeGen::Register *reg;
+            CodeGen::Location *mem; // holds memory location of subexpression
+
+            std::string memName;
 
             // Out type will be used by expressions to verify type of operation
             // Will throw error if type mismatch

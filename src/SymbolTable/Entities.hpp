@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AST/AbstractSyntaxTree.hpp>
+#include <code-gen/Entities.hpp>
 
 namespace SymbolTable {
 
@@ -13,6 +14,8 @@ namespace SymbolTable {
                 , func(false)
                 , block(0)
                 , offset(0)
+                , reg(nullptr)
+                , loaded(false)
                 {};
             IdEntry( std::string ident, Scanner::Token::Type type, int block, bool func = false )
                 : ident(ident)
@@ -20,12 +23,16 @@ namespace SymbolTable {
                 , func(func)
                 , block(block)
                 , offset(0)
+                , reg(nullptr)
+                , loaded(false)
             {
             };
 
             std::string             ident;
             Scanner::Token::Type    type;
             bool                    func;
+            CodeGen::Register       *reg;
+            bool                    loaded;
 
             /*
                 1 == global
