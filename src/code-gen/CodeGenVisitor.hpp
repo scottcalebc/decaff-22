@@ -20,12 +20,24 @@ namespace CodeGen {
 
         public:
         // virtual methods to be overriden
+            virtual std::string emit() = 0;
     };
 
 
     class Immediate {
         public:
+            Immediate();
+            Immediate(std::string value);
             std::string immediate;
+            std::string emit();
+    };
+
+    class Label {
+        public:
+            Label();
+            Label(std::string value);
+            std::string label;
+            std::string emit();
     };
 
     /**
@@ -36,6 +48,7 @@ namespace CodeGen {
 
         public:
             std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
+            std::string emit();
 
     };
 
@@ -48,10 +61,30 @@ namespace CodeGen {
         public:
             Register    baseReg; // base register (frame pointer, stack pointer, global pointer)
             int         offset; // offset from register
+            std::string emit();
+    };
+
+    class InstructionStreamItems {
+        protected:
+            InstructionStreamItems() {};
+
+        public:
+            virtual std::string emit() = 0;
+    };
+
+    class Comment : public InstructionStreamItems {
+
+        public:
+            Comment();
+            Comment(std::string comment);
+
+            std::string comment;
+
+            std::string emit();
     };
 
 
-    class Instruction {
+    class Instruction : public InstructionStreamItems {
 
         public:
             Instruction();
@@ -61,9 +94,14 @@ namespace CodeGen {
 
             std::string op;     // string of operations
 
+            // Always Assume first operand is a register
+            // caller will handle if op2/3 need to be registers, just assume their right
             Location *operand1; // some ops only have a single operand
             Location *operand2; // some ops only have two operands
             Location *operand3; // some ops have three
+
+
+            std::string emit();
     };
 
     
@@ -71,6 +109,9 @@ namespace CodeGen {
 
         public:
             CodeGenVisitor();
+
+            // Keep references to an instance Register & Memory
+            // this will allow for calls to Next() for next available register and
 
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
