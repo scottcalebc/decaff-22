@@ -78,6 +78,8 @@ namespace SymbolTable {
             Scope * funcLookup(IdEntry *entry);
             Scanner::Token::Type getReturnType();
 
+            int getNextOffset();
+
             std::string toString(int &space);
     };
 

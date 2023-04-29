@@ -19,19 +19,36 @@ namespace CodeGen {
     }
 
     Immediate::Immediate()
+        : immediate()
+        , value(nullptr)
     {
 
     }
 
     Immediate::Immediate(std::string value)
         : immediate(value)
+        , value(nullptr)
+    {
+
+    }
+
+    Immediate::Immediate(int* value)
+        : immediate()
+        , value(value)
     {
 
     }
 
     std::string Immediate::emit()
     {
-        return immediate;
+        std::stringstream ss;
+
+        if (value == nullptr)
+            ss << immediate;
+        else
+            ss << *value - 4;
+        
+        return ss.str();
     }
 
     Label::Label()
@@ -100,12 +117,21 @@ namespace CodeGen {
     }
 
     Comment::Comment()
+        : comment()
+        , dataSize(nullptr)
     {
-
     }
 
     Comment::Comment(std::string comment)
         : comment(comment)
+        , dataSize(nullptr)
+    {
+
+    }
+
+    Comment::Comment(std::string comment, int *dataSize)
+        :comment(comment)
+        , dataSize(dataSize)
     {
 
     }
@@ -115,6 +141,9 @@ namespace CodeGen {
         std::stringstream ss;
 
         ss << "# " << comment;
+
+        if (dataSize != nullptr)
+            ss << " " << *dataSize - 4;
 
         return ss.str();
     }
@@ -210,6 +239,11 @@ namespace CodeGen {
             instructions.push_back(new Comment(output));
     }
 
+    void CodeGenVisitor::emit(std::string output, int *dataSize)
+    {
+        instructions.push_back(new Comment(output, dataSize));
+    }
+
     void CodeGenVisitor::emit(Label *label)
     {
         instructions.push_back(label);
@@ -259,7 +293,48 @@ namespace CodeGen {
     }
 
 
+    void CodeGenVisitor::visit(AST::Declaration *p)
+    {
+        std::cout << "Allocation offsets for declarations\n";
 
+        SymbolTable::IdEntry* e= p->pScope->idLookup(p->ident.getValue<std::string>());
+
+        if (e == nullptr)
+            throw std::runtime_error("No declaration found for identifier: " + p->ident.getValue<std::string>());
+        else
+            std::cout << "Found declaration going to calculate offset\n";
+
+        // if we are in function scope these are parameters
+        std::string reg("fp");
+        if (p->pScope->numOfParams > 0)
+        {
+            // block == param location
+            // block is 0 indexed but first param starts at 4($fp)
+            e->offset = (e->block+1) * 4;
+        }
+        // otherwise we are in global or child scope thus we get the offset
+        else
+        {
+            e->offset =  - p->pScope->getNextOffset();
+
+            if (e->block == 1)
+                reg = "gp";
+        }
+
+        std::cout << "Setting offset to: " << e->offset << std::endl;
+        std::cout << "Will calculate to: " << e->offset << "($" << reg <<")\n";
+    }
+
+    void CodeGenVisitor::visit(AST::StatementBlock *p)
+    {
+        std::cout << "Starting statement block code gen\n";
+
+        for(auto decl : p->decls)
+        {
+            decl->accept(this);
+        }
+
+    }
 
 
     void CodeGenVisitor::visit(AST::FunctionDeclaration *p)
@@ -273,7 +348,9 @@ namespace CodeGen {
             emit(new Label("_" + funcName));
 
         // TODO figure out how to insert ref to offset size here
-        emit("BeginFunc ");
+        emit("BeginFunc ", &(p->pScope->baseOffset) );
+        p->pScope->baseOffset = 4;  // funciton base offset always starts at 4, first decl
+        // will be allocated at -8($fp)
 
         // setup frame
 
@@ -299,13 +376,14 @@ namespace CodeGen {
         // get ref to current scopes space offset, this will be used later for instr
         //  output
         // TODO @ccs need to make Immediate value / location a ref so it's modifiable
-        emit("subu", new Register("sp"), new Register("sp"), new Immediate("24"));
+        emit("subu", new Register("sp"), new Register("sp"), new Immediate(&(p->pScope->baseOffset)));
         instructions.back()->comment = new Comment("decrement sp to make space for locals/temps");
 
         emit("End frame setup");
 
         // generate sub expression
         emit("Statement Body");
+        p->stmts->accept(this);
 
 
         // return from function

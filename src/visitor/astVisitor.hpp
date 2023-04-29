@@ -45,6 +45,7 @@ class Visitor {
         virtual void visit(AST::GreaterThan *p) = 0;
         virtual void visit(AST::ReadInteger *p) = 0;
         virtual void visit(AST::KeywordStmt *p) = 0;
+        virtual void visit(AST::Declaration *p) = 0;
         virtual void visit(AST::StatementBlock *p) = 0;
         virtual void visit(AST::FunctionDeclaration *p) = 0;
 };

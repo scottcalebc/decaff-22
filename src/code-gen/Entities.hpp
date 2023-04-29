@@ -22,7 +22,9 @@ namespace CodeGen {
         public:
             Immediate();
             Immediate(std::string value);
+            Immediate(int *value);
             std::string immediate;
+            int *value;
             std::string emit();
     };
 
@@ -77,8 +79,10 @@ namespace CodeGen {
         public:
             Comment();
             Comment(std::string comment);
+            Comment(std::string comment, int *dataSize);
 
             std::string comment;
+            int *dataSize;
 
             std::string emit();
     };

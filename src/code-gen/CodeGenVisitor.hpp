@@ -18,6 +18,7 @@ namespace CodeGen {
 
             void emit(Label* label);
             void emit(std::string output);
+            void emit(std::string output, int *dataSize);
             void emit(std::string op, Location* operand1);
             void emit(std::string op, Location* operand1, Location* operand2);
             void emit(std::string op, Location* operand1, Location* operand2, Location* operand3);
@@ -75,7 +76,9 @@ namespace CodeGen {
             void visit(AST::KeywordStmt *p) {};
 
 
-            void visit(AST::StatementBlock *p){};
+            void visit(AST::StatementBlock *p);
+
+            void visit(AST::Declaration *p);
             void visit(AST::FunctionDeclaration *p);
             void visit(AST::Program *p);
 
