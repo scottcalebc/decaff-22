@@ -8,8 +8,68 @@
 
 namespace CodeGen {
 
+    /**
+     * @brief Abstract Base class for describing storage of location of variables / temporaries
+     * 
+     */
+    class Location {
+
+        protected:
+            Location() {};
+
+        public:
+        // virtual methods to be overriden
+    };
+
+
+    class Immediate {
+        public:
+            std::string immediate;
+    }
+
+    /**
+     * @brief Class for generating register locations
+     * 
+     */
+    class Register : public Location {
+
+        public:
+            std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
+
+    };
+
+    /**
+     * @brief Clas for describing memory location
+     * 
+     */
+    class Memory : public Location {
+
+        public:
+            Register    baseReg; // base register (frame pointer, stack pointer, global pointer)
+            int         offset; // offset from register
+    };
+
+
+    class Instruction {
+
+        public:
+            Instruction();
+            Instruction(std::string op, Location* op1);
+            Instruction(std::string op, Location*op1, Location* op2);
+            Instruction(std::string op, Location*op1, Location* op2, Location* op3);
+
+            std::string op;     // string of operations
+
+            Location *operand1; // some ops only have a single operand
+            Location *operand2; // some ops only have two operands
+            Location *operand3; // some ops have three
+    };
+
+    
     class CodeGenVisitor: public Visitor {
 
+        public:
+            CodeGenVisitor();
 
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
@@ -60,5 +120,5 @@ namespace CodeGen {
             void visit(AST::FunctionDeclaration *p){};
             void visit(AST::Program *p){};
 
-    }
+    };
 }
