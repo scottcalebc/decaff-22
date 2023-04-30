@@ -16,6 +16,8 @@ namespace CodeGen {
         public:
             CodeGenVisitor();
 
+            int tmpCounter;
+
             void emit(Label* label);
             void emit(Comment *output);
             void emit(std::string output);
@@ -47,7 +49,7 @@ namespace CodeGen {
             // Expressions
 
             // arithmetic expressions
-            void visit(AST::Add *p){};
+            void visit(AST::Add *p);
             void visit(AST::Assign *p);
             void visit(AST::Divide *p){};
             void visit(AST::Modulus *p){};

@@ -238,6 +238,7 @@ namespace CodeGen {
 
     CodeGenVisitor::CodeGenVisitor()
         : instructions()
+        , tmpCounter(0)
     {
 
     }
@@ -355,7 +356,7 @@ namespace CodeGen {
 
         std::cout << "Visiting constant calculating tmp label\n";
         std::stringstream ss;
-        ss << "_tmp" << offset/4;
+        ss << "_tmp" << tmpCounter++;
         std::string tmp(ss.str());
         std::string constant(p->value.getValue<std::string>());
 
@@ -375,6 +376,76 @@ namespace CodeGen {
                 addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
                 Register::Free();
 
+        }
+
+        p->mem = mem;
+        p->memName = tmp;
+    }
+
+    void CodeGenVisitor::visit(AST::Add *p)
+    {
+        std::cout << "Starting addition\n";
+
+        p->left->accept(this);
+        p->right->accept(this);
+
+        int offset = p->pScope->getNextOffset();
+        Memory *mem = new Memory("fp", -offset);
+
+        std::cout << "Visiting addition calculating tmp label\n";
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+        std::string tmp(ss.str());
+
+        int start( p->minCol() );
+        int end( p->maxCol() );
+
+        if (p->left->mem != nullptr && p->right->mem != nullptr)
+        {
+            // load right location
+            Register *rreg = Register::Next();
+            Register *lreg = Register::Next();
+            Register *oreg = Register::Next();
+
+            emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-1, end-start)) ); // expression start
+            emit("lw", rreg, p->right->mem);
+            addComment(new Comment("fill " + p->right->memName + " to " + rreg->emit() + " from " + p->right->mem->emit()));
+            emit("lw", lreg, p->left->mem);
+            addComment(new Comment("fill " + p->left->memName + " to " + lreg->emit() + " from " + p->left->mem->emit()));
+
+            // add instr
+            emit("add", oreg, lreg, rreg);
+            
+            // save to mem
+            emit("sw", oreg, mem);
+            addComment(new Comment("spill " + tmp + " from " + oreg->emit() + " to " + mem->emit()));
+
+
+            if (dynamic_cast<AST::Ident*>(p->left) != nullptr)
+            {
+                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->left);
+                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
+
+                if (e != nullptr && ! e->loaded)
+                    std::runtime_error("Invalid expression: use before load");
+            }
+            else if (dynamic_cast<AST::Ident*>(p->right) != nullptr)
+            {
+                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->right);
+                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
+
+                if (e != nullptr && ! e->loaded)
+                    std::runtime_error("Invalid expression: use before load");
+            }
+
+            /** Free all registers used for expression */
+            Register::Free();
+            Register::Free();
+            Register::Free();
+        }
+        else
+        {
+            std::cout << "Could not assign due to invalid memory location\n";
         }
 
         p->mem = mem;
@@ -406,6 +477,7 @@ namespace CodeGen {
 
         if (p->left->mem != nullptr && p->right->mem != nullptr)
         {
+            std::cout << "Writing comment: " << p->left->memName << " = " << p->right->memName << std::endl;
             // load right location
             emit(new Comment(p->left->memName + " = " + p->right->memName));
             Register *reg = Register::Next();
@@ -422,6 +494,8 @@ namespace CodeGen {
                 if (e != nullptr)
                     e->loaded = true;
             }
+
+            Register::Free();
         }
         else
         {
