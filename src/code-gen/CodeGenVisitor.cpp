@@ -71,7 +71,7 @@ namespace CodeGen {
         if (comment != nullptr)
             ss << comment->emit() << " ";
 
-        return ss.str();
+        return label;
     }
 
     Register::Register()
@@ -200,7 +200,8 @@ namespace CodeGen {
 
     }
 
-    Instruction::Instruction(std::string op, Location* op1, Location* op2)
+    Instruction::Instruction(std::string op, Location* op1, 
+        Location* op2)
         : op(op)
         , operand1(op1)
         , operand2(op2)
@@ -208,7 +209,8 @@ namespace CodeGen {
 
     }
     
-    Instruction::Instruction(std::string op, Location* op1, Location* op2, Location* op3)
+    Instruction::Instruction(std::string op, Location* op1, 
+        Location* op2, Location* op3)
         : op(op)
         , operand1(op1)
         , operand2(op2)
@@ -277,14 +279,18 @@ namespace CodeGen {
         instructions.push_back(new Instruction(op, operand1));
     }
 
-    void CodeGenVisitor::emit(std::string op, Location* operand1, Location* operand2)
+    void CodeGenVisitor::emit(std::string op, Location* operand1, 
+        Location* operand2)
     {
-        instructions.push_back(new Instruction(op, operand1, operand2));
+        instructions.push_back(
+                new Instruction(op, operand1, operand2) );
     }
 
-    void CodeGenVisitor::emit(std::string op, Location* operand1, Location* operand2, Location* operand3)
+    void CodeGenVisitor::emit(std::string op, Location* operand1, 
+        Location* operand2, Location* operand3)
     {
-        instructions.push_back(new Instruction(op, operand1, operand2, operand3));
+        instructions.push_back(
+            new Instruction(op, operand1, operand2, operand3));
     }
 
     void CodeGenVisitor::addComment(Comment* comment)
@@ -309,15 +315,117 @@ namespace CodeGen {
             
             std::string spacing("\t");
             if (dynamic_cast<Label*>(instrs) != nullptr )
+            {
                 spacing = "  ";
+            }
 
             std::string instr(instrs->emit());
             file    << spacing
-                    << instr << std::endl;
+                    << instr;
+
+            if (dynamic_cast<Label*>(instrs) != nullptr )
+            {
+                spacing = "  ";
+                file << ": ";
+                if ( instrs->comment != nullptr )
+                    file << instrs->comment->emit();
+            }
+
+            file << std::endl;
 
         }
 
         file.close();
+    }
+
+
+    void CodeGenVisitor::loadSubExprs(AST::Node *left, 
+        Register *lreg, AST::Node *right, Register *rreg)
+    {
+        emit("lw", rreg, right->mem);
+        addComment(new Comment("fill " + right->memName + " to " + rreg->emit() + " from " + right->mem->emit()));
+        emit("lw", lreg, left->mem);
+        addComment(new Comment("fill " + left->memName + " to " + lreg->emit() + " from " + left->mem->emit()));
+    }
+
+    void CodeGenVisitor::saveSubExpr(Register *reg, 
+        Memory* mem, std::string tmpName)
+    {
+        emit("sw", reg, mem);
+        addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
+
+    }
+
+    Memory * CodeGenVisitor::setupSubExpr(AST::Node *left, 
+        AST::Node *right, SymbolTable::Scope *pScope, 
+        std::string &tmpName)
+    {
+        left->accept(this);
+        right->accept(this);
+
+        int offset = pScope->getNextOffset();
+
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+        tmpName = ss.str();
+        
+        return new Memory("fp", -offset);
+    }
+
+    void CodeGenVisitor::identCheck(AST::Node *p, 
+        SymbolTable::Scope *pScope)
+    {
+        if (dynamic_cast<AST::Ident*>(p) != nullptr)
+        {
+            AST::Ident* ident = dynamic_cast<AST::Ident*>(p);
+            SymbolTable::IdEntry *e = pScope->idLookup(ident->value.getValue<std::string>());
+
+            if (e != nullptr && ! e->loaded)
+                std::runtime_error("Invalid expression: use before load");
+        }
+            
+    }
+
+    void CodeGenVisitor::binaryExpr(AST::Expr *p, std::string op)
+    {
+        std::string tmp("");
+
+        Memory *mem = setupSubExpr(p->left, p->right, p->pScope, tmp);
+
+        int start( p->minCol() );
+        int end( p->maxCol() );
+
+        if (p->left->mem != nullptr && p->right->mem != nullptr)
+        {
+            // load right location
+            Register *rreg = Register::Next();
+            Register *lreg = Register::Next();
+            Register *oreg = Register::Next();
+
+            emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
+            loadSubExprs(p->left, lreg, p->right, rreg);
+            // add instr
+            emit(op, oreg, lreg, rreg);
+            
+            // save to mem
+            saveSubExpr(oreg, mem, tmp);
+            // add instr
+
+            identCheck(p->left, p->pScope);
+            identCheck(p->right, p->pScope);
+
+            /** Free all registers used for expression */
+            Register::Free();
+            Register::Free();
+            Register::Free();
+        }
+        else
+        {
+            std::cout << "Could not assign due to invalid memory location\n";
+        }
+
+        p->mem = mem;
+        p->memName = tmp;
     }
 
 
@@ -382,74 +490,49 @@ namespace CodeGen {
         p->memName = tmp;
     }
 
+    void CodeGenVisitor::visit(AST::Modulus *p)
+    {
+        std::cout << "Starting modulus generation\n";
+
+        binaryExpr(p, "rem");
+    }
+
+    void CodeGenVisitor::visit(AST::Multiply *p)
+    {
+        std::cout << "Starting multiply generation\n";
+
+        binaryExpr(p, "mul");
+    }
+
+    void CodeGenVisitor::visit(AST::Divide *p)
+    {
+        std::cout << "Starting divide generation\n";
+
+        binaryExpr(p, "div");
+    }
+
+    void CodeGenVisitor::visit(AST::Subtract *p)
+    {
+        // have to be careful as this might be unary
+        
+        if (p->right != nullptr)
+        {
+            std::cout << "Starting subtract generation\n";
+            binaryExpr(p, "sub");
+        }
+        else
+        {
+            std::cout << "Starting negate generation\n";
+            // unary expression
+            p->left->accept(this);
+        }
+    }
+
     void CodeGenVisitor::visit(AST::Add *p)
     {
         std::cout << "Starting addition\n";
 
-        p->left->accept(this);
-        p->right->accept(this);
-
-        int offset = p->pScope->getNextOffset();
-        Memory *mem = new Memory("fp", -offset);
-
-        std::cout << "Visiting addition calculating tmp label\n";
-        std::stringstream ss;
-        ss << "_tmp" << tmpCounter++;
-        std::string tmp(ss.str());
-
-        int start( p->minCol() );
-        int end( p->maxCol() );
-
-        if (p->left->mem != nullptr && p->right->mem != nullptr)
-        {
-            // load right location
-            Register *rreg = Register::Next();
-            Register *lreg = Register::Next();
-            Register *oreg = Register::Next();
-
-            emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-1, end-start)) ); // expression start
-            emit("lw", rreg, p->right->mem);
-            addComment(new Comment("fill " + p->right->memName + " to " + rreg->emit() + " from " + p->right->mem->emit()));
-            emit("lw", lreg, p->left->mem);
-            addComment(new Comment("fill " + p->left->memName + " to " + lreg->emit() + " from " + p->left->mem->emit()));
-
-            // add instr
-            emit("add", oreg, lreg, rreg);
-            
-            // save to mem
-            emit("sw", oreg, mem);
-            addComment(new Comment("spill " + tmp + " from " + oreg->emit() + " to " + mem->emit()));
-
-
-            if (dynamic_cast<AST::Ident*>(p->left) != nullptr)
-            {
-                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->left);
-                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
-
-                if (e != nullptr && ! e->loaded)
-                    std::runtime_error("Invalid expression: use before load");
-            }
-            else if (dynamic_cast<AST::Ident*>(p->right) != nullptr)
-            {
-                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->right);
-                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
-
-                if (e != nullptr && ! e->loaded)
-                    std::runtime_error("Invalid expression: use before load");
-            }
-
-            /** Free all registers used for expression */
-            Register::Free();
-            Register::Free();
-            Register::Free();
-        }
-        else
-        {
-            std::cout << "Could not assign due to invalid memory location\n";
-        }
-
-        p->mem = mem;
-        p->memName = tmp;
+        binaryExpr(p, "add");
     }
 
 
@@ -477,23 +560,17 @@ namespace CodeGen {
 
         if (p->left->mem != nullptr && p->right->mem != nullptr)
         {
-            std::cout << "Writing comment: " << p->left->memName << " = " << p->right->memName << std::endl;
             // load right location
             emit(new Comment(p->left->memName + " = " + p->right->memName));
+            
             Register *reg = Register::Next();
+            
             emit("lw", reg, p->right->mem);
             addComment(new Comment("fill " + p->right->memName + " to " + reg->emit() + " from " + p->right->mem->emit()));
             emit("sw", reg, p->left->mem);
             addComment(new Comment("spill " + p->right->memName + " from " + reg->emit() + " to " + p->left->mem->emit()));
-
-             if (dynamic_cast<AST::Ident*>(p->left) != nullptr)
-            {
-                AST::Ident* ident = dynamic_cast<AST::Ident*>(p->left);
-                SymbolTable::IdEntry *e = p->pScope->idLookup(ident->value.getValue<std::string>());
-
-                if (e != nullptr)
-                    e->loaded = true;
-            }
+            
+            identCheck(p->left, p->pScope);
 
             Register::Free();
         }
