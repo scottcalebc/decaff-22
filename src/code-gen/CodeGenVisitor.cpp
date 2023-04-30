@@ -338,14 +338,17 @@ namespace CodeGen {
         file.close();
     }
 
+    void CodeGenVisitor::loadSubExpr(AST::Node *p, Register *reg)
+    {
+        emit("lw", reg, p->mem);
+        addComment(new Comment("fill " + p->memName + " to " + reg->emit() + " from " + p->mem->emit()));
+    }
 
     void CodeGenVisitor::loadSubExprs(AST::Node *left, 
         Register *lreg, AST::Node *right, Register *rreg)
     {
-        emit("lw", rreg, right->mem);
-        addComment(new Comment("fill " + right->memName + " to " + rreg->emit() + " from " + right->mem->emit()));
-        emit("lw", lreg, left->mem);
-        addComment(new Comment("fill " + left->memName + " to " + lreg->emit() + " from " + left->mem->emit()));
+        loadSubExpr(left, lreg);
+        loadSubExpr(right, rreg);
     }
 
     void CodeGenVisitor::saveSubExpr(Register *reg, 
@@ -353,7 +356,6 @@ namespace CodeGen {
     {
         emit("sw", reg, mem);
         addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
-
     }
 
     Memory * CodeGenVisitor::setupSubExpr(AST::Node *left, 
@@ -361,7 +363,9 @@ namespace CodeGen {
         std::string &tmpName)
     {
         left->accept(this);
-        right->accept(this);
+
+        if (right != nullptr)
+            right->accept(this);
 
         int offset = pScope->getNextOffset();
 
@@ -384,6 +388,42 @@ namespace CodeGen {
                 std::runtime_error("Invalid expression: use before load");
         }
             
+    }
+
+    void CodeGenVisitor::unaryExpr(AST::Expr *p, std::string op)
+    {
+        std::string tmp("");
+
+        Memory *mem = setupSubExpr(p->left, p->right, p->pScope, tmp);
+
+        int start( p->minCol() );
+        int end( p->maxCol() );
+
+        if (p->left->mem != nullptr)
+        {
+            Register *lreg = Register::Next();
+            Register *oreg = Register::Next();
+
+            emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
+            loadSubExpr(p->left, lreg);
+
+            emit(op, oreg, lreg);
+
+            saveSubExpr(oreg, mem, tmp);
+
+            identCheck(p->left, p->pScope);
+
+            Register::Free();
+            Register::Free();
+
+        }
+        else
+        {
+            std::cout << "Could not assign due to invalid memory location\n";
+        }
+
+        p->mem = mem;
+        p->memName = tmp;
     }
 
     void CodeGenVisitor::binaryExpr(AST::Expr *p, std::string op)
@@ -524,7 +564,7 @@ namespace CodeGen {
         {
             std::cout << "Starting negate generation\n";
             // unary expression
-            p->left->accept(this);
+            unaryExpr(p, "neg");
         }
     }
 

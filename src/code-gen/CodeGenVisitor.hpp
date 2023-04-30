@@ -43,6 +43,7 @@ namespace CodeGen {
                 AST::Node *right, SymbolTable::Scope *pScope, 
                 std::string &tmpName);
 
+            void loadSubExpr(AST::Node *p, Register *reg);
             void loadSubExprs(AST::Node *left, Register *lreg, 
                 AST::Node *right, Register *rreg);
 
@@ -52,6 +53,7 @@ namespace CodeGen {
             void identCheck(AST::Node *p, SymbolTable::Scope *pScope);
 
             void binaryExpr(AST::Expr *p, std::string op);
+            void unaryExpr(AST::Expr *p, std::string op);
 
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
