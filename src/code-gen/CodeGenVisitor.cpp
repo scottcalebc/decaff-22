@@ -468,6 +468,57 @@ namespace CodeGen {
         p->memName = tmp;
     }
 
+    void CodeGenVisitor::pushParam(AST::Node *p)
+    {
+        Register *reg = Register::Next();
+        emit(new Comment("PushParam " + p->memName));
+
+        // allocate space on stack for param
+        emit("subu", new Register("sp"), new Register("sp"), new Immediate("4"));
+        addComment(new Comment("decrement sp to make space for param"));
+
+        // load parameter into reg
+        emit("lw", reg, p->mem);
+        addComment(new Comment("fill " + p->memName + " to " + reg->emit() + " from " + p->mem->emit()));
+
+        // push parameter onto stack for call 
+        emit("sw", reg, new Memory("sp", 4));
+        addComment(new Comment("copy param value to stack"));
+    }
+
+    void CodeGenVisitor::popParams(int num)
+    {
+        std::stringstream ss;
+        ss << "PopParams " << num*4;
+
+        std::stringstream ss2;
+        ss2 << num*4;
+
+        emit(new Comment(ss.str()));
+        emit("add", new Register("sp"), new Register("sp"), new Immediate(ss2.str()));
+        addComment(new Comment("pop params off stack"));
+    }
+
+    void CodeGenVisitor::CallFormalVisit(AST::Call *p)
+    {
+        for( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
+        {
+            AST::Node *formal( *it );
+
+            formal->accept(this);
+        }
+    }
+
+    void CodeGenVisitor::CallFormalPush(AST::Call *p)
+    {
+        for( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
+        {
+            AST::Node *formal( *it );
+
+            pushParam( formal );
+        }
+    }
+
 
 
 
@@ -621,6 +672,38 @@ namespace CodeGen {
     }
 
 
+    void CodeGenVisitor::visit(AST::Print *p)
+    {
+        std::cout << "Starting Print Call code gen\n";
+
+        CallFormalVisit(p);
+
+        // Print builtin only accepts single argument based on type
+        // after each parameter push we call the corresponding funciton
+        for( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
+        {
+            AST::Node *formal( *it );
+
+            // push parameter onto stack
+            pushParam( formal );
+
+            switch ( formal->outType )
+            {
+            case Scanner::Token::Type::Int :
+                emit(new Comment("LCall _PrintInt"));
+                emit("jal", new Label("_PrintInt"));
+                break;
+            
+            default:
+                break;
+            }
+
+            // now we need to pop params
+            popParams(1);
+        }
+
+    }
+
 
     /**
      * @brief Visitor declaration and calculate offsets for expresions
@@ -701,7 +784,7 @@ namespace CodeGen {
         emit("sw", new Register("fp"), new Memory("sp", 8));
         instructions.back()->comment = new Comment("save fp");
 
-        emit("sw", new Register("ra"), new Memory("sp", 8));
+        emit("sw", new Register("ra"), new Memory("sp", 4));
         instructions.back()->comment = new Comment("save ra");
 
         emit("addiu", new Register("fp"), new Register("sp"), new Immediate("8"));

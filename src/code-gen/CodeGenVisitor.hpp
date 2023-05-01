@@ -55,6 +55,11 @@ namespace CodeGen {
             void binaryExpr(AST::Expr *p, std::string op);
             void unaryExpr(AST::Expr *p, std::string op);
 
+            void pushParam(AST::Node *p);
+            void popParams(int num);
+            void CallFormalVisit(AST::Call *p);
+            void CallFormalPush(AST::Call *p);
+
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
             void visit(Acceptor *a) { std::cout << "STTypeVisitor: Got acceptor" << std::endl; };
@@ -87,7 +92,7 @@ namespace CodeGen {
 
             // function calls
             void visit(AST::Call *p){};
-            void visit(AST::Print *p){};
+            void visit(AST::Print *p);
             void visit(AST::ReadLine *p){};
             void visit(AST::ReadInteger *p){};
             
