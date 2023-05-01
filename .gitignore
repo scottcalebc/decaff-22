@@ -4,3 +4,4 @@ CTest*
 *.cmake
 *.tcl
 depedencies/cmake*/
+tests/assembly-test
