@@ -183,7 +183,7 @@ namespace CodeGen {
         ss << "  " << command << " ";
 
         if (comment != nullptr)
-            ss << comment << " ";
+            ss << comment->emit() << " ";
 
         return ss.str();
     }
@@ -248,6 +248,7 @@ namespace CodeGen {
     CodeGenVisitor::CodeGenVisitor()
         : instructions()
         , tmpCounter(0)
+        , labelCounter(1)
     {
 
     }
@@ -597,16 +598,34 @@ namespace CodeGen {
         switch (p->value.type)
         {
             case Scanner::Token::Type::StringConstant:
-            case Scanner::Token::Type::BoolConstant:
+                {
+                    emit(".data");
+                    addComment(new Comment("create string constant marked with label"));
+                    std::stringstream ss;
+                    ss << "_string" << labelCounter++;
+                    Label *l = new Label(ss.str());
+                    
+                    ss.str("");
+                    ss << l->emit() << ": .asciiz " << constant ;
+
+                    emit(ss.str());
+                    emit(".text");
+                    emit("la", reg, l);
+                    addComment(new Comment("load label"));
+                }
                 break;
-            default:
+            case Scanner::Token::Type::BoolConstant :
+                break;
+            default :
                 emit("li", reg, new Immediate(constant));
                 addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
-                emit("sw", reg, mem);
-                addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
+                break;
 
         }
 
+        // Each constant will be saved to memory locaiton
+        emit("sw", reg, mem);
+        addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
         Register::Free();
 
         p->mem = mem;
@@ -712,7 +731,7 @@ namespace CodeGen {
 
         // Print builtin only accepts single argument based on type
         // after each parameter push we call the corresponding funciton
-        for( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
+        for( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
         {
             AST::Node *formal( *it );
 

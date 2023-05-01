@@ -17,6 +17,7 @@ namespace CodeGen {
             CodeGenVisitor();
 
             int tmpCounter;
+            int labelCounter;
 
             void emit(Label* label);
             void emit(Comment *output);
