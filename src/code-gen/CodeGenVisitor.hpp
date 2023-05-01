@@ -61,6 +61,7 @@ namespace CodeGen {
             void CallFormalVisit(AST::Call *p);
             void CallFormalPush(AST::Call *p);
             void saveReturn(AST::Call *p, std::string tmpName);
+            void functionReturn();
 
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
@@ -93,7 +94,7 @@ namespace CodeGen {
             void visit(AST::GreaterThan *p){};
 
             // function calls
-            void visit(AST::Call *p){};
+            void visit(AST::Call *p);
             void visit(AST::Print *p);
             void visit(AST::ReadLine *p);
             void visit(AST::ReadInteger *p);
@@ -103,7 +104,7 @@ namespace CodeGen {
             void visit(AST::For *p){};
             void visit(AST::Break *p){};
             void visit(AST::While *p){};
-            void visit(AST::Return *p){};
+            void visit(AST::Return *p);
             void visit(AST::KeywordStmt *p) {};
 
 

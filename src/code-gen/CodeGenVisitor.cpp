@@ -551,6 +551,21 @@ namespace CodeGen {
 
     }
 
+    void CodeGenVisitor::functionReturn()
+    {
+        emit("move", new Register("sp"), new Register("fp"));
+        addComment(new Comment("pop callee frame off stack"));
+
+        emit("lw", new Register("ra"), new Memory("fp", -4));
+        addComment(new Comment("restore saved ra"));
+
+        emit("lw", new Register("fp"), new Memory("fp", 0));
+        addComment(new Comment("restore saved fp"));
+
+        emit("jr", new Register("ra"));
+        addComment(new Comment("return from function"));
+    }
+
 
 
 
@@ -585,7 +600,6 @@ namespace CodeGen {
         int offset = p->pScope->getNextOffset();
         Memory *mem = new Memory("fp", -offset);
 
-        std::cout << "Visiting constant calculating tmp label\n";
         std::stringstream ss;
         ss << "_tmp" << tmpCounter++;
         std::string tmp(ss.str());
@@ -634,22 +648,16 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Modulus *p)
     {
-        std::cout << "Starting modulus generation\n";
-
         binaryExpr(p, "rem");
     }
 
     void CodeGenVisitor::visit(AST::Multiply *p)
     {
-        std::cout << "Starting multiply generation\n";
-
         binaryExpr(p, "mul");
     }
 
     void CodeGenVisitor::visit(AST::Divide *p)
     {
-        std::cout << "Starting divide generation\n";
-
         binaryExpr(p, "div");
     }
 
@@ -659,12 +667,10 @@ namespace CodeGen {
         
         if (p->right != nullptr)
         {
-            std::cout << "Starting subtract generation\n";
             binaryExpr(p, "sub");
         }
         else
         {
-            std::cout << "Starting negate generation\n";
             // unary expression
             unaryExpr(p, "neg");
         }
@@ -672,8 +678,6 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Add *p)
     {
-        std::cout << "Starting addition\n";
-
         binaryExpr(p, "add");
     }
 
@@ -685,8 +689,6 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Assign *p)
     {
-        std::cout << "Starting assignment\n";
-
         // visit left to find reg
         p->left->accept(this);
         // evaluate right hand side
@@ -723,10 +725,66 @@ namespace CodeGen {
     }
 
 
+    // Keyword Visitors
+    void CodeGenVisitor::visit(AST::Return *p)
+    {
+        std::cout << "Starting return gen\n";
+
+        if (p->expr != nullptr)
+        {
+            p->expr->accept(this);
+            emit(new Comment("Return " + p->expr->memName));
+            
+            Register *reg = Register::Next();
+            
+            emit("lw", reg, p->expr->mem);
+            addComment(new Comment("fill " + p->expr->memName + " to " + reg->emit() + " from " + p->expr->mem->emit()));
+
+            emit("move", new Register("v0"), reg);
+            addComment(new Comment("assign return value into $v0"));
+        }
+        else
+        {
+            emit("Return ");
+        }
+        
+        // emit("move", new Register(""))
+        functionReturn();
+    }
+
+
+    // Call visitors
+
+
+
+    void CodeGenVisitor::visit(AST::Call *p)
+    {
+        CallFormalVisit(p);
+        CallFormalPush(p);
+
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+
+        std::string tmp(ss.str());
+
+        ss.str("");
+        ss << "_" << p->value.getValue<std::string>();
+
+        Label* l = new Label(ss.str());
+
+        emit(new Comment(ss.str() + " = " + l->emit()));
+
+        emit("jal", l);
+        addComment(new Comment("jump to function"));
+
+        saveReturn(p, tmp);
+
+        popParams(p->actuals.size());
+    }
+
+
     void CodeGenVisitor::visit(AST::Print *p)
     {
-        std::cout << "Starting Print Call code gen\n";
-
         CallFormalVisit(p);
 
         // Print builtin only accepts single argument based on type
@@ -755,6 +813,7 @@ namespace CodeGen {
 
             emit(new Comment("LCall " + l->label));
             emit("jal", l);
+            addComment(new Comment("jump to function"));
 
             // now we need to pop params
             popParams(1);
@@ -764,7 +823,6 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::ReadLine *p)
     {
-        std::cout << "Staring call to ReadLine\n";
         std::stringstream ss;
         ss << "_tmp" << tmpCounter++;
 
@@ -773,13 +831,13 @@ namespace CodeGen {
         emit(new Comment(ss.str() + " = " + l->emit()));
 
         emit("jal", l);
+        addComment(new Comment("jump to function"));
 
         saveReturn(p, ss.str());
     }
 
     void CodeGenVisitor::visit(AST::ReadInteger *p)
     {
-        std::cout << "Staring call to ReadInteger\n";
         std::stringstream ss;
         ss << "_tmp" << tmpCounter++;
 
@@ -788,8 +846,10 @@ namespace CodeGen {
         emit(new Comment(ss.str() + " = " + l->emit()));
 
         emit("jal", l);
+        addComment(new Comment("jump to function"));
 
         saveReturn(p, ss.str());
+
     }
 
 
@@ -800,14 +860,10 @@ namespace CodeGen {
      */
     void CodeGenVisitor::visit(AST::Declaration *p)
     {
-        std::cout << "Allocation offsets for declarations\n";
-
         SymbolTable::IdEntry* e= p->pScope->idLookup(p->ident.getValue<std::string>());
 
         if (e == nullptr)
             throw std::runtime_error("No declaration found for identifier: " + p->ident.getValue<std::string>());
-        else
-            std::cout << "Found declaration going to calculate offset\n";
 
         // if we are in function scope these are parameters
         std::string reg("fp");
@@ -832,15 +888,11 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::StatementBlock *p)
     {
-        std::cout << "Starting statement block code gen\n";
-
         for(auto decl : p->decls)
         {
             decl->accept(this);
         }
-
-        std::cout << "Visiting statement body\n";
-
+        
         for (auto stmt : p->stmts )
         {
             stmt->accept(this);
@@ -901,32 +953,20 @@ namespace CodeGen {
         // return from function
         emit("EndFunc");
         emit("(below handles reaching end of fn body with no explicit return)");
-        
-        emit("move", new Register("sp"), new Register("fp"));
-        instructions.back()->comment = new Comment("pop callee frame off stack");
 
-        emit("lw", new Register("ra"), new Memory("fp", -4));
-        instructions.back()->comment = new Comment("restore saved ra");
-
-        emit("lw", new Register("fp"), new Memory("fp", 0));
-        instructions.back()->comment = new Comment("restore saved fp");
-
-        emit("jr", new Register("ra"));
-        instructions.back()->comment = new Comment("return from function");
+        functionReturn();
     }
 
     void CodeGenVisitor::visit(AST::Program *p)
     {
-        std::cout << "Beginning code gen of program with preamble\n";
         emit("standard Decaf preamble");
         emit(".text");
         emit(".align 2");
         emit(".globl main");
 
-        std::cout << "Visiting declarations to assign memory locations\n";
+        std::cout << "TODO: Visiting declarations to assign memory locations\n";
         // TODO visit global variables
 
-        std::cout << "Visiting functions for generation\n";
         for( auto func : p->func )
         {
             func->accept(this);
