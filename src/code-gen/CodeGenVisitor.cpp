@@ -189,6 +189,10 @@ namespace CodeGen {
     }
 
     Instruction::Instruction() 
+        : op()
+        , operand1(nullptr)
+        , operand2(nullptr)
+        , operand3(nullptr)
     {
 
     }
@@ -196,6 +200,8 @@ namespace CodeGen {
     Instruction::Instruction(std::string op, Location* op1)
         : op(op)
         , operand1(op1)
+        , operand2(nullptr)
+        , operand3(nullptr)
     {
 
     }
@@ -205,6 +211,7 @@ namespace CodeGen {
         : op(op)
         , operand1(op1)
         , operand2(op2)
+        , operand3(nullptr)
     {
 
     }
@@ -484,6 +491,8 @@ namespace CodeGen {
         // push parameter onto stack for call 
         emit("sw", reg, new Memory("sp", 4));
         addComment(new Comment("copy param value to stack"));
+        
+        Register::Free();
     }
 
     void CodeGenVisitor::popParams(int num)
@@ -517,6 +526,28 @@ namespace CodeGen {
 
             pushParam( formal );
         }
+    }
+
+    void CodeGenVisitor::saveReturn(AST::Call *p, std::string tmpName)
+    {
+        // get new temporary offset
+        int offset = p->pScope->getNextOffset();
+
+        Memory *mem = new Memory("fp", -offset);
+
+        Register *reg = Register::Next();
+
+        emit("move", reg, new Register("v0"));
+        addComment(new Comment("copy function return value from $v0"));
+
+        emit("sw", reg, mem);
+        addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
+
+        Register::Free();
+
+        p->mem = mem;
+        p->memName = tmpName;
+
     }
 
 
@@ -573,9 +604,10 @@ namespace CodeGen {
                 addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
                 emit("sw", reg, mem);
                 addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
-                Register::Free();
 
         }
+
+        Register::Free();
 
         p->mem = mem;
         p->memName = tmp;
@@ -687,21 +719,43 @@ namespace CodeGen {
             // push parameter onto stack
             pushParam( formal );
 
+            Label *l( nullptr ); // label to print call
             switch ( formal->outType )
             {
             case Scanner::Token::Type::Int :
-                emit(new Comment("LCall _PrintInt"));
-                emit("jal", new Label("_PrintInt"));
+                l = new Label("_PrintInt");
                 break;
-            
+            case Scanner::Token::Type::String :
+                l = new Label("_PrintString");
+                break;
+            case Scanner::Token::Type::Bool :
+                l = new Label("_PrintBool");
             default:
                 break;
             }
+
+            emit(new Comment("LCall " + l->label));
+            emit("jal", l);
 
             // now we need to pop params
             popParams(1);
         }
 
+    }
+
+    void CodeGenVisitor::visit(AST::ReadInteger *p)
+    {
+        std::cout << "Staring call to ReadInteger\n";
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+
+        Label* l = new Label("_ReadInteger");
+
+        emit(new Comment(ss.str() + " = " + l->emit()));
+
+        emit("jal", new Label("_ReadInteger"));
+
+        saveReturn(p, ss.str());
     }
 
 

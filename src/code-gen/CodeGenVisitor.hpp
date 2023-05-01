@@ -59,6 +59,7 @@ namespace CodeGen {
             void popParams(int num);
             void CallFormalVisit(AST::Call *p);
             void CallFormalPush(AST::Call *p);
+            void saveReturn(AST::Call *p, std::string tmpName);
 
             // Overloads of Visitor Interface
             // default acceptor to show missing virtual functions
@@ -94,7 +95,7 @@ namespace CodeGen {
             void visit(AST::Call *p){};
             void visit(AST::Print *p);
             void visit(AST::ReadLine *p){};
-            void visit(AST::ReadInteger *p){};
+            void visit(AST::ReadInteger *p);
             
             // keyword statments, break has no outtype
             void visit(AST::If *p){};
