@@ -762,6 +762,21 @@ namespace CodeGen {
 
     }
 
+    void CodeGenVisitor::visit(AST::ReadLine *p)
+    {
+        std::cout << "Staring call to ReadLine\n";
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+
+        Label* l = new Label("_ReadLine");
+
+        emit(new Comment(ss.str() + " = " + l->emit()));
+
+        emit("jal", l);
+
+        saveReturn(p, ss.str());
+    }
+
     void CodeGenVisitor::visit(AST::ReadInteger *p)
     {
         std::cout << "Staring call to ReadInteger\n";
@@ -772,7 +787,7 @@ namespace CodeGen {
 
         emit(new Comment(ss.str() + " = " + l->emit()));
 
-        emit("jal", new Label("_ReadInteger"));
+        emit("jal", l);
 
         saveReturn(p, ss.str());
     }
