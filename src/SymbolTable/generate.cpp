@@ -70,6 +70,26 @@ SymbolTable::IdEntry* SymbolTable::Scope::idLookup(std::string id)
     return it->second;
 }
 
+int SymbolTable::Scope::getNextOffset()
+{
+    // if our parent has null parent, then parent is global and we are in 
+    //  functio scope which holds base offset
+    if (parentScope != nullptr && parentScope->parentScope == nullptr)
+    {
+        baseOffset += 4;
+        return baseOffset;
+    }
+
+    // we are in global scope so return global scopes offset
+    if (parentScope == nullptr)
+    {
+        baseOffset += 4;
+        return baseOffset;
+    }
+    
+    return parentScope->getNextOffset();
+}
+
 std::string SymbolTable::Scope::toString(int &space)
 {
     std::stringstream ss;

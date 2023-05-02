@@ -8,6 +8,7 @@ add_subdirectory(visitor)
 add_subdirectory(common)
 add_subdirectory(SymbolTable)
 add_subdirectory(semantic-analyzer)
+add_subdirectory(code-gen)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
@@ -18,6 +19,7 @@ target_link_libraries(${PROJECT_NAME}
     Common
     SymbolTable
     SemanticAnalyzer
+    CodeGen
 )
 
 target_include_directories(${PROJECT_NAME}

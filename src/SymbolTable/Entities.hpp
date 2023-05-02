@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AST/AbstractSyntaxTree.hpp>
+#include <code-gen/Entities.hpp>
 
 namespace SymbolTable {
 
@@ -13,6 +14,8 @@ namespace SymbolTable {
                 , func(false)
                 , block(0)
                 , offset(0)
+                , reg(nullptr)
+                , loaded(false)
                 {};
             IdEntry( std::string ident, Scanner::Token::Type type, int block, bool func = false )
                 : ident(ident)
@@ -20,12 +23,16 @@ namespace SymbolTable {
                 , func(func)
                 , block(block)
                 , offset(0)
+                , reg(nullptr)
+                , loaded(false)
             {
             };
 
             std::string             ident;
             Scanner::Token::Type    type;
             bool                    func;
+            CodeGen::Register       *reg;
+            bool                    loaded;
 
             /*
                 1 == global
@@ -57,6 +64,11 @@ namespace SymbolTable {
             int numOfParams;                    // used by functions for type checking
             Scanner::Token::Type returnType;    // used by functions for type check
 
+            // this will hold the offset necessary for the function scope
+            // children scopes allocating locals/temporaries
+            int baseOffset;                     // used during code gen
+
+
             typedef std::map<std::string, IdEntry*>::iterator TableIterator;
             std::map<std::string, IdEntry*> table;
             std::map<std::string, Scope*> funcScope;
@@ -72,6 +84,8 @@ namespace SymbolTable {
 
             Scope * funcLookup(IdEntry *entry);
             Scanner::Token::Type getReturnType();
+
+            int getNextOffset();
 
             std::string toString(int &space);
     };

@@ -67,7 +67,9 @@ namespace SemanticAnalyzer {
             void visit(AST::Break *p);
             void visit(AST::While *p);
             void visit(AST::Return *p);
+            
             void visit(AST::KeywordStmt *p) {};
+            void visit(AST::Declaration *p) {};
 
 
             void visit(AST::StatementBlock *p);

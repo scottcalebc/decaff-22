@@ -54,6 +54,7 @@ namespace SymbolTable
                 void visit(AST::GreaterThan *p) {};
                 void visit(AST::LessThan *p) {};
                 void visit(AST::Break *p) {};
+                void visit(AST::Declaration *p) {};
 
 
                 // actual implemented overrides
