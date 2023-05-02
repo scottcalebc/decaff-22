@@ -831,7 +831,7 @@ namespace CodeGen {
 
         Label* l = new Label(ss.str());
 
-        emit(new Comment(ss.str() + " = " + l->emit()));
+        emit(new Comment(tmp + " = " + l->emit()));
 
         emit("jal", l);
         addComment(new Comment("jump to function"));

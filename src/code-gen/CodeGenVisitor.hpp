@@ -83,15 +83,15 @@ namespace CodeGen {
             void visit(AST::Multiply *p);
 
             // logical  epxressions
-            void visit(AST::Or *p){};
-            void visit(AST::And *p){};
-            void visit(AST::Not *p){};
-            void visit(AST::GTE *p){};
-            void visit(AST::LTE *p){};
-            void visit(AST::Equal *p){};
-            void visit(AST::NotEqual *p){};
-            void visit(AST::LessThan *p){};
-            void visit(AST::GreaterThan *p){};
+            void visit(AST::Or *p);
+            void visit(AST::And *p);
+            void visit(AST::Not *p);
+            void visit(AST::GTE *p);
+            void visit(AST::LTE *p);
+            void visit(AST::Equal *p);
+            void visit(AST::NotEqual *p);
+            void visit(AST::LessThan *p);
+            void visit(AST::GreaterThan *p);
 
             // function calls
             void visit(AST::Call *p);
