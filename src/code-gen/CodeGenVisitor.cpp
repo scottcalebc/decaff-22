@@ -629,7 +629,15 @@ namespace CodeGen {
                 }
                 break;
             case Scanner::Token::Type::BoolConstant :
-                break;
+                if (constant.compare("true") == 0)
+                {
+                    constant = std::string("1");
+                }
+                else
+                {
+                    constant = std::string("0");
+                }
+                // set constant "true" or "false" to int value so fallback to default emit
             default :
                 emit("li", reg, new Immediate(constant));
                 addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
@@ -645,6 +653,8 @@ namespace CodeGen {
         p->mem = mem;
         p->memName = tmp;
     }
+
+    // Arithemetic Expressions
 
     void CodeGenVisitor::visit(AST::Modulus *p)
     {
@@ -679,6 +689,53 @@ namespace CodeGen {
     void CodeGenVisitor::visit(AST::Add *p)
     {
         binaryExpr(p, "add");
+    }
+
+
+    // Logical Expression
+    void CodeGenVisitor::visit(AST::And *p)
+    {
+        binaryExpr(p, "and");
+    }
+
+    void CodeGenVisitor::visit(AST::Or *p)
+    {
+        binaryExpr(p, "or");
+    }
+
+    void CodeGenVisitor::visit(AST::GTE *p)
+    {
+        binaryExpr(p, "sge");
+    }
+    
+    void CodeGenVisitor::visit(AST::GreaterThan *p)
+    {
+        binaryExpr(p, "sgt");
+    }
+
+    void CodeGenVisitor::visit(AST::LTE *p)
+    {
+        binaryExpr(p, "sle");
+    }
+
+    void CodeGenVisitor::visit(AST::LessThan *p)
+    {
+        binaryExpr(p, "slt");
+    }
+
+    void CodeGenVisitor::visit(AST::Equal *p)
+    {
+        binaryExpr(p, "seq");
+    }
+
+    void CodeGenVisitor::visit(AST::NotEqual *p)
+    {
+        binaryExpr(p, "sne");
+    }
+
+    void CodeGenVisitor::visit(AST::Not *p)
+    {
+        unaryExpr(p, "not");
     }
 
 
@@ -742,6 +799,8 @@ namespace CodeGen {
 
             emit("move", new Register("v0"), reg);
             addComment(new Comment("assign return value into $v0"));
+
+            Register::Free();
         }
         else
         {
