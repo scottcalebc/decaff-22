@@ -896,6 +896,36 @@ namespace CodeGen {
         emit(end);
     }
 
+    void CodeGenVisitor::visit(AST::For *p)
+    {
+        std::cout << "Starting For\n";
+
+        p->startExpr->accept(this);
+
+        Label *start = Label::Next();
+        Label *end = Label::Next();
+
+        emit(start);
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + end->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, end);
+
+        // statement body
+        p->stmt->accept(this);
+        p->loopExpr->accept(this);
+
+        emit("b", start);   // branch back to start of loop
+
+        emit(end);
+
+    }
+
 
     // Call visitors
 

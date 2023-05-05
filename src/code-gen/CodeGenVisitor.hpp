@@ -19,6 +19,8 @@ namespace CodeGen {
             int tmpCounter;
             int labelCounter;
 
+            Register *endLoop;  // Used by Break
+
             void emit(Label* label);
             void emit(Comment *output);
             void emit(std::string output);
@@ -101,7 +103,7 @@ namespace CodeGen {
             
             // keyword statments, break has no outtype
             void visit(AST::If *p);
-            void visit(AST::For *p){};
+            void visit(AST::For *p);
             void visit(AST::Break *p){};
             void visit(AST::While *p);
             void visit(AST::Return *p);
