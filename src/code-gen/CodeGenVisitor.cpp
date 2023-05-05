@@ -828,8 +828,72 @@ namespace CodeGen {
             emit("Return ");
         }
         
-        // emit("move", new Register(""))
         functionReturn();
+    }
+
+    void CodeGenVisitor::visit(AST::If *p)
+    {
+        std::cout << "Starting if\n";
+
+        // Get Else and End Label
+        Label * elseLabel = Label::Next();
+        Label * endLabel = Label::Next();
+
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + elseLabel->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, elseLabel);
+
+        Register::Free();
+
+        // Emit statment Body
+        p->stmt->accept(this);
+
+        emit(new Comment("Goto " + endLabel->emit()));
+        emit("b", endLabel);
+
+        // Else Block
+        emit(elseLabel);
+
+        p->elseStmt->accept(this);
+
+        // Emit end label
+        emit(endLabel);
+    }
+
+    void CodeGenVisitor::visit(AST::While *p)
+    {
+        std::cout << "Starting While\n";
+
+        // Get Start of Loop Label and End Label
+        Label *start = Label::Next();
+        Label *end = Label::Next();
+
+        // emit start label
+        emit(start);
+
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + end->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, end);
+
+        // statement body
+        p->stmt->accept(this);
+
+        emit("b", start);   // branch back to start of loop
+
+        // emit end of loop
+        emit(end);
     }
 
 
