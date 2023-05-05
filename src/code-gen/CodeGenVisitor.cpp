@@ -831,6 +831,13 @@ namespace CodeGen {
         functionReturn();
     }
 
+    void CodeGenVisitor::visit(AST::Break *p)
+    {
+        std::cout << "Starting break gne\n";
+
+        emit("b", endLoop);
+    }
+
     void CodeGenVisitor::visit(AST::If *p)
     {
         std::cout << "Starting if\n";
@@ -872,7 +879,7 @@ namespace CodeGen {
 
         // Get Start of Loop Label and End Label
         Label *start = Label::Next();
-        Label *end = Label::Next();
+        endLoop = Label::Next();
 
         // emit start label
         emit(start);
@@ -882,10 +889,12 @@ namespace CodeGen {
 
         p->expr->accept(this);
 
-        emit(new Comment("IfZ " + p->expr->memName + " Goto " + end->emit()));
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + endLoop->emit()));
 
         emit("lw", reg, p->expr->mem);
-        emit("beqz", reg, end);
+        emit("beqz", reg, endLoop);
+
+        Register::Free();
 
         // statement body
         p->stmt->accept(this);
@@ -893,7 +902,7 @@ namespace CodeGen {
         emit("b", start);   // branch back to start of loop
 
         // emit end of loop
-        emit(end);
+        emit(endLoop);
     }
 
     void CodeGenVisitor::visit(AST::For *p)
@@ -903,7 +912,7 @@ namespace CodeGen {
         p->startExpr->accept(this);
 
         Label *start = Label::Next();
-        Label *end = Label::Next();
+        endLoop = Label::Next();
 
         emit(start);
         // Get reg to hold conditional value
@@ -911,10 +920,12 @@ namespace CodeGen {
 
         p->expr->accept(this);
 
-        emit(new Comment("IfZ " + p->expr->memName + " Goto " + end->emit()));
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + endLoop->emit()));
 
         emit("lw", reg, p->expr->mem);
-        emit("beqz", reg, end);
+        emit("beqz", reg, endLoop);
+
+        Register::Free();
 
         // statement body
         p->stmt->accept(this);
@@ -922,7 +933,7 @@ namespace CodeGen {
 
         emit("b", start);   // branch back to start of loop
 
-        emit(end);
+        emit(endLoop);
 
     }
 
