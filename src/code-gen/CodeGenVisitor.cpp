@@ -62,6 +62,27 @@ namespace CodeGen {
 
     }
 
+    int Label::counter = 0;
+
+    Label * Label::Next()
+    {
+        std::stringstream ss;
+
+        ss << "_L" << counter ++;
+
+        return new Label(ss.str());
+    }
+
+    Label * Label::Next(std::string info)
+    {
+        std::stringstream ss;
+
+        ss << "_L" << info << counter ++;
+
+        return new Label(ss.str());
+
+    }
+
     std::string Label::emit()
     {
         std::stringstream ss;
