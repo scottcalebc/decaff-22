@@ -137,7 +137,11 @@ namespace CodeGen {
             Label(std::string value);
             std::string label;
             std::string emit();
+
+            static int counter;
             
+            static Label * Next();
+            static Label * Next(std::string info);
     };
 
 };

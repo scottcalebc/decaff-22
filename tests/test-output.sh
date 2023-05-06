@@ -8,14 +8,24 @@ test_type=$1
 shift
 OPTS=$*
 
-samples_dir=./samples
+samples_dir="$project_dir/tests/samples"
 output_file_arr=()
 
 for frag in $(ls $samples_dir/$test_type/*.[fd]* ); do
     output_file=$(basename $frag | sed 's/\.[fd].*/\.out/')
     output_file_arr+=( $output_file )
+    
+    spim_file=$(basename $frag | sed 's/\.[fd].*/\.s/')
+
     echo "Running decaf-22 $OPTS $frag > $output_file"
     $project_dir/build/bin/decaf-22 $OPTS $frag  > $output_file
+
+    if [[ $test_type == "codegen" && -f $spim_file ]]; then
+        echo "Loading definitions and running MIPS file"
+        cat ../spim-defs/defs.asm >> ./$spim_file
+        ./spim -file ./$spim_file >> $output_file
+        echo "" >> $output_file
+    fi
 done
 
 ret=0

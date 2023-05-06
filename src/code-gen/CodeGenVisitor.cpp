@@ -62,6 +62,27 @@ namespace CodeGen {
 
     }
 
+    int Label::counter = 0;
+
+    Label * Label::Next()
+    {
+        std::stringstream ss;
+
+        ss << "_L" << counter ++;
+
+        return new Label(ss.str());
+    }
+
+    Label * Label::Next(std::string info)
+    {
+        std::stringstream ss;
+
+        ss << "_L" << info << counter ++;
+
+        return new Label(ss.str());
+
+    }
+
     std::string Label::emit()
     {
         std::stringstream ss;
@@ -314,7 +335,7 @@ namespace CodeGen {
 
         std::string actual_file_name( ss.str() );
 
-        std::cout << "Opening file with name: " << actual_file_name << std::endl;
+        // std::cout << "Opening file with name: " << actual_file_name << std::endl;
         std::ofstream file;
         file.open( actual_file_name );
 
@@ -584,8 +605,7 @@ namespace CodeGen {
 
         std::string reg("fp");
 
-        // TODO change how block is used for parameters
-        if (e->block == 0)
+        if (e->block == 1)
             reg = "gp";
 
         p->mem = new Memory(reg, e->offset);
@@ -735,7 +755,40 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Not *p)
     {
-        unaryExpr(p, "not");
+        // unaryExpr(p, "not");
+        // Not is special, we will visit expression
+        //  then compare output to 0 this will result in logical not
+        // Example:
+        //  bool == 0
+        //  1 == 0  = 0
+        //  0 == 0  = 1
+        p->left->accept( this );
+
+        Register *reg = Register::Next();
+        Register *lvalue = Register::Next();
+        Register *outValue = Register::Next();
+        int offset = p->pScope->getNextOffset();
+        Memory *mem = new Memory("fp", -offset);
+
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+        std::string tmp(ss.str());
+
+        emit("li", reg, new Immediate("0"));
+        addComment(new Comment("load constant value '0' into " + reg->emit() ));
+
+        emit("lw", lvalue, p->left->mem);
+        emit("seq", outValue, lvalue, reg);
+
+        emit("sw", outValue, mem);
+
+        p->mem = mem;
+        p->memName = tmp;
+
+        Register::Free();
+        Register::Free();
+        Register::Free();
+
     }
 
 
@@ -785,8 +838,6 @@ namespace CodeGen {
     // Keyword Visitors
     void CodeGenVisitor::visit(AST::Return *p)
     {
-        std::cout << "Starting return gen\n";
-
         if (p->expr != nullptr)
         {
             p->expr->accept(this);
@@ -807,8 +858,114 @@ namespace CodeGen {
             emit("Return ");
         }
         
-        // emit("move", new Register(""))
         functionReturn();
+    }
+
+    void CodeGenVisitor::visit(AST::Break *p)
+    {
+        emit("b", endLoop);
+    }
+
+    void CodeGenVisitor::visit(AST::If *p)
+    {
+        // Get Else and End Label
+        Label * elseLabel = Label::Next();
+        Label * endLabel = Label::Next();
+
+        if (p->elseStmt == nullptr)
+            elseLabel = endLabel;
+
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + elseLabel->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, elseLabel);
+
+        Register::Free();
+
+        // Emit statment Body
+        p->stmt->accept(this);
+
+        // Else Block
+        if (p->elseStmt != nullptr)
+        {
+            // only need to emit branch if else block is present
+            emit(new Comment("Goto " + endLabel->emit()));
+            emit("b", endLabel);
+            emit(elseLabel);
+
+            p->elseStmt->accept(this);
+        }
+
+        // Emit end label
+        emit(endLabel);
+    }
+
+    void CodeGenVisitor::visit(AST::While *p)
+    {
+        // Get Start of Loop Label and End Label
+        Label *start = Label::Next();
+        endLoop = Label::Next();
+
+        // emit start label
+        emit(start);
+
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + endLoop->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, endLoop);
+
+        Register::Free();
+
+        // statement body
+        p->stmt->accept(this);
+
+        emit("b", start);   // branch back to start of loop
+
+        // emit end of loop
+        emit(endLoop);
+    }
+
+    void CodeGenVisitor::visit(AST::For *p)
+    {
+        if (p->startExpr != nullptr)
+            p->startExpr->accept(this);
+
+        Label *start = Label::Next();
+        endLoop = Label::Next();
+
+        emit(start);
+        // Get reg to hold conditional value
+        Register *reg = Register::Next();
+
+        p->expr->accept(this);
+
+        emit(new Comment("IfZ " + p->expr->memName + " Goto " + endLoop->emit()));
+
+        emit("lw", reg, p->expr->mem);
+        emit("beqz", reg, endLoop);
+
+        Register::Free();
+
+        // statement body
+        p->stmt->accept(this);
+
+        if (p->loopExpr != nullptr)
+            p->loopExpr->accept(this);
+
+        emit("b", start);   // branch back to start of loop
+
+        emit(endLoop);
+
     }
 
 
@@ -851,6 +1008,8 @@ namespace CodeGen {
         for( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
         {
             AST::Node *formal( *it );
+
+            formal->accept( this );
 
             // push parameter onto stack
             pushParam( formal );
@@ -930,7 +1089,7 @@ namespace CodeGen {
         {
             // block == param location
             // block is 0 indexed but first param starts at 4($fp)
-            e->offset = (e->block+1) * 4;
+            e->offset = (e->paramIndex+1) * 4;
         }
         // otherwise we are in global or child scope thus we get the offset
         else
@@ -941,8 +1100,8 @@ namespace CodeGen {
                 reg = "gp";
         }
 
-        std::cout << "Setting offset to: " << e->offset << std::endl;
-        std::cout << "Will calculate to: " << e->offset << "($" << reg <<")\n";
+        // std::cout << "Setting offset to: " << e->offset << std::endl;
+        // std::cout << "Will calculate to: " << e->offset << "($" << reg <<")\n";
     }
 
     void CodeGenVisitor::visit(AST::StatementBlock *p)
@@ -963,7 +1122,7 @@ namespace CodeGen {
     void CodeGenVisitor::visit(AST::FunctionDeclaration *p)
     {
         std::string funcName = p->ident.getValue<std::string>();
-        std::cout << "Staring gen of function: " << p->ident.getValue<std::string>() << std::endl;
+        // std::cout << "Staring gen of function: " << p->ident.getValue<std::string>() << std::endl;
 
         if (funcName.compare("main") == 0)
             emit(new Label(funcName));
@@ -1023,8 +1182,10 @@ namespace CodeGen {
         emit(".align 2");
         emit(".globl main");
 
-        std::cout << "TODO: Visiting declarations to assign memory locations\n";
-        // TODO visit global variables
+        for( auto var : p->vars)
+        {
+            var->accept(this);
+        }
 
         for( auto func : p->func )
         {
