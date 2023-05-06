@@ -532,7 +532,7 @@ namespace SemanticAnalyzer {
                 // it->visit(this);
                 for( auto& formal : func->table )
                 {
-                    if (formal.second->block == i)
+                    if (formal.second->paramIndex == i)
                     {
                         if ((*it)->outType != formal.second->type && ! exprErr)
                         {

@@ -16,6 +16,7 @@ namespace SymbolTable {
                 , offset(0)
                 , reg(nullptr)
                 , loaded(false)
+                , paramIndex(-1)
                 {};
             IdEntry( std::string ident, Scanner::Token::Type type, int block, bool func = false )
                 : ident(ident)
@@ -25,6 +26,7 @@ namespace SymbolTable {
                 , offset(0)
                 , reg(nullptr)
                 , loaded(false)
+                , paramIndex(-1)
             {
             };
 
@@ -33,6 +35,7 @@ namespace SymbolTable {
             bool                    func;
             CodeGen::Register       *reg;
             bool                    loaded;
+            int                     paramIndex;
 
             /*
                 1 == global
@@ -57,6 +60,7 @@ namespace SymbolTable {
                 , funcScope()
                 , numOfParams(0)
                 , returnType(Scanner::Token::Type::ERROR)
+                , baseOffset(-4)
             {};
 
 

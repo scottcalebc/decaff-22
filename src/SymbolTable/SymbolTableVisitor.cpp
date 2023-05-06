@@ -60,11 +60,12 @@ void SymbolTable::STVisitor::visit(AST::FunctionDeclaration *p)
     currScope->returnType = p->type;
     p->setScope( currScope );
 
-    int i = 0;
+    int idx = 0;
     for ( auto &param : p->formals )
     {
         // index should be parameter index, this will be used during type checking
-        currScope->install(param, i++);
+        IdEntry *id = currScope->install(param, 2);
+        id->paramIndex = idx++;
     }
 
     currScope->numOfParams = p->formals.size();

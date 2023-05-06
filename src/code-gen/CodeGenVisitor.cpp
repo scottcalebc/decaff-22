@@ -605,8 +605,7 @@ namespace CodeGen {
 
         std::string reg("fp");
 
-        // TODO change how block is used for parameters
-        if (e->block == 0)
+        if (e->block == 1)
             reg = "gp";
 
         p->mem = new Memory(reg, e->offset);
@@ -1056,7 +1055,7 @@ namespace CodeGen {
         {
             // block == param location
             // block is 0 indexed but first param starts at 4($fp)
-            e->offset = (e->block+1) * 4;
+            e->offset = (e->paramIndex+1) * 4;
         }
         // otherwise we are in global or child scope thus we get the offset
         else
@@ -1151,6 +1150,10 @@ namespace CodeGen {
 
         std::cout << "TODO: Visiting declarations to assign memory locations\n";
         // TODO visit global variables
+        for( auto var : p->vars)
+        {
+            var->accept(this);
+        }
 
         for( auto func : p->func )
         {
