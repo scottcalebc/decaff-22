@@ -532,11 +532,12 @@ namespace CodeGen {
 
     void CodeGenVisitor::CallFormalVisit(AST::Call *p)
     {
-        for( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
+        for( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
         {
             AST::Node *formal( *it );
 
             formal->accept(this);
+            pushParam( formal );
         }
     }
 
@@ -862,7 +863,7 @@ namespace CodeGen {
 
         // Emit statment Body
         p->stmt->accept(this);
-        
+
         // Else Block
         if (p->elseStmt != nullptr)
         {
@@ -953,7 +954,7 @@ namespace CodeGen {
     void CodeGenVisitor::visit(AST::Call *p)
     {
         CallFormalVisit(p);
-        CallFormalPush(p);
+        // CallFormalPush(p);
 
         std::stringstream ss;
         ss << "_tmp" << tmpCounter++;
@@ -978,13 +979,15 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Print *p)
     {
-        CallFormalVisit(p);
+        // CallFormalVisit(p);
 
         // Print builtin only accepts single argument based on type
         // after each parameter push we call the corresponding funciton
-        for( auto it = p->actuals.cbegin(); it != p->actuals.cend(); ++it)
+        for( auto it = p->actuals.crbegin(); it != p->actuals.crend(); ++it)
         {
             AST::Node *formal( *it );
+
+            formal->accept( this );
 
             // push parameter onto stack
             pushParam( formal );
