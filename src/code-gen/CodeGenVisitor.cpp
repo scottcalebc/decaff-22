@@ -755,7 +755,40 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Not *p)
     {
-        unaryExpr(p, "not");
+        // unaryExpr(p, "not");
+        // Not is special, we will visit expression
+        //  then compare output to 0 this will result in logical not
+        // Example:
+        //  bool == 0
+        //  1 == 0  = 0
+        //  0 == 0  = 1
+        p->left->accept( this );
+
+        Register *reg = Register::Next();
+        Register *lvalue = Register::Next();
+        Register *outValue = Register::Next();
+        int offset = p->pScope->getNextOffset();
+        Memory *mem = new Memory("fp", -offset);
+
+        std::stringstream ss;
+        ss << "_tmp" << tmpCounter++;
+        std::string tmp(ss.str());
+
+        emit("li", reg, new Immediate("0"));
+        addComment(new Comment("load constant value '0' into " + reg->emit() ));
+
+        emit("lw", lvalue, p->left->mem);
+        emit("seq", outValue, lvalue, reg);
+
+        emit("sw", outValue, mem);
+
+        p->mem = mem;
+        p->memName = tmp;
+
+        Register::Free();
+        Register::Free();
+        Register::Free();
+
     }
 
 
