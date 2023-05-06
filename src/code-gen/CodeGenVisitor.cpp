@@ -863,15 +863,11 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Break *p)
     {
-        std::cout << "Starting break gne\n";
-
         emit("b", endLoop);
     }
 
     void CodeGenVisitor::visit(AST::If *p)
     {
-        std::cout << "Starting if\n";
-
         // Get Else and End Label
         Label * elseLabel = Label::Next();
         Label * endLabel = Label::Next();
@@ -911,8 +907,6 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::While *p)
     {
-        std::cout << "Starting While\n";
-
         // Get Start of Loop Label and End Label
         Label *start = Label::Next();
         endLoop = Label::Next();
@@ -943,8 +937,6 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::For *p)
     {
-        std::cout << "Starting For\n";
-
         if (p->startExpr != nullptr)
             p->startExpr->accept(this);
 
