@@ -845,6 +845,9 @@ namespace CodeGen {
         Label * elseLabel = Label::Next();
         Label * endLabel = Label::Next();
 
+        if (p->elseStmt == nullptr)
+            elseLabel = endLabel;
+
         // Get reg to hold conditional value
         Register *reg = Register::Next();
 
@@ -864,9 +867,12 @@ namespace CodeGen {
         emit("b", endLabel);
 
         // Else Block
-        emit(elseLabel);
+        if (p->elseStmt != nullptr)
+        {
+            emit(elseLabel);
 
-        p->elseStmt->accept(this);
+            p->elseStmt->accept(this);
+        }
 
         // Emit end label
         emit(endLabel);
@@ -908,7 +914,8 @@ namespace CodeGen {
     {
         std::cout << "Starting For\n";
 
-        p->startExpr->accept(this);
+        if (p->startExpr != nullptr)
+            p->startExpr->accept(this);
 
         Label *start = Label::Next();
         endLoop = Label::Next();
@@ -928,7 +935,9 @@ namespace CodeGen {
 
         // statement body
         p->stmt->accept(this);
-        p->loopExpr->accept(this);
+
+        if (p->loopExpr != nullptr)
+            p->loopExpr->accept(this);
 
         emit("b", start);   // branch back to start of loop
 
