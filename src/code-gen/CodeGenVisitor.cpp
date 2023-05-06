@@ -862,13 +862,13 @@ namespace CodeGen {
 
         // Emit statment Body
         p->stmt->accept(this);
-
-        emit(new Comment("Goto " + endLabel->emit()));
-        emit("b", endLabel);
-
+        
         // Else Block
         if (p->elseStmt != nullptr)
         {
+            // only need to emit branch if else block is present
+            emit(new Comment("Goto " + endLabel->emit()));
+            emit("b", endLabel);
             emit(elseLabel);
 
             p->elseStmt->accept(this);
