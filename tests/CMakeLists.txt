@@ -60,3 +60,12 @@ add_test(
     WORKING_DIRECTORY
     ${PROJECT_SOURCE_DIR}/tests
 )
+
+add_test(
+  NAME
+    test_code_generation_outputs
+  COMMAND
+    ${BASH_PROGRAM} ${PROJECT_SOURCE_DIR}/tests/test-output.sh ${PROJECT_SOURCE_DIR} codegen --code-gen
+    WORKING_DIRECTORY
+    ${PROJECT_SOURCE_DIR}/tests/assembly-test
+)
