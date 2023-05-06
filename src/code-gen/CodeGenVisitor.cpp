@@ -335,7 +335,7 @@ namespace CodeGen {
 
         std::string actual_file_name( ss.str() );
 
-        std::cout << "Opening file with name: " << actual_file_name << std::endl;
+        // std::cout << "Opening file with name: " << actual_file_name << std::endl;
         std::ofstream file;
         file.open( actual_file_name );
 
@@ -806,8 +806,6 @@ namespace CodeGen {
     // Keyword Visitors
     void CodeGenVisitor::visit(AST::Return *p)
     {
-        std::cout << "Starting return gen\n";
-
         if (p->expr != nullptr)
         {
             p->expr->accept(this);
@@ -1078,8 +1076,8 @@ namespace CodeGen {
                 reg = "gp";
         }
 
-        std::cout << "Setting offset to: " << e->offset << std::endl;
-        std::cout << "Will calculate to: " << e->offset << "($" << reg <<")\n";
+        // std::cout << "Setting offset to: " << e->offset << std::endl;
+        // std::cout << "Will calculate to: " << e->offset << "($" << reg <<")\n";
     }
 
     void CodeGenVisitor::visit(AST::StatementBlock *p)
@@ -1100,7 +1098,7 @@ namespace CodeGen {
     void CodeGenVisitor::visit(AST::FunctionDeclaration *p)
     {
         std::string funcName = p->ident.getValue<std::string>();
-        std::cout << "Staring gen of function: " << p->ident.getValue<std::string>() << std::endl;
+        // std::cout << "Staring gen of function: " << p->ident.getValue<std::string>() << std::endl;
 
         if (funcName.compare("main") == 0)
             emit(new Label(funcName));
@@ -1160,8 +1158,6 @@ namespace CodeGen {
         emit(".align 2");
         emit(".globl main");
 
-        std::cout << "TODO: Visiting declarations to assign memory locations\n";
-        // TODO visit global variables
         for( auto var : p->vars)
         {
             var->accept(this);

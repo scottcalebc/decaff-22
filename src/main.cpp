@@ -36,12 +36,8 @@ int usage(const char* progName)
 
 std::string getFileName(const std::string &file_path)
 {
-    std::cout << "Splitting: " << file_path << '\n';
-
     std::size_t start = file_path.find_last_of("/");
     std::size_t end = file_path.find_last_of(".");
-    std::cout << " name: " << file_path.substr(start+1, end-start-1) << '\n';
-    std::cout << " ext : " << file_path.substr(end+1)<< '\n';
 
     return file_path.substr(start+1, end-start-1);
 }
@@ -130,6 +126,15 @@ int main(int argc, char** argv) {
     {
         // std::cout << "Ended at semantic-check function" << std::endl;
         return 0;
+    }
+
+    //linking stage
+    if (bTypeCheck && prog.pScope->idLookup("main") == nullptr)
+    {
+        bTypeCheck = false;
+        std::cout   << "\n*** Error.\n"
+                    << "*** Linker: function 'main' not defined\n\n";
+
     }
 
     // code gen
