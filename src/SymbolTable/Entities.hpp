@@ -5,6 +5,18 @@
 
 namespace SymbolTable {
 
+    class Exception : public std::exception
+    {
+        public:
+            Exception(char *msg);
+            Exception(std::string message, std::string id);
+            Exception(int start, int length, int lineNumber, std::string line, std::string msg);
+
+            std::string message;
+
+            const char * what();
+    };
+
     class IdEntry {
 
         public:

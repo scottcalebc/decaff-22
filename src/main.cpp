@@ -104,6 +104,12 @@ int main(int argc, char** argv) {
     catch ( Parser::ParseException &exc)
     {
         std::cout << exc.what() << std::endl;
+        return 1;
+    }
+    catch ( SymbolTable::Exception &exc)
+    {
+        std::cout << exc.what() << std::endl;
+        return 1;
     }
     
     if (function.compare("--parser") == 0)
@@ -120,6 +126,7 @@ int main(int argc, char** argv) {
     catch ( std::exception &exc )
     {
         std::cout << exc.what() << std::endl;
+        return 1;
     }
 
     // stop after semantic checking
@@ -135,7 +142,7 @@ int main(int argc, char** argv) {
         bTypeCheck = false;
         std::cout   << "\n*** Error.\n"
                     << "*** Linker: function 'main' not defined\n\n";
-
+        return 1;
     }
 
     // code gen

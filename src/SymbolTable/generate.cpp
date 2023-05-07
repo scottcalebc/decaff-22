@@ -4,6 +4,40 @@
 #include "generate.hpp"
 #include "SymbolTableVisitor.hpp"
 
+
+SymbolTable::Exception::Exception(char *msg)
+    : message(msg)
+{
+
+}
+
+SymbolTable::Exception::Exception(std::string message, std::string id)
+{
+    std::stringstream ss;
+    ss << std::endl
+        << "*** Error: " << message << " : " << id << std::endl;
+
+    message = ss.str();
+}
+
+SymbolTable::Exception::Exception(int start, int length, int lineNumber, std::string line, std::string msg)
+{
+    std::stringstream ss;
+    ss << std::endl
+        << "*** Error line " << lineNumber << ".\n"
+        << line << std::endl
+        << std::setw(start-1) << " "
+        << std::setfill('^') << std::setw(length) << "" << std::endl
+        << "*** " << msg << std::endl;
+
+    message = ss.str();
+}
+
+const char * SymbolTable::Exception::what()
+{
+    return message.c_str();
+}
+
 SymbolTable::IdEntry *SymbolTable::Scope::install(std::string id, Scanner::Token::Type type, int block)
 {
     auto e = new IdEntry(id, type, block);
@@ -12,7 +46,8 @@ SymbolTable::IdEntry *SymbolTable::Scope::install(std::string id, Scanner::Token
 
     // Handle name collisions within a single scope
     if (it != table.end())
-        throw std::runtime_error("Cannot redeclare variable in same scope");
+        throw Exception("Cannot redeclare variable in same scope", id);
+        // throw std::runtime_error("Cannot redeclare variable in same scope");
 
     table.insert( {id, e} );
     return e;
@@ -25,7 +60,8 @@ SymbolTable::IdEntry *SymbolTable::Scope::install(AST::Declaration* id, int bloc
 
     // Handle name collisions within a single scope
     if (it != table.end())
-        throw std::runtime_error("Cannot redeclare variable in same scope");
+        throw Exception(id->ident.colStart, id->ident.value.length(), id->ident.lineNumber, id->ident.lineInfo, "Cannot redeclare variable in same scope");
+        // throw std::runtime_error("Cannot redeclare variable in same scope");
     table.insert( {id->ident.value, e} );
     return e;
 }
@@ -37,7 +73,8 @@ SymbolTable::IdEntry *SymbolTable::Scope::install(AST::FunctionDeclaration* id, 
 
     // Handle name collisions within a single scope
     if (it != table.end())
-        throw std::runtime_error("Cannot redeclare variable in same scope");
+        throw Exception(id->ident.colStart, id->ident.value.length(), id->ident.lineNumber, id->ident.lineInfo, "Cannot redeclare variable in same scope");
+        // throw std::runtime_error("Cannot redeclare variable in same scope");
     table.insert( {id->ident.value, e} );
     return e;
 }
