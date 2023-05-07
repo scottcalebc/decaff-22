@@ -1333,13 +1333,13 @@ namespace CodeGen {
         saveReturn(p, tmp);
 
         int size = 0;
-        for ( auto &p : p->actuals)
+        for ( auto &actual : p->actuals)
         {
             size++;
             // We allocate 8 on stack instead of 4 for doubles
             // easy hack is to pretend like we have 1 more parameter
             // for each double in the parameter list
-            if (p->outType == Scanner::Token::Type::Double)
+            if (actual->outType == Scanner::Token::Type::Double)
                 size++;
         }
 
