@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
                 std::cout << token;
             } 
             catch( Scanner::GenericException &exc ) {
-                std::cout << exc.what() << std::endl;
+                std::cout << exc.what();
                 token.type = Scanner::Token::Type::ERROR;
             }
         } while (token.type != Scanner::Token::Type::END);
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
     }
     catch ( Parser::ParseException &exc)
     {
-        std::cout << exc.what() << std::endl;
+        std::cout << exc.what();
     }
     
     if (function.compare("--parser") == 0)
@@ -140,6 +140,9 @@ int main(int argc, char** argv) {
     // code gen
     if (bTypeCheck)
         CodeGen::generate(&prog, file_name);
+
+
+    std::cout << std::endl;
 
     return 0;
 }
