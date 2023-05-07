@@ -1,5 +1,12 @@
 
 int foo(int a, double b, bool c) {
+  Print("Testing param locations: ", c, "\n");
+  if (b >= 2.0 )
+  {
+    Print("foo: Returning a + 3\n");
+    return a + 3;
+  }
+  Print("foo: Returning a + 2\n");
   return a + 2;
 }
 
@@ -12,6 +19,7 @@ void main() {
 
   x = true;
   a = 2;
+  d = 4.0;
   x = a == 2;
   a = 2 + 3 * 4 - (6 / 2);
   b = ReadInteger();
@@ -20,8 +28,11 @@ void main() {
   Print("END\n");
 
   s = ReadLine();
-  Print(s);
+  Print(s, "\n");
 
+  Print("Not true: ", !true, "\n");
   foo(a, d, !true);
-  foo(a + 2, d/2.0, a == b && d >= 1.0);
+  Print("a+2 before: ", a+2, "\n");
+  a = foo(a + 2, d/2.0, a == b && d >= 1.0);
+  Print("a after: ", a, "\n");
 }
