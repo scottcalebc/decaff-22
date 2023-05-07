@@ -638,13 +638,16 @@ namespace CodeGen {
         loadSubExpr(p->right, rreg);
         
         // FP compare a < b
+        addComment(new Comment("Start of FP comparison"));
         emit(op, lreg, rreg);
+        
 
         Label *fbranch = Label::Next();
         Label *ebranch = Label::Next();
 
         // Branch on FP compare if false
         emit("bc1f", fbranch);
+        addComment(new Comment("Jump to false branch"));
         
         // get normal register
         Register *oreg = Register::Next();
@@ -652,6 +655,7 @@ namespace CodeGen {
         Immediate *immTbranch = new Immediate("1");
         if (invert)
         {
+            emit(new Comment("Inverting branch results"));
             // swap values
             immFbranch->immediate = "1";
             immTbranch->immediate = "0";
@@ -660,22 +664,30 @@ namespace CodeGen {
         
         // Branch True
         // li $t*, 1    // return 1
+        emit(new Comment("True branch"));
         emit("li", oreg, immTbranch);
+        addComment(new Comment("fill " + tmp + " to " + oreg->emit() + " from value " + immTbranch->emit()));
         // sw $t*, out memory
         emit("sw", oreg, mem);
+        addComment(new Comment("spill " + tmp + " from " + oreg->emit() + " to " + mem->emit()));
         // branch end
         emit("b", ebranch);
+        addComment(new Comment("Unconditional branch to end"));
 
         // Branch False
         emit(fbranch);
+        addComment(new Comment("False branch"));
         // li $t*, 0    // return 0
         emit("li", oreg, immFbranch);
+        addComment(new Comment("fill " + tmp + " to " + oreg->emit() + " from value " + immFbranch->emit()));
         // sw $t*, out memory
         emit("sw", oreg, mem);
+        addComment(new Comment("spill " + tmp + " from " + oreg->emit() + " to " + mem->emit()));
         // branch end
 
         // Branch end
         emit(ebranch);
+        addComment(new Comment("End of FP comparison"));
 
         identCheck(p->left, p->pScope);
         identCheck(p->right, p->pScope);
@@ -1121,7 +1133,7 @@ namespace CodeGen {
             
             Register *reg = Register::Next();
 
-            if (p->outType == Scanner::Token::Type::Double)
+            if (p->left->outType == Scanner::Token::Type::Double)
                 reg = FloatingRegister::Next();
             
             loadSubExpr(p->right, reg);
