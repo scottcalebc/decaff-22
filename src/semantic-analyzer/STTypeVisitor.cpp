@@ -422,7 +422,7 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             // Do I need an out type on assign? Probably not, cannot have multiple assignments
-            // p->outType = p->left->outType;
+            p->outType = p->left->outType;
         } else if (! exprErr){
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
