@@ -110,6 +110,10 @@ namespace CodeGen {
     int Register::registerCount = 3;
     int Register::registerIndex = 0;
 
+    // Using three registers for FP 
+    int FloatingRegister::registerCount = 3;
+    int FloatingRegister::registerIndex = 0;
+
 
     std::string Register::emit()
     {
@@ -129,6 +133,45 @@ namespace CodeGen {
     }
 
     void Register::Free()
+    {
+        registerIndex = (registerIndex - 1)%registerCount;
+    }
+
+
+    FloatingRegister::FloatingRegister()
+    {
+
+    }
+
+    // do I need this
+    FloatingRegister::FloatingRegister(std::string reg)
+        : name(reg)
+    {
+
+    }
+
+    std::string FloatingRegister::emit()
+    {
+        std::stringstream ss;
+        
+        ss << "$" << name;
+
+        return ss.str();
+    }
+
+    FloatingRegister* FloatingRegister::Next()
+    {
+        registerIndex = (registerIndex + 1)%registerCount;
+        std::stringstream ss;
+        // Multiply index by two since we will be using double precision
+        // 0 * 2 = 0,1  first double precision value
+        // 1 * 2 = 2,3  second
+        // 2 * 2 = 4,5  third
+        ss << "f" << registerIndex*2;  
+        return new FloatingRegister(ss.str());
+    }
+
+    void FloatingRegister::Free()
     {
         registerIndex = (registerIndex - 1)%registerCount;
     }
@@ -369,7 +412,14 @@ namespace CodeGen {
 
     void CodeGenVisitor::loadSubExpr(AST::Node *p, Register *reg)
     {
-        emit("lw", reg, p->mem);
+        switch(p->outType)
+        {
+            case Scanner::Token::Type::Double:
+                emit("l.d", reg, p->mem);
+                break;
+            default:
+                emit("lw", reg, p->mem);
+        }
         addComment(new Comment("fill " + p->memName + " to " + reg->emit() + " from " + p->mem->emit()));
     }
 
@@ -380,10 +430,17 @@ namespace CodeGen {
         loadSubExpr(right, rreg);
     }
 
-    void CodeGenVisitor::saveSubExpr(Register *reg, 
+    void CodeGenVisitor::saveSubExpr(AST::Node *p, Register *reg, 
         Memory* mem, std::string tmpName)
     {
-        emit("sw", reg, mem);
+        switch(p->outType)
+        {
+            case Scanner::Token::Type::Double:
+                emit("s.d", reg, mem);
+                break;
+            default:
+                emit("sw", reg, mem);
+        }
         addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
     }
 
@@ -433,15 +490,29 @@ namespace CodeGen {
             Register *lreg = Register::Next();
             Register *oreg = Register::Next();
 
+            if (p->left->outType == Scanner::Token::Type::Double)
+            {
+                lreg = FloatingRegister::Next();
+                oreg = FloatingRegister::Next();
+
+                int offset = p->pScope->getNextOffset(); // get next offset to save double
+                mem = new Memory("fp", -offset);
+            }
+
             emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
             loadSubExpr(p->left, lreg);
 
             emit(op, oreg, lreg);
 
-            saveSubExpr(oreg, mem, tmp);
+            saveSubExpr(p, oreg, mem, tmp);
 
             identCheck(p->left, p->pScope);
 
+            if (p->left->outType == Scanner::Token::Type::Double)
+            {
+                FloatingRegister::Next();
+                FloatingRegister::Next();
+            }
             Register::Free();
             Register::Free();
 
@@ -471,19 +542,35 @@ namespace CodeGen {
             Register *lreg = Register::Next();
             Register *oreg = Register::Next();
 
+            if (p->left->outType == Scanner::Token::Type::Double)
+            {
+                rreg = FloatingRegister::Next();
+                lreg = FloatingRegister::Next();
+                oreg = FloatingRegister::Next();
+
+                int offset = p->pScope->getNextOffset(); // get next offset to save double
+                mem = new Memory("fp", -offset);
+            }
+
             emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
             loadSubExprs(p->left, lreg, p->right, rreg);
             // add instr
             emit(op, oreg, lreg, rreg);
             
             // save to mem
-            saveSubExpr(oreg, mem, tmp);
+            saveSubExpr(p, oreg, mem, tmp);
             // add instr
 
             identCheck(p->left, p->pScope);
             identCheck(p->right, p->pScope);
 
             /** Free all registers used for expression */
+            if (p->left->outType == Scanner::Token::Type::Double)
+            {
+                FloatingRegister::Next();
+                FloatingRegister::Next();
+                FloatingRegister::Next();
+            }
             Register::Free();
             Register::Free();
             Register::Free();
@@ -497,23 +584,114 @@ namespace CodeGen {
         p->memName = tmp;
     }
 
+    void CodeGenVisitor::floatingPointLogical(AST::Expr *p, std::string op, 
+        bool invert, bool equalCheck)
+    {
+        // visit left/right
+        std::string tmp( "" );
+        Memory *mem = setupSubExpr(p->left, p->right, p->pScope, tmp);
+        
+        // Don't need to get extra offset as output is 32-bit value
+        // int offset = p->pScope->getNextOffset();
+        // mem = new Memory("fp", -offset);
+
+        // Load FP regs
+        FloatingRegister *lreg = FloatingRegister::Next();
+        FloatingRegister *rreg = FloatingRegister::Next();
+
+        loadSubExpr(p->left, lreg);
+        loadSubExpr(p->right, rreg);
+        
+        // FP compare a < b
+        emit(op, lreg, rreg);
+
+        Label *fbranch = Label::Next();
+        Label *ebranch = Label::Next();
+
+        // Branch on FP compare if false
+        emit("bclf", fbranch);
+        
+        // get normal register
+        Register *oreg = Register::Next();
+        Immediate *immFbranch = new Immediate("0");
+        Immediate *immTbranch = new Immediate("1");
+        if (invert)
+        {
+            // swap values
+            immFbranch->immediate = "1";
+            immTbranch->immediate = "0";
+        }
+        
+        
+        // Branch True
+        // certain comparison like lessthan/greaterthan require additional 
+        //  equality check
+        if (equalCheck)
+        {
+            // in expressions like a < b OR a > b
+            // If values are equal than we need to return false
+            emit("c.eq.d", lreg, rreg);
+            emit("bclf", fbranch);
+        
+        }
+        // li $t*, 1    // return 1
+        emit("li", oreg, immTbranch);
+        // sw $t*, out memory
+        emit("sw", oreg, mem);
+        // branch end
+        emit("b", ebranch);
+
+        // Branch False
+        emit(fbranch);
+        // li $t*, 0    // return 0
+        emit("li", oreg, immFbranch);
+        // sw $t*, out memory
+        emit("sw", oreg, mem);
+        // branch end
+
+        // Branch end
+        emit(ebranch);
+
+        Register::Free();
+
+        p->mem = mem;
+        p->memName = tmp;
+    }
+
     void CodeGenVisitor::pushParam(AST::Node *p)
     {
         Register *reg = Register::Next();
+
+        if (p->outType == Scanner::Token::Type::Double)
+            reg = FloatingRegister::Next();
+
         emit(new Comment("PushParam " + p->memName));
 
         // allocate space on stack for param
-        emit("subu", new Register("sp"), new Register("sp"), new Immediate("4"));
+        Immediate *imm = new Immediate("4");
+        if (p->outType == Scanner::Token::Type::Double )
+            imm->immediate = "8";
+
+        emit("subu", new Register("sp"), new Register("sp"), imm);
         addComment(new Comment("decrement sp to make space for param"));
 
         // load parameter into reg
-        emit("lw", reg, p->mem);
-        addComment(new Comment("fill " + p->memName + " to " + reg->emit() + " from " + p->mem->emit()));
+        loadSubExpr(p, reg);
+        // emit("lw", reg, p->mem);
+        // addComment(new Comment("fill " + p->memName + " to " + reg->emit() + " from " + p->mem->emit()));
 
         // push parameter onto stack for call 
-        emit("sw", reg, new Memory("sp", 4));
-        addComment(new Comment("copy param value to stack"));
+        Memory *mem = new Memory("sp", 4);
+        if (p->outType == Scanner::Token::Type::Double )
+            mem->offset += 4;
+
+        saveSubExpr(p, reg, mem, p->memName);
+        // emit("sw", reg, new Memory("sp", 4));
+        // addComment(new Comment("copy param value to stack"));
         
+        if (p->outType == Scanner::Token::Type::Double)
+            FloatingRegister::Free();
+
         Register::Free();
     }
 
@@ -554,16 +732,29 @@ namespace CodeGen {
     {
         // get new temporary offset
         int offset = p->pScope->getNextOffset();
-
         Memory *mem = new Memory("fp", -offset);
-
         Register *reg = Register::Next();
 
-        emit("move", reg, new Register("v0"));
-        addComment(new Comment("copy function return value from $v0"));
+        if (p->outType == Scanner::Token::Type::Double)
+        {
+            offset = p->pScope->getNextOffset();
+            mem = new Memory("fp", -offset);
 
-        emit("sw", reg, mem);
-        addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
+            // Return Value in $f6
+            reg = new FloatingRegister("f6");
+
+            saveSubExpr(p, reg, mem, tmpName);
+        }
+        else
+        {
+            emit("move", reg, new Register("v0"));
+            addComment(new Comment("copy function return value from $v0"));
+
+            saveSubExpr(p, reg, mem, tmpName);
+            // emit("sw", reg, mem);
+            // addComment(new Comment("spill " + tmpName + " from " + reg->emit() + " to " + mem->emit()));
+
+        }
 
         Register::Free();
 
@@ -648,6 +839,14 @@ namespace CodeGen {
                     addComment(new Comment("load label"));
                 }
                 break;
+            case Scanner::Token::Type::DoubleConstant:
+                // must get new offset for floating point value
+                reg = FloatingRegister::Next();
+                offset = p->pScope->getNextOffset();
+                mem = new Memory("fp", -offset);
+                emit("li.d", reg, new Immediate(constant));
+                addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
+                break;
             case Scanner::Token::Type::BoolConstant :
                 if (constant.compare("true") == 0)
                 {
@@ -666,9 +865,17 @@ namespace CodeGen {
         }
 
         // Each constant will be saved to memory locaiton
-        emit("sw", reg, mem);
-        addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
+        if (p->value.type == Scanner::Token::Type::DoubleConstant)
+        {
+            emit("s.d", reg, mem);
+            FloatingRegister::Free();
+        }
+        else
+        {
+            emit("sw", reg, mem);
+        }
         Register::Free();
+        addComment(new Comment("spill " + tmp + " from " + reg->emit() + " to " + mem->emit()));
 
         p->mem = mem;
         p->memName = tmp;
@@ -678,41 +885,59 @@ namespace CodeGen {
 
     void CodeGenVisitor::visit(AST::Modulus *p)
     {
+        std::string op( "rem" );
         binaryExpr(p, "rem");
     }
 
     void CodeGenVisitor::visit(AST::Multiply *p)
     {
-        binaryExpr(p, "mul");
+        std::string op( "mul" );
+        if (p->outType == Scanner::Token::Type::Double)
+            op += ".d";
+        binaryExpr(p, op);
     }
 
     void CodeGenVisitor::visit(AST::Divide *p)
     {
-        binaryExpr(p, "div");
+        std::string op( "div" );
+        if (p->outType == Scanner::Token::Type::Double)
+            op += ".d";
+        binaryExpr(p, op);
     }
 
     void CodeGenVisitor::visit(AST::Subtract *p)
     {
         // have to be careful as this might be unary
+        std::string op( "sub" );
         
         if (p->right != nullptr)
         {
-            binaryExpr(p, "sub");
+            if (p->outType == Scanner::Token::Type::Double)
+                op += ".d";
+            binaryExpr(p, op);
         }
         else
         {
+            op = "neg";
+            if (p->outType == Scanner::Token::Type::Double)
+                op += ".d";
             // unary expression
-            unaryExpr(p, "neg");
+            unaryExpr(p, op);
         }
     }
 
     void CodeGenVisitor::visit(AST::Add *p)
     {
-        binaryExpr(p, "add");
+        std::string op( "add" );
+        if (p->outType == Scanner::Token::Type::Double)
+            op += ".d";
+        binaryExpr(p, op);
     }
 
 
     // Logical Expression
+
+    // And/Or will always be done on bool values in normal registers
     void CodeGenVisitor::visit(AST::And *p)
     {
         binaryExpr(p, "and");
@@ -723,34 +948,83 @@ namespace CodeGen {
         binaryExpr(p, "or");
     }
 
+    // Comparison will operate on normal registers for integers/strings/bools
+    //  For doubles will need branches to check coprocess flag and load bool
+    //  value into memory
     void CodeGenVisitor::visit(AST::GTE *p)
     {
-        binaryExpr(p, "sge");
+        // Have to check left/right type, logical operators outType is always bool
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "sge");
+        }
+        else
+        {
+            // invert op result
+            floatingPointLogical(p, "c.lt.d", true, false);
+        }
     }
     
     void CodeGenVisitor::visit(AST::GreaterThan *p)
     {
-        binaryExpr(p, "sgt");
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "sgt");
+        }
+        else
+        {
+            // invert op results and perform additional equal check
+            floatingPointLogical(p, "c.lt.d", true, true);
+        }
     }
 
     void CodeGenVisitor::visit(AST::LTE *p)
     {
-        binaryExpr(p, "sle");
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "sle");
+        }
+        else
+        {
+            floatingPointLogical(p, "c.le.d", false, false);
+        }
     }
 
     void CodeGenVisitor::visit(AST::LessThan *p)
     {
-        binaryExpr(p, "slt");
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "slt");
+        }
+        else
+        {
+            floatingPointLogical(p, "c.lt.d", false, false);
+        }
     }
 
     void CodeGenVisitor::visit(AST::Equal *p)
     {
-        binaryExpr(p, "seq");
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "seq");
+        }
+        else
+        {
+            floatingPointLogical(p, "c.eq.d", false, false);
+        }
     }
 
     void CodeGenVisitor::visit(AST::NotEqual *p)
     {
-        binaryExpr(p, "sne");
+        if (p->left->outType != Scanner::Token::Type::Double)
+        {
+            binaryExpr(p, "sne");
+        }
+        else
+        {
+            // invert equality check
+            floatingPointLogical(p, "c.eq.d", true, false);
+        }
     }
 
     void CodeGenVisitor::visit(AST::Not *p)
@@ -818,13 +1092,22 @@ namespace CodeGen {
             emit(new Comment(p->left->memName + " = " + p->right->memName));
             
             Register *reg = Register::Next();
+
+            if (p->outType == Scanner::Token::Type::Double)
+                reg = FloatingRegister::Next();
             
-            emit("lw", reg, p->right->mem);
-            addComment(new Comment("fill " + p->right->memName + " to " + reg->emit() + " from " + p->right->mem->emit()));
-            emit("sw", reg, p->left->mem);
-            addComment(new Comment("spill " + p->right->memName + " from " + reg->emit() + " to " + p->left->mem->emit()));
+            loadSubExpr(p->right, reg);
+            // emit("lw", reg, p->right->mem);
+            // addComment(new Comment("fill " + p->right->memName + " to " + reg->emit() + " from " + p->right->mem->emit()));
+
+            saveSubExpr(p, reg, p->left->mem, p->left->memName);
+            // emit("sw", reg, p->left->mem);
+            // addComment(new Comment("spill " + p->right->memName + " from " + reg->emit() + " to " + p->left->mem->emit()));
             
             identCheck(p->left, p->pScope);
+
+            if (p->outType == Scanner::Token::Type::Double)
+                FloatingRegister::Free();
 
             Register::Free();
         }
@@ -842,16 +1125,30 @@ namespace CodeGen {
         {
             p->expr->accept(this);
             emit(new Comment("Return " + p->expr->memName));
-            
-            Register *reg = Register::Next();
-            
-            emit("lw", reg, p->expr->mem);
-            addComment(new Comment("fill " + p->expr->memName + " to " + reg->emit() + " from " + p->expr->mem->emit()));
 
-            emit("move", new Register("v0"), reg);
-            addComment(new Comment("assign return value into $v0"));
+            Register *reg;
 
-            Register::Free();
+            if ( p->outType == Scanner::Token::Type::Double )
+            {
+                reg = FloatingRegister::Next();
+                emit("l.d", reg, p->expr->mem);
+                addComment(new Comment("fill " + p->expr->memName + " to " + reg->emit() + " from " + p->expr->mem->emit()));
+                
+                FloatingRegister * outreg = new FloatingRegister("f6");
+                // TODO need to save FP register to specific reg on return maybe fp6 ?
+                emit("mov.d", outreg, reg);
+
+                FloatingRegister::Free();
+            }
+            else
+            {
+                reg = Register::Next();
+                emit("lw", reg, p->expr->mem);
+                addComment(new Comment("fill " + p->expr->memName + " to " + reg->emit() + " from " + p->expr->mem->emit()));
+                emit("move", new Register("v0"), reg);
+                addComment(new Comment("assign return value into $v0"));
+                Register::Free();
+            }
         }
         else
         {
@@ -995,12 +1292,24 @@ namespace CodeGen {
 
         saveReturn(p, tmp);
 
-        popParams(p->actuals.size());
+        int size = 0;
+        for ( auto &p : p->actuals)
+        {
+            size++;
+            // We allocate 8 on stack instead of 4 for doubles
+            // easy hack is to pretend like we have 1 more parameter
+            // for each double in the parameter list
+            if (p->outType == Scanner::Token::Type::Double)
+                size++;
+        }
+
+        popParams(size);
     }
 
 
     void CodeGenVisitor::visit(AST::Print *p)
     {
+        // Don't need to worry about doubles here
         CallFormalVisit(p);
 
         // Print builtin only accepts single argument based on type
@@ -1089,12 +1398,26 @@ namespace CodeGen {
         {
             // block == param location
             // block is 0 indexed but first param starts at 4($fp)
-            e->offset = (e->paramIndex+1) * 4;
+            
+            // TODO need to handle if double, but really only if previous decl is double?
+            // e->offset = (e->paramIndex+1) * 4;
+            e->offset = p->pScope->getNextParamOffset(); // will this work?
+
+            // If this is a double we need to move offset twice
+            if (e->type == Scanner::Token::Type::Double)
+                p->pScope->getNextParamOffset();
+
+            // because stack grows downward the first offset is the start of the 
+            // double, the second address is in the middle, thus we do not need it
         }
         // otherwise we are in global or child scope thus we get the offset
         else
         {
             e->offset =  - p->pScope->getNextOffset();
+
+            // if double we need to offset again for double precision
+            if (e->type == Scanner::Token::Type::Double)
+                e->offset = - p->pScope->getNextOffset();
 
             if (e->block == 1)
                 reg = "gp";

@@ -70,6 +70,24 @@ SymbolTable::IdEntry* SymbolTable::Scope::idLookup(std::string id)
     return it->second;
 }
 
+int SymbolTable::Scope::getNextParamOffset()
+{
+    if (parentScope != nullptr && parentScope->parentScope == nullptr)
+    {
+        paramOffset += 4;
+        return paramOffset;
+    }
+
+    // we are in global scope so return global scopes offset
+    if (parentScope == nullptr)
+    {
+        paramOffset += 4;
+        return paramOffset;
+    }
+    
+    return parentScope->getNextOffset();
+}
+
 int SymbolTable::Scope::getNextOffset()
 {
     // if our parent has null parent, then parent is global and we are in 

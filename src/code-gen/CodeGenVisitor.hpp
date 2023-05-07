@@ -50,13 +50,15 @@ namespace CodeGen {
             void loadSubExprs(AST::Node *left, Register *lreg, 
                 AST::Node *right, Register *rreg);
 
-            void saveSubExpr(Register *reg, Memory* mem, 
+            void saveSubExpr(AST::Node *p, Register *reg, Memory* mem, 
                 std::string tmpName);
 
             void identCheck(AST::Node *p, SymbolTable::Scope *pScope);
 
             void binaryExpr(AST::Expr *p, std::string op);
             void unaryExpr(AST::Expr *p, std::string op);
+
+            void floatingPointLogical(AST::Expr *p, std::string op, bool invert, bool equalCheck);
 
             void pushParam(AST::Node *p);
             void popParams(int num);

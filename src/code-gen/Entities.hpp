@@ -48,6 +48,20 @@ namespace CodeGen {
 
     };
 
+    class FloatingRegister : public Register {
+        public:
+            static int registerCount;
+            static int registerIndex;
+
+            FloatingRegister();
+            FloatingRegister(std::string reg);
+            std::string name;   //holds the name of the register (t1-tN) (fp, sp, gb, ...)
+            std::string emit();
+
+            static FloatingRegister* Next();
+            static void Free();
+    };
+
     /**
      * @brief Class for describing memory location
      * 
