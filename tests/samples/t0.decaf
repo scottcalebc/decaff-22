@@ -19,7 +19,6 @@ void main() {
 
   x = true;
   a = 2;
-  d = 4.0;
   x = a == 2;
   a = 2 + 3 * 4 - (6 / 2);
   b = ReadInteger();

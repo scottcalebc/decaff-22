@@ -36,6 +36,7 @@ int usage(const char* progName)
 
 std::string getFileName(const std::string &file_path)
 {
+
     std::size_t start = file_path.find_last_of("/");
     std::size_t end = file_path.find_last_of(".");
 
@@ -81,7 +82,7 @@ int main(int argc, char** argv) {
                 std::cout << token;
             } 
             catch( Scanner::GenericException &exc ) {
-                std::cout << exc.what();
+                std::cout << exc.what() << std::endl;
                 token.type = Scanner::Token::Type::ERROR;
             }
         } while (token.type != Scanner::Token::Type::END);
@@ -102,7 +103,7 @@ int main(int argc, char** argv) {
     }
     catch ( Parser::ParseException &exc)
     {
-        std::cout << exc.what();
+        std::cout << exc.what() << std::endl;
     }
     
     if (function.compare("--parser") == 0)
@@ -140,9 +141,6 @@ int main(int argc, char** argv) {
     // code gen
     if (bTypeCheck)
         CodeGen::generate(&prog, file_name);
-
-
-    std::cout << std::endl;
 
     return 0;
 }
