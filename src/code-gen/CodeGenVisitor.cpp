@@ -313,6 +313,7 @@ namespace CodeGen {
         : instructions()
         , tmpCounter(0)
         , labelCounter(1)
+        , error(false)
     {
 
     }
@@ -372,6 +373,11 @@ namespace CodeGen {
 
     void CodeGenVisitor::write(std::string file_name)
     {
+
+        // If encountered error skip file writing
+        if (error)
+            return;
+
         std::stringstream ss;
         ss << file_name << ".s";
 
@@ -470,10 +476,39 @@ namespace CodeGen {
             AST::Ident* ident = dynamic_cast<AST::Ident*>(p);
             SymbolTable::IdEntry *e = pScope->idLookup(ident->value.getValue<std::string>());
 
-            if (e != nullptr && ! e->loaded)
-                std::runtime_error("Invalid expression: use before load");
+            // If var is not loaded and not a parameter then we throw error
+            //  params will always be loaded
+            if (e != nullptr && ! e->loaded && e->block != 2)
+            {
+                std::cout   << std::endl
+                            << "*** Error line " << ident->value.lineNumber << ".\n"
+                            << ident->value.lineInfo << std::endl
+                            << std::setw(ident->minCol() -1 ) << " "
+                            << std::setfill('^') << std::setw(ident->maxCol() - ident->minCol()) << "" << std::endl
+                            << "*** Invalid expression: use before load on var: " << ident->value.getValue<std::string>()
+                            << std::endl;
+                std::cout << std::setfill(' ');
+
+                // set loaded to true and continue, will not write out assembly code
+                // though
+                error = true;
+                e->loaded = true;
+            }
         }
             
+    }
+
+    void CodeGenVisitor::identLoaded(AST::Node *p,
+        SymbolTable::Scope *pScope)
+    {
+        if (dynamic_cast<AST::Ident*>(p) != nullptr)
+        {
+            AST::Ident* ident = dynamic_cast<AST::Ident*>(p);
+            SymbolTable::IdEntry *e = pScope->idLookup(ident->value.getValue<std::string>());
+
+            if (e != nullptr)
+                e->loaded = true;
+        }
     }
 
     void CodeGenVisitor::unaryExpr(AST::Expr *p, std::string op)
@@ -585,7 +620,7 @@ namespace CodeGen {
     }
 
     void CodeGenVisitor::floatingPointLogical(AST::Expr *p, std::string op, 
-        bool invert, bool equalCheck)
+        bool invert)
     {
         // visit left/right
         std::string tmp( "" );
@@ -609,7 +644,7 @@ namespace CodeGen {
         Label *ebranch = Label::Next();
 
         // Branch on FP compare if false
-        emit("bclf", fbranch);
+        emit("bc1f", fbranch);
         
         // get normal register
         Register *oreg = Register::Next();
@@ -624,16 +659,6 @@ namespace CodeGen {
         
         
         // Branch True
-        // certain comparison like lessthan/greaterthan require additional 
-        //  equality check
-        if (equalCheck)
-        {
-            // in expressions like a < b OR a > b
-            // If values are equal than we need to return false
-            emit("c.eq.d", lreg, rreg);
-            emit("bclf", fbranch);
-        
-        }
         // li $t*, 1    // return 1
         emit("li", oreg, immTbranch);
         // sw $t*, out memory
@@ -651,6 +676,9 @@ namespace CodeGen {
 
         // Branch end
         emit(ebranch);
+
+        identCheck(p->left, p->pScope);
+        identCheck(p->right, p->pScope);
 
         Register::Free();
 
@@ -961,7 +989,7 @@ namespace CodeGen {
         else
         {
             // invert op result
-            floatingPointLogical(p, "c.lt.d", true, false);
+            floatingPointLogical(p, "c.lt.d", true);
         }
     }
     
@@ -973,8 +1001,8 @@ namespace CodeGen {
         }
         else
         {
-            // invert op results and perform additional equal check
-            floatingPointLogical(p, "c.lt.d", true, true);
+            // invert op results 
+            floatingPointLogical(p, "c.le.d", true);
         }
     }
 
@@ -986,7 +1014,7 @@ namespace CodeGen {
         }
         else
         {
-            floatingPointLogical(p, "c.le.d", false, false);
+            floatingPointLogical(p, "c.le.d", false);
         }
     }
 
@@ -998,7 +1026,7 @@ namespace CodeGen {
         }
         else
         {
-            floatingPointLogical(p, "c.lt.d", false, false);
+            floatingPointLogical(p, "c.lt.d", false);
         }
     }
 
@@ -1010,7 +1038,7 @@ namespace CodeGen {
         }
         else
         {
-            floatingPointLogical(p, "c.eq.d", false, false);
+            floatingPointLogical(p, "c.eq.d", false);
         }
     }
 
@@ -1023,7 +1051,7 @@ namespace CodeGen {
         else
         {
             // invert equality check
-            floatingPointLogical(p, "c.eq.d", true, false);
+            floatingPointLogical(p, "c.eq.d", true);
         }
     }
 
@@ -1104,7 +1132,7 @@ namespace CodeGen {
             // emit("sw", reg, p->left->mem);
             // addComment(new Comment("spill " + p->right->memName + " from " + reg->emit() + " to " + p->left->mem->emit()));
             
-            identCheck(p->left, p->pScope);
+            identLoaded(p->left, p->pScope);
 
             if (p->outType == Scanner::Token::Type::Double)
                 FloatingRegister::Free();
