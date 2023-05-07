@@ -66,7 +66,6 @@ namespace SemanticAnalyzer {
 
             if ( ltype == Scanner::Token::Type::ERROR )
             {   
-                std::cout << "Error getting type from left expression\n";
                 return false;
             }
 
@@ -81,19 +80,11 @@ namespace SemanticAnalyzer {
                     return true;
                 }
             }
-            else if ( ! unary )
-            {
-                std::cout << "Cannot get right type from empty expression\n";
-            }
-            else 
+            else if ( unary )
             {
                 // we hit a unary so return true
                 return true;
             }
-        }
-        else
-        {
-            std::cout << "Cannot get left type from empty expression\n";
         }
 
         return false;
