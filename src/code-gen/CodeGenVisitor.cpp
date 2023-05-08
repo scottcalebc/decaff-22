@@ -531,7 +531,7 @@ namespace CodeGen {
                 oreg = FloatingRegister::Next();
 
                 int offset = p->pScope->getNextOffset(); // get next offset to save double
-                mem = new Memory("fp", -offset);
+                // mem = new Memory("fp", -offset);
             }
 
             emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
@@ -584,7 +584,7 @@ namespace CodeGen {
                 oreg = FloatingRegister::Next();
 
                 int offset = p->pScope->getNextOffset(); // get next offset to save double
-                mem = new Memory("fp", -offset);
+                // mem = new Memory("fp", -offset);
             }
 
             emit(new Comment( tmp + " = " + p->op.lineInfo.substr(start-2, end-start+2)) ); // expression start
@@ -778,7 +778,7 @@ namespace CodeGen {
         if (p->outType == Scanner::Token::Type::Double)
         {
             offset = p->pScope->getNextOffset();
-            mem = new Memory("fp", -offset);
+            // mem = new Memory("fp", -offset);
 
             // Return Value in $f6
             reg = new FloatingRegister("f6");
@@ -883,7 +883,7 @@ namespace CodeGen {
                 // must get new offset for floating point value
                 reg = FloatingRegister::Next();
                 offset = p->pScope->getNextOffset();
-                mem = new Memory("fp", -offset);
+                // mem = new Memory("fp", -offset);
                 emit("li.d", reg, new Immediate(constant));
                 addComment(new Comment("load constant value " + constant + " into " + reg->emit() ));
                 break;
@@ -1350,7 +1350,7 @@ namespace CodeGen {
     void CodeGenVisitor::visit(AST::Print *p)
     {
         // Don't need to worry about doubles here
-        CallFormalVisit(p);
+        // CallFormalVisit(p);
 
         // Print builtin only accepts single argument based on type
         // after each parameter push we call the corresponding funciton
@@ -1445,8 +1445,9 @@ namespace CodeGen {
 
             // If this is a double we need to move offset twice
             if (e->type == Scanner::Token::Type::Double)
-                p->pScope->getNextParamOffset();
+                e->offset = p->pScope->getNextParamOffset();
 
+            
             // because stack grows downward the first offset is the start of the 
             // double, the second address is in the middle, thus we do not need it
         }
@@ -1457,7 +1458,10 @@ namespace CodeGen {
 
             // if double we need to offset again for double precision
             if (e->type == Scanner::Token::Type::Double)
-                e->offset = - p->pScope->getNextOffset();
+                p->pScope->getNextOffset();
+                // e->offset = - p->pScope->getNextOffset();
+
+            
 
             if (e->block == 1)
                 reg = "gp";

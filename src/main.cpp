@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
         usage(argv[0]);
     }
 
-    std::string function("--parser");
+    std::string function("--code-gen");
     std::string file_path(argv[1]);
 
     if (argc > 2 )
