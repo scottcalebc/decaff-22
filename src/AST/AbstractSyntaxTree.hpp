@@ -30,8 +30,8 @@ namespace AST {
             SymbolTable::Scope *pScope;
 
             // Out register holding value of sub expression
-            CodeGen::Register *reg;
-            CodeGen::Location *mem; // holds memory location of subexpression
+            CodeGen::Register   *reg;
+            CodeGen::Memory     *mem; // holds memory location of subexpression
 
             std::string memName;
 

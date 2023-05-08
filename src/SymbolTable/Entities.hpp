@@ -5,6 +5,18 @@
 
 namespace SymbolTable {
 
+    class Exception : public std::exception
+    {
+        public:
+            Exception(char *msg);
+            Exception(std::string message, std::string id);
+            Exception(int start, int length, int lineNumber, std::string line, std::string msg);
+
+            std::string message;
+
+            const char * what();
+    };
+
     class IdEntry {
 
         public:
@@ -61,6 +73,7 @@ namespace SymbolTable {
                 , numOfParams(0)
                 , returnType(Scanner::Token::Type::ERROR)
                 , baseOffset(-4)
+                , paramOffset(0)
             {};
 
 
@@ -71,6 +84,7 @@ namespace SymbolTable {
             // this will hold the offset necessary for the function scope
             // children scopes allocating locals/temporaries
             int baseOffset;                     // used during code gen
+            int paramOffset;                    // used during code gen
 
 
             typedef std::map<std::string, IdEntry*>::iterator TableIterator;
@@ -90,6 +104,7 @@ namespace SymbolTable {
             Scanner::Token::Type getReturnType();
 
             int getNextOffset();
+            int getNextParamOffset();
 
             std::string toString(int &space);
     };

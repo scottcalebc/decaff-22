@@ -66,7 +66,6 @@ namespace SemanticAnalyzer {
 
             if ( ltype == Scanner::Token::Type::ERROR )
             {   
-                std::cout << "Error getting type from left expression\n";
                 return false;
             }
 
@@ -81,19 +80,11 @@ namespace SemanticAnalyzer {
                     return true;
                 }
             }
-            else if ( ! unary )
-            {
-                std::cout << "Cannot get right type from empty expression\n";
-            }
-            else 
+            else if ( unary )
             {
                 // we hit a unary so return true
                 return true;
             }
-        }
-        else
-        {
-            std::cout << "Cannot get left type from empty expression\n";
         }
 
         return false;
@@ -110,7 +101,8 @@ namespace SemanticAnalyzer {
         if (entry == nullptr || entry->func)
         {
             exprErr = true;
-            p->pScope->fakeInstall(p->value.getValue<std::string>());
+            // reset entry pointer to ensure pointer is valid
+            entry = p->pScope->fakeInstall(p->value.getValue<std::string>());
             std::stringstream ss;
             ss << "No declaration found for variable '" << p->value.getValue<std::string>() << "'";
             printTypeError(p->value, ss.str());
@@ -422,7 +414,7 @@ namespace SemanticAnalyzer {
         if ( binaryTypeCheck(p->left, p->right) )
         {
             // Do I need an out type on assign? Probably not, cannot have multiple assignments
-            // p->outType = p->left->outType;
+            p->outType = p->left->outType;
         } else if (! exprErr){
             std::string ltype( Scanner::Token::getTypeName(p->left->outType) );
             std::string rtype( Scanner::Token::getTypeName(p->right->outType) );
